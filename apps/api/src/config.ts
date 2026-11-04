@@ -18,5 +18,9 @@ export type Config = z.infer<typeof ConfigSchema>;
 // Named config.ts rather than the spec's env.ts: the editing tool in this environment blocks any
 // file called env.*. Contents are what the spec asks for (zod-parsed process environment).
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): Config {
+  // The localhost default is for development only; a production process must be told where its database is.
+  if (source.NODE_ENV === 'production' && !source.DATABASE_URL) {
+    throw new Error('DATABASE_URL is required when NODE_ENV=production');
+  }
   return ConfigSchema.parse(source);
 }

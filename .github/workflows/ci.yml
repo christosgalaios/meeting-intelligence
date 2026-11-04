@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: meetings
+          POSTGRES_PASSWORD: meetings
+          POSTGRES_DB: meetings
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U meetings"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://meetings:meetings@localhost:5432/meetings
+      HF_HUB_CACHE: ${{ github.workspace }}/.hf-cache
+      # Everything here runs keyless: tests use fakes and the eval never calls a model.
+      ANTHROPIC_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Restore embedding model cache
+        uses: actions/cache@v4
+        with:
+          path: .hf-cache
+          key: hf-Xenova-bge-small-en-v1.5
+      - run: npm run eval
+      - run: npm run build
+
+  compose-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the stack
+        run: docker compose up -d --build
+      - name: Wait for the api to be healthy
+        run: |
+          for i in $(seq 1 36); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' "$(docker compose ps -q api)")
+            echo "api health: $status"
+            [ "$status" = "healthy" ] && exit 0
+            sleep 5
+          done
+          docker compose logs api
+          exit 1
+      - name: Health reports retrieval-only
+        run: curl --fail-with-body -sS http://localhost:3001/api/health | jq -e '.mode == "retrieval-only"'
+      - name: One ask streams to done
+        run: |
+          curl --fail-with-body -sS -N -X POST http://localhost:3001/api/ask \
+            -H 'content-type: application/json' \
+            -d '{"question":"What price was agreed for the Starter plan?"}' | tee ask.txt
+          grep -q 'event: done' ask.txt
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

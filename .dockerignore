@@ -1,0 +1,12 @@
+.git
+.githooks
+.github
+**/node_modules
+**/dist
+**/coverage
+.env
+.env.*
+!.env.example
+docs
+*.log
+.hf-cache

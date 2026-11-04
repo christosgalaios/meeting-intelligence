@@ -1,14 +1,14 @@
 services:
   db:
     image: pgvector/pgvector:pg17
-    environment: { POSTGRES_USER: meetings, POSTGRES_PASSWORD: meetings, POSTGRES_DB: meetings }
-    ports: ["5432:5432"]
+    environment: { POSTGRES_USER: meetings, POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-meetings}", POSTGRES_DB: meetings }
+    ports: ["127.0.0.1:5432:5432"]
     volumes: [dbdata:/var/lib/postgresql/data]
     healthcheck: { test: ["CMD-SHELL", "pg_isready -U meetings"], interval: 5s, retries: 20 }
   api:
     build: { context: ., dockerfile: apps/api/Dockerfile }
     environment:
-      DATABASE_URL: postgres://meetings:meetings@db:5432/meetings
+      DATABASE_URL: postgres://meetings:${POSTGRES_PASSWORD:-meetings}@db:5432/meetings
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       PORT: 3001
       SEED_ON_START: "true"
