@@ -24,7 +24,9 @@ Option 3.
 - The threshold is a weak filter. At 0.58 it has precision 1.00 and recall 0.17: it refused 1 of 6 unanswerable questions (q19) and 0 answerable ones. The other 5 got through.
 - Score ranges overlap almost completely. Answerable questions top out between 0.582 and 0.828. Unanswerable ones between 0.576 and 0.746. No threshold separates them.
 - 0.58 is the highest value that refuses no answerable question. 0.60 already refuses q12 wrongly. The margin to q12 is 0.002, so treat the number as a conservative pre-filter, not a classifier.
-- In full mode the model does most of the refusing. I have not measured how often it declines correctly. [TODO: run the 6 unanswerable questions through Sonnet with the dev key and record how many it refuses]
+- In full mode the model does most of the refusing. I ran the 6 unanswerable questions (q17 to q22) through the full app with the dev key on 2026-11-04. All 6 were refused: 1 by the threshold (q19, no model call) and 5 by the model (`model_declined`). Raw output: `evals/results/manual-refusal-and-injection-2026-11-04.jsonl`.
+- Two of those five (q18 and q22) refused and then cited the nearest related fact: prices exist in pounds only, and the team chose a payment provider's subscriptions without naming it. That is the behaviour I want. It says no, then shows what is actually there.
+- This is one run on 6 questions, so it is indicative only. It is not a measured refusal rate.
 - In retrieval-only mode, a user can still see near-miss turns for an unanswerable question. The UI labels them as the nearest moments, with their scores.
 - The text override needs every term of the question in one chunk. With the OR query (ADR 0005) one common word would otherwise defeat the threshold. No eval question has a full match, so the override never fires on this set.
 - Rejected option 1 alone: with recall at 0.17 it would let five of six near misses reach the model, and in full mode there would be nothing behind it.

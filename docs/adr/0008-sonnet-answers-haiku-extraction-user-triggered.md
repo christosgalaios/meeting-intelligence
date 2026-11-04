@@ -32,7 +32,7 @@ Paid calls happen only on a user action:
 - Extraction is cheap, which suits a call that reads a whole transcript.
 - The ask estimate on the button is an assumption (about 4,000 input and 300 output tokens), not a measurement. The real figure replaces it once the answer finishes.
 - Without a key the model layer is a null client that nothing calls. The mode is fixed at start from `ANTHROPIC_API_KEY`.
-- I did not run Haiku against Sonnet on answer quality, so "Sonnet for answers" is a judgement, not a result. There is no faithfulness eval. [TODO: if a manual run with the dev key is done, add model, date and numbers here]
+- I did not run Haiku against Sonnet on answer quality, so "Sonnet for answers" is a judgement, not a result. There is no faithfulness eval, and no Haiku-against-Sonnet comparison was run. Both are on the "with more time" list. The only live check is a small manual run of refusals and one injection question (ADR 0006 and ADR 0009).
 - Rejected option 2: answers synthesise across meetings and must follow the citation rules, which is where a smaller model is most likely to slip. Not measured.
 - Rejected option 3: it spends Sonnet prices on a task Haiku can do with structured output.
 - Rejected option 4: higher cost per question, and I had no result showing Sonnet was not good enough.
