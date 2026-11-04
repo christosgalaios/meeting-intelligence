@@ -15,7 +15,7 @@ export interface ParseResult {
 }
 
 // [hh:mm:ss] Speaker: text, or the shorter [mm:ss] form.
-const LINE = /^\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]\s+([^:]{1,80}):\s?(.*)$/;
+export const LINE = /^\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]\s+([^:]{1,80}):\s?(.*)$/;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 

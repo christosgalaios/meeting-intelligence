@@ -6,6 +6,7 @@ import type { LlmClient } from '../llm/client.js';
 import { validateExtraction } from '../llm/extractionSchema.js';
 import { chunkTurns } from '../transcript/chunk.js';
 import { parseTranscript } from '../transcript/parse.js';
+import { validateTranscript } from '../transcript/validate.js';
 import { fileSlug } from '../transcript/slug.js';
 import { filenameMeta } from '../transcript/title.js';
 import type { MeetingDetail } from '../types.js';
@@ -47,6 +48,8 @@ export async function ingestTranscript(
 ): Promise<MeetingDetail> {
   const { pool, embedder, llm, queue, log } = deps;
   const t0 = performance.now();
+  // Before any embedding, database write or model call: rejected input costs nothing.
+  validateTranscript(input.text);
 
   for (let attempt = 0; ; attempt++) {
     const slug = await pickSlug(pool, fileSlug(input.filename));

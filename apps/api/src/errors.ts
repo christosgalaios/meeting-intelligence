@@ -17,10 +17,10 @@ export class AppError extends Error {
   readonly code: ErrorCode;
   readonly status: number;
 
-  constructor(code: ErrorCode, message: string) {
+  constructor(code: ErrorCode, message: string, status?: number) {
     super(message);
     this.name = 'AppError';
     this.code = code;
-    this.status = STATUS[code];
+    this.status = status ?? STATUS[code];
   }
 }
