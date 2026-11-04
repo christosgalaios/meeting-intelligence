@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { seedSamples } from '../api/client';
 import { useApp } from '../AppContext';
 import { IconSearch } from '../components/icons';
 import { MeetingList } from '../components/MeetingList';
@@ -13,6 +14,8 @@ export function LibraryPage() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
   const input = useRef<HTMLInputElement>(null);
+  const [loadingSamples, setLoadingSamples] = useState(false);
+  const [sampleError, setSampleError] = useState<string | null>(null);
   const empty = !meetingsLoading && meetings.length === 0;
 
   // The library asks across every meeting. The list refreshes while an extraction is still running.
@@ -41,6 +44,19 @@ export function LibraryPage() {
     if (ask.start(question, undefined, meetings.length)) {
       setQuestion('');
       navigate('/ask');
+    }
+  };
+
+  const loadSamples = async () => {
+    setLoadingSamples(true);
+    setSampleError(null);
+    try {
+      await seedSamples();
+      reloadMeetings();
+    } catch (err) {
+      setSampleError(err instanceof Error ? err.message : 'Could not load the samples.');
+    } finally {
+      setLoadingSamples(false);
     }
   };
 
@@ -93,8 +109,16 @@ export function LibraryPage() {
             <h2 className="m-0 text-[17px] font-semibold">No meetings yet</h2>
             <p className="m-0 max-w-[520px] text-pretty text-fg-2">
               Upload a transcript to start. One speaker turn per line, each with a timestamp. Searching runs on your own API and costs nothing; a written answer
-              needs an Anthropic key.
+              needs an Anthropic key. Or explore with the sample meetings: no model is called to load them.
             </p>
+            <button type="button" onClick={() => void loadSamples()} disabled={loadingSamples} className={btnPrimary}>
+              {loadingSamples ? 'Loading samples…' : 'Load sample meetings'}
+            </button>
+            {sampleError && (
+              <p role="alert" className="m-0 text-[13px] text-danger">
+                {sampleError}
+              </p>
+            )}
           </div>
         )}
 

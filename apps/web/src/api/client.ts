@@ -71,6 +71,9 @@ export const uploadMeeting = (req: UploadRequest) => sendJson('/meetings', Meeti
 /** User-clicked. The API answers 202 with a pending meeting; poll getMeeting for the result. */
 export const extractMeeting = (id: string) => sendJson(`/meetings/${encodeURIComponent(id)}/extract`, MeetingDetail, post());
 
+/** Loads the bundled sample transcripts. No model call; safe to repeat. */
+export const seedSamples = () => sendJson('/seed', z.object({ added: z.number().int(), skipped: z.number().int() }), post());
+
 export const getTrace = (id: string, signal?: AbortSignal) =>
   sendJson(`/traces/${encodeURIComponent(id)}`, QueryTrace, signal ? { signal } : undefined);
 

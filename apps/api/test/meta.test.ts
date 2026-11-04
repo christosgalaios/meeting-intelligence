@@ -7,7 +7,8 @@ import { ExtractionQueue } from '../src/services/queue.js';
 import { seedTranscripts } from '../src/services/seed.js';
 import { filenameMeta } from '../src/transcript/title.js';
 import { MeetingDetail, MeetingSummary } from '../src/types.js';
-import { FakeLlm, createTestDb, fakeEmbedder } from './helpers.js';
+import { NullLlmClient } from '../src/llm/client.js';
+import { FakeLlm, createTestDb, fakeEmbedder, notReadyEmbedder, parseSse } from './helpers.js';
 
 const PRICING = readFileSync(new URL('./fixtures/pricing.txt', import.meta.url), 'utf8');
 
@@ -74,6 +75,64 @@ describe('seeding never calls the model', () => {
     expect(llm.extractCalls).toBe(0);
     const { rows } = await pool.query("SELECT DISTINCT extraction_status AS s, count(meeting_date)::int AS dated FROM meetings GROUP BY 1");
     expect(rows).toEqual([{ s: 'skipped', dated: res.added }]);
+    await drop();
+  });
+});
+
+describe('POST /api/seed', () => {
+  it('loads the samples without calling the model, and is idempotent', async () => {
+    const { pool, drop } = await createTestDb();
+    const llm = new FakeLlm();
+    const app = buildServer({ pool, embedder: fakeEmbedder, llm, logLevel: 'silent' });
+    const first = await app.inject({ method: 'POST', url: '/api/seed' });
+    expect(first.statusCode).toBe(200);
+    const { added } = first.json() as { added: number; skipped: number };
+    expect(added).toBeGreaterThan(0);
+    await app.extractionQueue.idle();
+    expect(llm.extractCalls).toBe(0);
+    const again = await app.inject({ method: 'POST', url: '/api/seed' });
+    expect(again.json()).toEqual({ added: 0, skipped: added });
+    const { rows } = await pool.query("SELECT count(*)::int AS n, count(*) FILTER (WHERE extraction_status = 'skipped')::int AS s FROM meetings");
+    expect(rows[0]).toEqual({ n: added, s: added });
+    await app.close();
+    await drop();
+  });
+
+  it('two simultaneous requests add each sample once', async () => {
+    const { pool, drop } = await createTestDb();
+    const app = buildServer({ pool, embedder: fakeEmbedder, llm: new FakeLlm(), logLevel: 'silent' });
+    const [a, b] = await Promise.all([app.inject({ method: 'POST', url: '/api/seed' }), app.inject({ method: 'POST', url: '/api/seed' })]);
+    expect(a.statusCode).toBe(200);
+    expect(b.json()).toEqual(a.json());
+    const { rows } = await pool.query("SELECT count(*)::int AS n FROM meetings WHERE slug ~ '-[0-9]+$' AND slug ~ '-2$'");
+    expect(rows[0].n).toBe(0);
+    await app.close();
+    await drop();
+  });
+
+  it('is a 503 while the embedder is not ready', async () => {
+    const { pool, drop } = await createTestDb();
+    const app = buildServer({ pool, embedder: notReadyEmbedder, llm: new FakeLlm(), logLevel: 'silent' });
+    const res = await app.inject({ method: 'POST', url: '/api/seed' });
+    expect(res.statusCode).toBe(503);
+    await app.close();
+    await drop();
+  });
+});
+
+describe('turn scores', () => {
+  it('rank and score each turn by its own similarity to the question, not its chunk', async () => {
+    const { pool, drop } = await createTestDb();
+    const app = buildServer({ pool, embedder: fakeEmbedder, llm: new NullLlmClient(), logLevel: 'silent' });
+    await app.inject({ method: 'POST', url: '/api/meetings', payload: { filename: 'p.txt', text: PRICING } });
+    const res = await app.inject({ method: 'POST', url: '/api/ask', payload: { question: 'What price was agreed for the Starter plan?' } });
+    const sourcesBlock = parseSse(res.payload).find((e) => e.event === 'sources')!;
+    const turns = (sourcesBlock.data as { turns: Array<{ score: number; text: string }> }).turns;
+    const scores = turns.map((t) => t.score);
+    expect(new Set(scores).size).toBeGreaterThan(1); // not one shared chunk score
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
+    expect(scores.every((s) => s >= -1 && s <= 1)).toBe(true); // cosine, not an RRF value
+    await app.close();
     await drop();
   });
 });

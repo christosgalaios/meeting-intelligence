@@ -1,4 +1,5 @@
 import type { Pool } from '../db/pool.js';
+import { QUERY_PREFIX, type Embedder } from '../embed/embedder.js';
 import type { RankedChunk, SourceTurn } from '../types.js';
 
 interface TurnRow {
@@ -62,4 +63,23 @@ export async function expandToTurns(pool: Pool, chunks: RankedChunk[], opts: { n
         score,
       };
     });
+}
+
+const dot = (a: number[], b: number[]) => a.reduce((s, x, i) => s + x * (b[i] ?? 0), 0);
+const norm = (a: number[]) => Math.sqrt(dot(a, a)) || 1;
+
+/**
+ * Replaces each turn's inherited chunk score with its own: the cosine similarity between the turn text and the
+ * question, from the same embedder. Overlapping chunks give every turn in them the same RRF score, which made the
+ * results indistinguishable. Best first; ties by meeting then turn number. Chunk-level RRF scores stay on the chunks.
+ */
+export async function rescoreTurns(embedder: Embedder, question: string, turns: SourceTurn[]): Promise<SourceTurn[]> {
+  if (turns.length === 0) return turns;
+  const vectors = await embedder.embed([QUERY_PREFIX + question, ...turns.map((t) => t.text)]);
+  const q = vectors[0];
+  if (!q || vectors.length !== turns.length + 1) throw new Error('embedder returned the wrong number of vectors');
+  const qn = norm(q);
+  return turns
+    .map((t, i) => ({ ...t, score: dot(q, vectors[i + 1]!) / (qn * norm(vectors[i + 1]!)) }))
+    .sort((a, b) => b.score - a.score || (a.meetingId < b.meetingId ? -1 : a.meetingId > b.meetingId ? 1 : 0) || a.n - b.n);
 }

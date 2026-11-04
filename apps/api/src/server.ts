@@ -8,6 +8,7 @@ import type { LlmClient } from './llm/client.js';
 import { registerAskRoutes } from './routes/ask.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { registerMeetingRoutes } from './routes/meetings.js';
+import { registerSeedRoutes } from './routes/seed.js';
 import { registerTraceRoutes } from './routes/traces.js';
 import { ExtractionQueue } from './services/queue.js';
 import type { ApiError } from './types.js';
@@ -91,6 +92,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   registerHealthRoutes(app);
   registerMeetingRoutes(app);
   registerAskRoutes(app);
+  registerSeedRoutes(app);
   registerTraceRoutes(app);
 
   return app;
