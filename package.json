@@ -5,6 +5,14 @@
     "apps/*"
   ],
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks",
+    "dev": "npm run dev --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "eval": "npm run eval --workspace apps/api",
+    "seed": "npm run seed --workspace apps/api",
+    "migrate": "npm run migrate --workspace apps/api"
   }
 }
