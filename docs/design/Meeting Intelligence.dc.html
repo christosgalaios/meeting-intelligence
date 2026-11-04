@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+:root,[data-theme="light"]{--bg:#F6F6F4;--surface:#FFFFFF;--surface-2:#F1F1EE;--surface-3:#E7E7E3;--border:#E2E2DE;--border-strong:#CDCDC7;--text:#17171A;--text-2:#4C4C54;--text-3:#67676F;--accent:#3352C6;--accent-hover:#2A45AD;--on-accent:#FFFFFF;--accent-soft:#EBEFFC;--accent-soft-text:#2A45AD;--chart-2:#C8891E;--hl:#FFF2C7;--hl-text:#5C4200;--ok:#1E7347;--ok-soft:#E5F3EA;--warn:#8A5A00;--warn-soft:#FBF1DA;--danger:#B3261E;--danger-soft:#FCEBE9;--focus:#3352C6;--spk-1:oklch(0.53 0.14 35);--spk-2:oklch(0.5 0.1 195);--spk-3:oklch(0.5 0.14 300);--spk-4:oklch(0.5 0.12 145);--spk-5:oklch(0.52 0.11 75);--spk-6:oklch(0.52 0.15 355);--shadow:0 1px 2px rgba(23,23,26,.05),0 2px 8px rgba(23,23,26,.04);--shadow-lg:0 12px 40px rgba(23,23,26,.14),0 2px 6px rgba(23,23,26,.06);--font-sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--font-mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;--r-sm:4px;--r-md:6px;--r-lg:10px;--r-xl:14px;--r-pill:999px;color-scheme:light}
+[data-theme="dark"]{--bg:#0E0E10;--surface:#161618;--surface-2:#1C1C1F;--surface-3:#26262A;--border:#28282D;--border-strong:#3A3A41;--text:#EDEDF0;--text-2:#B2B2BA;--text-3:#8F8F98;--accent:#8EA4F6;--accent-hover:#A8BAF8;--on-accent:#0E0E10;--accent-soft:#1D2442;--accent-soft-text:#BCC9FA;--chart-2:#E0AE55;--hl:#3B3115;--hl-text:#F3DC9A;--ok:#5FCB91;--ok-soft:#13281C;--warn:#E3B45C;--warn-soft:#2D2311;--danger:#F28B82;--danger-soft:#341818;--focus:#8EA4F6;--spk-1:oklch(0.76 0.11 35);--spk-2:oklch(0.76 0.09 195);--spk-3:oklch(0.76 0.11 300);--spk-4:oklch(0.76 0.1 145);--spk-5:oklch(0.78 0.1 80);--spk-6:oklch(0.76 0.12 355);--shadow:0 1px 2px rgba(0,0,0,.5);--shadow-lg:0 16px 48px rgba(0,0,0,.55),0 0 0 1px #2A2A30;color-scheme:dark}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+[data-askbar]:focus-within{border-color:var(--focus)!important;box-shadow:0 0 0 3px var(--accent-soft)!important}
+[data-askbar] input:focus-visible,[data-askbar] textarea:focus-visible{outline:none}
+::placeholder{color:var(--text-3);opacity:1}
+a{color:var(--accent)}a:hover{color:var(--accent-hover)}
+@keyframes mi-pulse{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@keyframes mi-blink{50%{opacity:0}}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" data-theme="{{ theme }}" style="display:flex;height:100%;min-height:640px;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:14px;line-height:1.45;overflow:hidden;position:relative">
+
+<nav aria-label="Primary" style="width:{{ sideW }};flex-shrink:0;display:flex;flex-direction:column;gap:2px;padding:14px 10px;border-right:1px solid var(--border);background:var(--bg)">
+  <div style="display:flex;align-items:center;gap:9px;padding:4px 8px 16px">
+    <span aria-hidden="true" style="width:20px;height:20px;border-radius:5px;background:var(--text);display:grid;place-items:center;flex-shrink:0"><span style="width:8px;height:8px;border-radius:2px;background:var(--bg)"></span></span>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:13.5px;font-weight:600;letter-spacing:-0.01em;white-space:nowrap">Meeting Intelligence</span></sc-if>
+  </div>
+  <button type="button" onClick="{{ goLibrary }}" aria-current="{{ libCurrent }}" style="display:flex;align-items:center;gap:10px;height:32px;padding:0 8px;border:0;border-radius:var(--r-md);background:{{ libNavBg }};color:var(--text);font-size:13.5px;text-align:left" style-hover="background:var(--surface-3)">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"></rect><rect x="9" y="2" width="5" height="5" rx="1"></rect><rect x="2" y="9" width="5" height="5" rx="1"></rect><rect x="9" y="9" width="5" height="5" rx="1"></rect></svg>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="flex:1">Library</span><span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3)">{{ meetingCount }}</span></sc-if>
+  </button>
+  <button type="button" onClick="{{ goAsk }}" aria-current="{{ askCurrent }}" style="display:flex;align-items:center;gap:10px;height:32px;padding:0 8px;border:0;border-radius:var(--r-md);background:{{ askNavBg }};color:var(--text);font-size:13.5px;text-align:left" style-hover="background:var(--surface-3)">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path></svg>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span>Ask</span></sc-if>
+  </button>
+  <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:20px 8px 6px;font-size:11.5px;font-weight:500;color:var(--text-3)">Meetings</div>
+    <sc-for list="{{ sideMeetings }}" as="sm" hint-placeholder-count="4">
+      <button type="button" onClick="{{ sm.open }}" style="display:block;width:100%;height:30px;padding:0 8px;border:0;border-radius:var(--r-md);background:{{ sm.bg }};color:var(--text-2);font-size:13px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="background:var(--surface-3);color:var(--text)">{{ sm.title }}</button>
+    </sc-for>
+  </sc-if>
+  <div style="flex:1"></div>
+  <button type="button" onClick="{{ openKey }}" title="{{ keyTitle }}" style="display:flex;align-items:center;gap:10px;min-height:32px;padding:6px 8px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-2);font-size:12.5px;text-align:left" style-hover="background:var(--surface-3)">
+    <span aria-hidden="true" style="width:8px;height:8px;border-radius:4px;background:{{ keyDot }};flex-shrink:0;margin:0 4px"></span>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="display:flex;flex-direction:column"><span style="color:var(--text)">{{ keyTitle }}</span><span style="font-size:11.5px;color:var(--text-3)">{{ keySub }}</span></span></sc-if>
+  </button>
+  <button type="button" onClick="{{ toggleTheme }}" aria-label="{{ themeLabel }}" style="display:flex;align-items:center;gap:10px;height:32px;padding:0 8px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-2);font-size:12.5px;text-align:left" style-hover="background:var(--surface-3)">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="5.5"></circle><path d="M8 2.5v11" ></path></svg>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span>{{ themeLabel }}</span></sc-if>
+  </button>
+</nav>
+
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface)">
+
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ false }}">
+  <div role="status" style="display:flex;align-items:center;gap:12px;padding:9px 20px;background:var(--accent-soft);color:var(--accent-soft-text);font-size:13px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><path d="M8 7.2v4"></path><circle cx="8" cy="4.9" r=".4"></circle></svg>
+    <span style="flex:1;min-width:240px">Showing the best-matching moments. Add your own Anthropic key for written answers.</span>
+    <button type="button" onClick="{{ openKey }}" style="height:26px;padding:0 10px;border:1px solid currentColor;border-radius:var(--r-md);background:transparent;color:inherit;font-size:12.5px;font-weight:500">Add key</button>
+  </div>
+</sc-if>
+
+<!-- LIBRARY -->
+<sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow:auto">
+<div style="max-width:1080px;margin:0 auto;padding:36px clamp(20px,4vw,48px) 64px;display:flex;flex-direction:column;gap:24px">
+  <div>
+    <h1 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.015em">Library</h1>
+    <p style="margin:4px 0 0;color:var(--text-2);font-size:13.5px">{{ libSummary }}</p>
+  </div>
+  <form data-askbar="" onSubmit="{{ submitLib }}" style="display:flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;border:1px solid var(--border-strong);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow);opacity:{{ libFormOpacity }}">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-3)" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path></svg>
+    <input ref="{{ libInputRef }}" aria-label="Ask across all meetings" placeholder="{{ libPlaceholder }}" value="{{ libInput }}" onChange="{{ onLibInput }}" disabled="{{ libEmpty }}" style="flex:1;min-width:0;border:0;background:transparent;font-size:15px;padding:9px 0">
+    <kbd style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:1px 6px">/</kbd>
+    <button type="submit" disabled="{{ libEmpty }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13.5px;font-weight:500;white-space:nowrap" style-hover="background:var(--accent-hover)">{{ libAskLabel }}<span style="font-family:var(--font-mono);font-size:12px;padding-left:8px;border-left:1px solid currentColor">{{ libCost }}</span></button>
+  </form>
+
+  <sc-if value="{{ upIdle }}" hint-placeholder-val="{{ true }}">
+    <div onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDrop }}" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 20px;border:1px dashed {{ dropBorder }};border-radius:var(--r-lg);background:{{ dropBg }}">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+        <div style="font-weight:500">Add a transcript</div>
+        <div style="color:var(--text-2);font-size:13px">Drop a .txt file or paste text. One turn per line, like <code style="font-family:var(--font-mono);font-size:12px;color:var(--text);background:var(--surface-2);padding:1px 5px;border-radius:var(--r-sm)">[12:04] Priya Raman: Then let's decide it.</code></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="button" onClick="{{ openPaste }}" style="height:32px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);font-size:13px;font-weight:500" style-hover="background:var(--surface-2)">Paste text</button>
+        <button type="button" onClick="{{ chooseFile }}" style="height:32px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);font-size:13px;font-weight:500" style-hover="background:var(--surface-2)">Choose file</button>
+        <input ref="{{ fileRef }}" type="file" accept=".txt,text/plain" onChange="{{ onFile }}" aria-hidden="true" style="display:none">
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ upPaste }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--border-strong);border-radius:var(--r-lg);background:var(--surface)">
+      <label for="mi-paste" style="font-weight:500">Paste a transcript</label>
+      <textarea id="mi-paste" rows="9" value="{{ pasteText }}" onChange="{{ onPaste }}" placeholder="[00:12] Priya Raman: Okay, let's start." style="width:100%;resize:vertical;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2);padding:10px 12px;font-family:var(--font-mono);font-size:12.5px;line-height:1.6"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button type="button" onClick="{{ runPaste }}" style="height:32px;padding:0 14px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:500" style-hover="background:var(--accent-hover)">Import</button>
+        <button type="button" onClick="{{ fillExample }}" style="height:32px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);font-size:13px" style-hover="background:var(--surface-2)">Use example with errors</button>
+        <button type="button" onClick="{{ cancelUpload }}" style="height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-2);font-size:13px" style-hover="background:var(--surface-2)">Cancel</button>
+        <span style="flex:1"></span>
+        <span style="font-size:12px;color:var(--text-3)">Parsing runs locally. Nothing is sent to an AI model.</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ upError }}" hint-placeholder-val="{{ false }}">
+    <div role="alert" style="display:flex;flex-direction:column;border:1px solid var(--danger);border-radius:var(--r-lg);background:var(--surface);overflow:hidden">
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--danger-soft)">
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <div style="font-weight:600;color:var(--danger)">{{ errTitle }}</div>
+          <div style="font-size:13px;color:var(--text-2)">{{ errSub }}</div>
+        </div>
+      </div>
+      <div role="table" aria-label="Lines that could not be parsed" style="display:flex;flex-direction:column">
+        <div role="row" style="display:grid;grid-template-columns:64px minmax(0,1.2fr) minmax(0,1fr);gap:12px;padding:8px 16px;border-bottom:1px solid var(--border);font-size:11.5px;color:var(--text-3);font-weight:500">
+          <span role="columnheader">Line</span><span role="columnheader">Content</span><span role="columnheader">Why it failed</span>
+        </div>
+        <sc-for list="{{ errRows }}" as="er" hint-placeholder-count="3">
+          <div role="row" style="display:grid;grid-template-columns:64px minmax(0,1.2fr) minmax(0,1fr);gap:12px;padding:9px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:baseline">
+            <span role="cell" style="font-family:var(--font-mono);font-size:12px;color:var(--text-2)">{{ er.line }}</span>
+            <code role="cell" style="font-family:var(--font-mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ er.content }}</code>
+            <span role="cell" style="color:var(--text-2)">{{ er.reason }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;padding:12px 16px;flex-wrap:wrap">
+        <sc-if value="{{ errCanImport }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ importAnyway }}" style="height:32px;padding:0 14px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:500" style-hover="background:var(--accent-hover)">{{ errImportLabel }}</button></sc-if>
+        <button type="button" onClick="{{ openPaste }}" style="height:32px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);font-size:13px" style-hover="background:var(--surface-2)">Edit text</button>
+        <button type="button" onClick="{{ cancelUpload }}" style="height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-2);font-size:13px" style-hover="background:var(--surface-2)">Cancel</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ upDone }}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r-lg);background:var(--ok-soft);color:var(--ok);font-size:13px">
+      <span style="flex:1">{{ doneText }}</span>
+      <button type="button" onClick="{{ cancelUpload }}" style="height:26px;padding:0 10px;border:1px solid currentColor;border-radius:var(--r-md);background:transparent;color:inherit;font-size:12.5px">Dismiss</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ libEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:40px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--surface-2)">
+      <h2 style="margin:0;font-size:17px;font-weight:600">No meetings yet</h2>
+      <p style="margin:0;max-width:520px;color:var(--text-2);text-wrap:pretty">Upload a transcript to start, or explore with four sample meetings: a pricing review, an onboarding retro, a customer call and an engineering sync.</p>
+      <button type="button" onClick="{{ loadSamples }}" style="height:34px;padding:0 14px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13.5px;font-weight:500;margin-top:4px" style-hover="background:var(--accent-hover)">Load sample meetings</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasMeetings }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:8px">
+      <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Meetings</h2>
+      <span style="font-size:12px;color:var(--text-3)">Newest first</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:-12px">
+      <sc-for list="{{ cards }}" as="c" hint-placeholder-count="4">
+        <button type="button" onClick="{{ c.open }}" style="display:flex;flex-direction:column;gap:14px;padding:16px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);text-align:left;box-shadow:var(--shadow)" style-hover="border-color:var(--border-strong);background:var(--surface-2)">
+          <div style="display:flex;flex-direction:column;gap:4px;width:100%">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:15px;font-weight:600;letter-spacing:-0.01em;flex:1;min-width:0">{{ c.title }}</span>
+              <sc-if value="{{ c.isNew }}"><span style="font-size:11px;font-weight:500;padding:2px 6px;border-radius:var(--r-sm);background:var(--ok-soft);color:var(--ok)">New</span></sc-if>
+            </div>
+            <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-3)">{{ c.meta }}</span>
+          </div>
+          <div style="display:flex;gap:4px" aria-label="{{ c.speakersLabel }}">
+            <sc-for list="{{ c.people }}" as="pp" hint-placeholder-count="3">
+              <span title="{{ pp.name }}" style="width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:10.5px;font-weight:600;border:1.5px solid {{ pp.color }};color:{{ pp.color }};background:var(--surface)">{{ pp.ini }}</span>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:14px;width:100%;padding-top:12px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text-2)">
+            <sc-if value="{{ c.showCounts }}"><span><b style="font-weight:600;color:var(--text)">{{ c.dec }}</b> decisions</span><span><b style="font-weight:600;color:var(--text)">{{ c.act }}</b> action items</span></sc-if>
+            <sc-if value="{{ c.locked }}"><span style="display:flex;align-items:center;gap:6px;color:var(--text-3)"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg>Extraction needs a key</span></sc-if>
+            <sc-if value="{{ c.notExtracted }}"><span style="color:var(--text-3)">Not extracted yet</span></sc-if>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</div>
+</sc-if>
+
+<!-- ASK -->
+<sc-if value="{{ isAsk }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;min-height:0;display:flex;position:relative">
+  <section aria-label="Conversation" style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="height:52px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border);position:relative">
+      <h1 style="margin:0;font-size:14px;font-weight:600">Ask</h1>
+      <span aria-hidden="true" style="color:var(--border-strong)">/</span>
+      <button type="button" onClick="{{ toggleScope }}" aria-haspopup="true" aria-expanded="{{ scopeOpen }}" style="display:flex;align-items:center;gap:6px;height:28px;padding:0 8px 0 10px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);font-size:13px" style-hover="border-color:var(--border-strong)">
+        <span style="color:var(--text-3)">Scope</span><span style="font-weight:500">{{ scopeLabel }}</span>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg>
+      </button>
+      <sc-if value="{{ scopeOpen }}" hint-placeholder-val="{{ false }}">
+        <div role="menu" aria-label="Meetings to search" style="position:absolute;top:46px;left:64px;z-index:20;width:340px;padding:6px;border:1px solid var(--border-strong);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:2px">
+          <button type="button" role="menuitemcheckbox" aria-checked="{{ allChecked }}" onClick="{{ selectAll }}" style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border:0;border-radius:var(--r-md);background:transparent;font-size:13px;text-align:left" style-hover="background:var(--surface-2)">
+            <span aria-hidden="true" style="width:16px;height:16px;border-radius:4px;border:1.5px solid {{ allBox }};background:{{ allFill }};color:var(--on-accent);font-size:11px;display:grid;place-items:center">{{ allMark }}</span>
+            <span style="flex:1;font-weight:500">All meetings</span>
+          </button>
+          <div style="height:1px;background:var(--border);margin:2px 4px"></div>
+          <sc-for list="{{ scopeItems }}" as="si" hint-placeholder-count="4">
+            <button type="button" role="menuitemcheckbox" aria-checked="{{ si.checked }}" onClick="{{ si.toggle }}" style="display:flex;align-items:center;gap:10px;min-height:38px;padding:4px 8px;border:0;border-radius:var(--r-md);background:transparent;font-size:13px;text-align:left" style-hover="background:var(--surface-2)">
+              <span aria-hidden="true" style="width:16px;height:16px;flex-shrink:0;border-radius:4px;border:1.5px solid {{ si.box }};background:{{ si.fill }};color:var(--on-accent);font-size:11px;display:grid;place-items:center">{{ si.mark }}</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ si.title }}</span>
+              <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3)">{{ si.date }}</span>
+            </button>
+          </sc-for>
+          <div style="padding:8px 8px 4px;font-size:12px;color:var(--text-3);border-top:1px solid var(--border);margin-top:2px">Estimated cost per question grows with scope.</div>
+        </div>
+      </sc-if>
+      <span style="flex:1"></span>
+      <button type="button" onClick="{{ newThread }}" style="height:28px;padding:0 10px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-2);font-size:13px" style-hover="background:var(--surface-2);color:var(--text)">New thread</button>
+      <sc-if value="{{ compact }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ togglePanel }}" aria-expanded="{{ panelOpen }}" style="height:28px;padding:0 10px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);font-size:13px">Transcript</button></sc-if>
+    </header>
+
+    <div ref="{{ convRef }}" style="flex:1;min-height:0;overflow:auto">
+      <div style="max-width:720px;margin:0 auto;padding:32px clamp(20px,3vw,32px) 24px;display:flex;flex-direction:column;gap:44px">
+        <sc-if value="{{ threadEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px;padding-top:12vh">
+            <h2 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-0.015em">What do you want to know?</h2>
+            <p style="margin:0;color:var(--text-2)">Ask about decisions, owners and dates. Every answer links to the moment it came from.</p>
+          </div>
+        </sc-if>
+        <sc-for list="{{ exchanges }}" as="ex" hint-placeholder-count="1">
+          <article aria-busy="{{ ex.busy }}" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h2 style="margin:0;font-size:17px;font-weight:600;line-height:1.4;letter-spacing:-0.01em;text-wrap:pretty">{{ ex.q }}</h2>
+              <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3)">{{ ex.meta }}</span>
+            </div>
+            <sc-if value="{{ ex.isThinking }}">
+              <div role="status" style="display:flex;align-items:center;gap:10px;height:28px;color:var(--text-2);font-size:13.5px">{{ dots }}<span>{{ ex.thinkingText }}</span></div>
+            </sc-if>
+            <sc-if value="{{ ex.isAnswer }}">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ ex.blocks }}" as="b">
+                  <div style="display:flex;gap:10px;padding-left:{{ b.indent }}">
+                    <sc-if value="{{ b.isLi }}"><span aria-hidden="true" style="flex-shrink:0;width:5px;height:5px;border-radius:3px;background:var(--text-3);margin-top:11px"></span></sc-if>
+                    <p style="margin:0;font-size:15px;line-height:1.72;text-wrap:pretty"><sc-for list="{{ b.parts }}" as="pt"><sc-if value="{{ pt.isText }}">{{ pt.text }}</sc-if><sc-if value="{{ pt.isCite }}"><button type="button" onClick="{{ pt.onClick }}" aria-label="{{ pt.aria }}" style="display:inline-flex;align-items:center;gap:5px;vertical-align:1px;margin:0 3px 0 0;padding:0 7px 0 3px;height:21px;border:1px solid {{ pt.border }};border-radius:5px;background:{{ pt.bg }};font-family:var(--font-mono);font-size:11.5px;color:var(--text-2);line-height:1" style-hover="border-color:var(--accent);color:var(--text)"><span style="display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 3px;border-radius:3px;background:var(--surface-3);color:var(--text);font-size:10.5px;font-weight:500">{{ pt.n }}</span>{{ pt.label }}</button></sc-if></sc-for><sc-if value="{{ b.caret }}">{{ caret }}</sc-if></p>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ ex.isRefusal }}">
+              <div style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface-2)">
+                <div style="font-size:15px;font-weight:600">This wasn't discussed in these meetings.</div>
+                <div style="font-size:13.5px;color:var(--text-2);text-wrap:pretty">{{ ex.refusalNote }}</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ ex.hasMoments }}">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:12px;font-weight:500;color:var(--text-3)">{{ ex.momentsLabel }}</div>
+                <sc-for list="{{ ex.moments }}" as="mo">
+                  <button type="button" onClick="{{ mo.onClick }}" style="display:grid;grid-template-columns:28px minmax(0,1fr) 72px;gap:12px;align-items:start;padding:12px 14px;border:1px solid {{ mo.border }};border-radius:var(--r-lg);background:{{ mo.bg }};text-align:left" style-hover="border-color:var(--border-strong)">
+                    <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-3);padding-top:1px">#{{ mo.rank }}</span>
+                    <span style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                      <span style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:12.5px"><span style="font-family:var(--font-mono);color:var(--accent)">{{ mo.ts }}</span><span style="font-weight:600;color:{{ mo.color }}">{{ mo.speaker }}</span><span style="color:var(--text-3)">{{ mo.meeting }}</span></span>
+                      <span style="font-size:14px;line-height:1.55;color:var(--text);text-wrap:pretty">{{ mo.text }}</span>
+                    </span>
+                    <span style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding-top:2px">
+                      <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-2)">{{ mo.score }}</span>
+                      <span aria-hidden="true" style="width:56px;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ mo.scoreW }};background:{{ mo.barColor }}"></span></span>
+                    </span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ ex.isDone }}">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <button type="button" onClick="{{ ex.openWhy }}" style="display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 10px;border:1px solid {{ ex.whyBorder }};border-radius:var(--r-md);background:{{ ex.whyBg }};font-size:12.5px;color:var(--text)" style-hover="border-color:var(--border-strong)">{{ ex.whyLabel }}<span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3)">{{ ex.whyMeta }}</span></button>
+                <sc-if value="{{ ex.canCopy }}"><button type="button" onClick="{{ ex.copy }}" style="height:28px;padding:0 10px;border:0;border-radius:var(--r-md);background:transparent;font-size:12.5px;color:var(--text-2)" style-hover="background:var(--surface-2);color:var(--text)">{{ ex.copyLabel }}</button></sc-if>
+              </div>
+            </sc-if>
+          </article>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex-shrink:0;padding:10px clamp(20px,3vw,32px) 18px">
+      <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
+        <form data-askbar="" onSubmit="{{ submitAsk }}" style="display:flex;flex-direction:column;gap:8px;padding:10px 10px 10px 14px;border:1px solid var(--border-strong);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow)">
+          <label for="mi-ask" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Ask a question</label>
+          <textarea id="mi-ask" ref="{{ askInputRef }}" rows="2" placeholder="Ask about decisions, owners or dates…" value="{{ askInput }}" onChange="{{ onAskInput }}" onKeyDown="{{ onAskKey }}" style="border:0;resize:none;background:transparent;font-size:15px;line-height:1.5;padding:2px 0"></textarea>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ composerScope }}</span>
+            <span style="flex:1"></span>
+            <span style="font-size:11.5px;color:var(--text-3);white-space:nowrap">↵ to ask · ⇧↵ new line</span>
+            <button type="submit" disabled="{{ askDisabled }}" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13.5px;font-weight:500;white-space:nowrap;opacity:{{ askOpacity }}" style-hover="background:var(--accent-hover)">{{ askBtnLabel }}<span style="font-family:var(--font-mono);font-size:12px;padding-left:8px;border-left:1px solid currentColor">{{ askCost }}</span></button>
+          </div>
+        </form>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ suggestions }}" as="sg" hint-placeholder-count="3">
+            <button type="button" onClick="{{ sg.onClick }}" style="height:28px;padding:0 10px;border:1px solid var(--border);border-radius:var(--r-pill);background:var(--surface);font-size:12.5px;color:var(--text-2)" style-hover="border-color:var(--border-strong);color:var(--text)">{{ sg.q }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside aria-label="Sources" style="width:{{ panelW }};flex-shrink:0;position:{{ panelPos }};display:{{ panelDisplay }};top:0;right:0;bottom:0;z-index:10;flex-direction:column;border-left:1px solid var(--border);background:var(--bg);box-shadow:{{ panelShadow }}">
+    <div role="tablist" aria-label="Source views" style="height:52px;flex-shrink:0;display:flex;align-items:stretch;gap:20px;padding:0 16px;border-bottom:1px solid var(--border)">
+      <button type="button" role="tab" aria-selected="{{ tabIsT }}" onClick="{{ tabT }}" style="border:0;background:transparent;padding:0 2px;font-size:13px;font-weight:500;color:{{ tabTColor }};box-shadow:inset 0 -2px 0 {{ tabTLine }}">Transcript</button>
+      <button type="button" role="tab" aria-selected="{{ tabIsW }}" onClick="{{ tabW }}" style="border:0;background:transparent;padding:0 2px;font-size:13px;font-weight:500;color:{{ tabWColor }};box-shadow:inset 0 -2px 0 {{ tabWLine }}">Why this answer</button>
+      <span style="flex:1"></span>
+      <sc-if value="{{ compact }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ togglePanel }}" aria-label="Close panel" style="align-self:center;width:28px;height:28px;border:0;border-radius:var(--r-md);background:transparent;font-size:16px;color:var(--text-2)">×</button></sc-if>
+    </div>
+
+    <sc-if value="{{ tabIsT }}" hint-placeholder-val="{{ true }}">
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)">
+        <label for="mi-tm" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Meeting transcript</label>
+        <select id="mi-tm" value="{{ tMeetingId }}" onChange="{{ onTMeeting }}" style="flex:1;min-width:0;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);font-size:13px;font-weight:500">
+          <sc-for list="{{ tOptions }}" as="o"><option value="{{ o.id }}">{{ o.title }}</option></sc-for>
+        </select>
+        <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3);white-space:nowrap">{{ tMeta }}</span>
+      </div>
+      <div ref="{{ transcriptRef }}" style="flex:1;min-height:0;overflow:auto;padding:8px 8px 40px">
+        <sc-for list="{{ tTurns }}" as="tt" hint-placeholder-count="8">
+          <div data-turn="{{ tt.id }}" style="display:grid;grid-template-columns:50px minmax(0,1fr);gap:8px;padding:10px 10px;border-radius:var(--r-md);background:{{ tt.bg }};transition:background .5s">
+            <button type="button" onClick="{{ tt.onClick }}" aria-label="{{ tt.aria }}" style="align-self:start;border:0;background:transparent;padding:1px 0;font-family:var(--font-mono);font-size:12px;color:var(--accent);text-align:left" style-hover="text-decoration:underline">{{ tt.ts }}</button>
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12.5px;font-weight:600;color:{{ tt.color }}">{{ tt.speaker }}</span><sc-if value="{{ tt.hasCite }}"><span style="font-family:var(--font-mono);font-size:10.5px;padding:1px 5px;border-radius:3px;background:var(--surface-3);color:var(--text)">{{ tt.cite }}</span></sc-if></div>
+              <p style="margin:0;font-size:13.5px;line-height:1.6;color:{{ tt.textColor }};text-wrap:pretty">{{ tt.text }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ tabIsW }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow:auto;padding:16px 16px 32px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);gap:22px">
+        <sc-if value="{{ whyPending }}"><p style="margin:0;color:var(--text-2);font-size:13.5px">Details appear when the answer finishes.</p></sc-if>
+        <sc-if value="{{ whyReady }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)">{{ whyKicker }}</span>
+            <span style="font-size:14px;font-weight:600;line-height:1.4">{{ whyQ }}</span>
+          </div>
+          <sc-if value="{{ whyNote }}"><div style="font-size:12.5px;padding:8px 10px;border-radius:var(--r-md);background:var(--surface-2);color:var(--text-2);font-family:var(--font-mono)">{{ whyNote }}</div></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);clip-path:inset(0 round var(--r-lg));min-height:min-content">
+            <sc-for list="{{ whyCells }}" as="wc" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:3px;padding:10px 12px;background:var(--surface)">
+                <span style="font-size:11.5px;color:var(--text-3)">{{ wc.label }}</span>
+                <span style="font-family:var(--font-mono);font-size:13.5px;font-weight:500">{{ wc.value }}</span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">{{ wc.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12px;font-weight:500;color:var(--text-2)">Latency</span><span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3)">{{ whyTotal }}</span></div>
+            <sc-for list="{{ whyStages }}" as="st" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:108px minmax(0,1fr) 56px;gap:10px;align-items:center;font-size:12px">
+                <span style="color:var(--text-2)">{{ st.label }}</span>
+                <span style="position:relative;height:6px;border-radius:3px;background:var(--surface-3);display:block"><span style="position:absolute;top:0;bottom:0;left:{{ st.left }};width:{{ st.width }};border-radius:3px;background:var(--accent)"></span></span>
+                <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-2);text-align:right">{{ st.ms }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:500;color:var(--text-2)">Retrieved chunks, by rank</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">hybrid = 0.7·semantic + 0.3·keyword</span></div>
+            <div style="display:flex;gap:14px;font-size:11.5px;color:var(--text-3)">
+              <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:6px;border-radius:2px;background:var(--accent)"></span>semantic</span>
+              <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:6px;border-radius:2px;background:var(--chart-2)"></span>keyword (BM25)</span>
+              <span style="display:flex;align-items:center;gap:5px"><span style="width:1px;height:10px;background:var(--text-2)"></span>threshold 0.55</span>
+            </div>
+            <sc-for list="{{ whyRows }}" as="wr" hint-placeholder-count="6">
+              <button type="button" onClick="{{ wr.onClick }}" style="display:flex;flex-direction:column;gap:8px;padding:11px 12px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);text-align:left;opacity:{{ wr.opacity }}" style-hover="border-color:var(--border-strong)">
+                <span style="display:flex;align-items:center;gap:8px;width:100%;font-size:12px">
+                  <span style="font-family:var(--font-mono);color:var(--text-3);width:22px">#{{ wr.rank }}</span>
+                  <span style="font-family:var(--font-mono);color:var(--accent)">{{ wr.ts }}</span>
+                  <span style="font-weight:600;color:{{ wr.color }}">{{ wr.speaker }}</span>
+                  <span style="color:var(--text-3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ wr.meeting }}</span>
+                  <span style="font-family:var(--font-mono);font-size:10.5px;padding:2px 6px;border-radius:3px;background:{{ wr.tagBg }};color:{{ wr.tagColor }};white-space:nowrap">{{ wr.tag }}</span>
+                </span>
+                <span style="font-size:13px;line-height:1.5;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ wr.text }}</span>
+                <span style="display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:10px;align-items:center;width:100%">
+                  <span style="position:relative;height:8px;border-radius:2px;background:var(--surface-3);display:flex">
+                    <span style="height:100%;width:{{ wr.semW }};background:var(--accent);border-radius:2px 0 0 2px"></span>
+                    <span style="height:100%;width:{{ wr.kwW }};background:var(--chart-2);border-radius:0 2px 2px 0"></span>
+                    <span style="position:absolute;left:55%;top:-3px;bottom:-3px;width:1px;background:var(--text-2)"></span>
+                  </span>
+                  <span style="font-family:var(--font-mono);font-size:12.5px;font-weight:500;text-align:right">{{ wr.score }}</span>
+                </span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">sem {{ wr.sem }} · kw {{ wr.kw }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button type="button" onClick="{{ copyJson }}" style="height:28px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);font-size:12.5px" style-hover="background:var(--surface-2)">{{ copyJsonLabel }}</button>
+            <span style="font-size:11.5px;color:var(--text-3)">Embeddings run locally, so search is free. Chunk = one turn plus its neighbours.</span>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </aside>
+</div>
+</sc-if>
+
+<!-- MEETING DETAIL -->
+<sc-if value="{{ isMeeting }}" hint-placeholder-val="{{ false }}">
+<div ref="{{ detailRef }}" style="flex:1;overflow:auto">
+<div style="max-width:1080px;margin:0 auto;padding:24px clamp(20px,4vw,48px) 72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3)">
+    <button type="button" onClick="{{ goLibrary }}" style="border:0;background:transparent;padding:2px 4px;margin-left:-4px;border-radius:var(--r-sm);color:var(--text-2)" style-hover="color:var(--text);background:var(--surface-2)">Library</button><span aria-hidden="true">/</span><span>{{ dm.title }}</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em">{{ dm.title }}</h1>
+      <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-3)">{{ dm.meta }}</span>
+    </div>
+    <button type="button" onClick="{{ askThis }}" style="height:32px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px" style-hover="background:var(--surface-2)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path></svg>Ask about this meeting</button>
+  </div>
+
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+    <section aria-label="Summary" style="flex:2 1 520px;min-width:0;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow)">
+      <sc-if value="{{ dLocked }}">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:28px 24px">
+          <span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text-3)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg>Summary, decisions and action items</span>
+          <h2 style="margin:0;font-size:16px;font-weight:600">Extraction needs an Anthropic key</h2>
+          <p style="margin:0;max-width:480px;color:var(--text-2);font-size:13.5px;text-wrap:pretty">It runs once per meeting, when you start it, and costs about $0.01. Talk time and the transcript below work without a key.</p>
+          <button type="button" onClick="{{ openKey }}" style="height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:500;margin-top:4px" style-hover="background:var(--accent-hover)">Add key</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ dNeedsExtract }}">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:28px 24px">
+          <h2 style="margin:0;font-size:16px;font-weight:600">Not extracted yet</h2>
+          <p style="margin:0;max-width:480px;color:var(--text-2);font-size:13.5px">Pull out the summary, decisions and action items, each linked to its source moment.</p>
+          <button type="button" onClick="{{ extract }}" disabled="{{ dExtracting }}" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:500" style-hover="background:var(--accent-hover)">{{ extractLabel }}<span style="font-family:var(--font-mono);font-size:12px;padding-left:8px;border-left:1px solid currentColor">~$0.01</span></button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ dHas }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Summary</h2><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">{{ dExtractMeta }}</span></div>
+          <p style="margin:0;font-size:15px;line-height:1.65;text-wrap:pretty">{{ dSummary }}</p>
+        </div>
+        <div style="padding:18px 24px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border)">
+          <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Decisions <span style="font-family:var(--font-mono);color:var(--text-3)">{{ dDecCount }}</span></h2>
+          <sc-if value="{{ dNoDec }}"><p style="margin:0;font-size:13.5px;color:var(--text-3)">No decisions found.</p></sc-if>
+          <sc-for list="{{ dDecisions }}" as="d" hint-placeholder-count="3">
+            <div style="display:flex;gap:12px;align-items:baseline">
+              <span aria-hidden="true" style="flex-shrink:0;width:6px;height:6px;border-radius:1px;background:var(--text);transform:translateY(-2px) rotate(45deg)"></span>
+              <span style="flex:1;font-size:14px;line-height:1.55;text-wrap:pretty">{{ d.text }}</span>
+              <button type="button" onClick="{{ d.onClick }}" aria-label="{{ d.aria }}" style="flex-shrink:0;height:22px;padding:0 7px;border:1px solid var(--border-strong);border-radius:5px;background:var(--surface);font-family:var(--font-mono);font-size:11.5px;color:var(--text-2)" style-hover="border-color:var(--accent);color:var(--text)">{{ d.label }}</button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:18px 24px 20px;display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0 0 4px;font-size:13px;font-weight:500;color:var(--text-2)">Action items <span style="font-family:var(--font-mono);color:var(--text-3)">{{ dActCount }}</span></h2>
+          <sc-if value="{{ dNoAct }}"><p style="margin:0;font-size:13.5px;color:var(--text-3)">No action items found.</p></sc-if>
+          <div role="table" aria-label="Action items" style="display:flex;flex-direction:column">
+            <sc-if value="{{ dHasAct }}"><div role="row" style="display:grid;grid-template-columns:minmax(0,1fr) 132px 92px 64px;gap:12px;padding:6px 0;font-size:11.5px;color:var(--text-3);border-bottom:1px solid var(--border)"><span role="columnheader">Task</span><span role="columnheader">Owner</span><span role="columnheader">Due</span><span role="columnheader">Source</span></div></sc-if>
+            <sc-for list="{{ dActions }}" as="a" hint-placeholder-count="4">
+              <div role="row" style="display:grid;grid-template-columns:minmax(0,1fr) 132px 92px 64px;gap:12px;padding:9px 0;align-items:center;border-bottom:1px solid var(--border);font-size:13.5px">
+                <span role="cell" style="text-wrap:pretty">{{ a.task }}</span>
+                <span role="cell" style="display:flex;align-items:center;gap:7px;min-width:0"><span aria-hidden="true" style="width:7px;height:7px;border-radius:4px;flex-shrink:0;background:{{ a.color }}"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.owner }}</span></span>
+                <span role="cell" style="font-family:var(--font-mono);font-size:12px;color:var(--text-2)">{{ a.due }}</span>
+                <span role="cell"><button type="button" onClick="{{ a.onClick }}" aria-label="{{ a.aria }}" style="height:22px;padding:0 7px;border:1px solid var(--border-strong);border-radius:5px;background:var(--surface);font-family:var(--font-mono);font-size:11.5px;color:var(--accent)" style-hover="border-color:var(--accent)">{{ a.ts }}</button></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <section aria-label="Talk time" style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Talk time</h2><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">{{ dm.durLabel }}</span></div>
+      <div role="img" aria-label="{{ talkAria }}" style="display:flex;height:10px;border-radius:3px;overflow:hidden;gap:2px">
+        <sc-for list="{{ talk }}" as="tk" hint-placeholder-count="4"><span style="width:{{ tk.w }};background:{{ tk.color }}"></span></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ talk }}" as="tk" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:10px minmax(0,1fr) 52px 36px;gap:8px;align-items:center;font-size:13px">
+            <span style="width:8px;height:8px;border-radius:4px;background:{{ tk.color }}"></span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ tk.name }}</span>
+            <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-3);text-align:right">{{ tk.mins }}</span>
+            <span style="font-family:var(--font-mono);font-size:12px;text-align:right">{{ tk.pct }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font-size:11.5px;color:var(--text-3)">Computed from the transcript. No AI call.</span>
+    </section>
+  </div>
+
+  <section aria-label="Transcript" style="border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow)">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:16px 20px;border-bottom:1px solid var(--border)"><h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Transcript</h2><span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3)">{{ dm.turnsLabel }}</span></div>
+    <div style="padding:8px 8px 12px">
+      <sc-for list="{{ dTurns }}" as="dt" hint-placeholder-count="10">
+        <div data-turn="{{ dt.id }}" style="display:grid;grid-template-columns:60px 128px minmax(0,1fr);gap:12px;padding:10px 12px;border-radius:var(--r-md);background:{{ dt.bg }};transition:background .5s">
+          <button type="button" onClick="{{ dt.onClick }}" aria-label="{{ dt.aria }}" style="align-self:start;border:0;background:transparent;padding:1px 0;font-family:var(--font-mono);font-size:12px;color:var(--accent);text-align:left" style-hover="text-decoration:underline">{{ dt.ts }}</button>
+          <span style="font-size:13px;font-weight:600;color:{{ dt.color }};padding-top:1px">{{ dt.speaker }}</span>
+          <p style="margin:0;font-size:14px;line-height:1.6;text-wrap:pretty">{{ dt.text }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</div>
+</sc-if>
+</main>
+
+<sc-if value="{{ keyOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeKey }}" style="position:absolute;inset:0;z-index:50;background:rgba(10,10,12,.4);display:grid;place-items:center;padding:20px">
+    <form role="dialog" aria-modal="true" aria-labelledby="mi-key-t" onClick="{{ stop }}" onSubmit="{{ saveKey }}" style="width:min(440px,100%);display:flex;flex-direction:column;gap:14px;padding:22px;border:1px solid var(--border-strong);border-radius:var(--r-xl);background:var(--surface);box-shadow:var(--shadow-lg)">
+      <h2 id="mi-key-t" style="margin:0;font-size:16px;font-weight:600">{{ keyModalTitle }}</h2>
+      <p style="margin:0;font-size:13.5px;color:var(--text-2);text-wrap:pretty">Stored in this browser only. Every AI call is started by you and shows its estimated cost first.</p>
+      <sc-if value="{{ keyShowInput }}">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label for="mi-key" style="font-size:12.5px;font-weight:500">Anthropic API key</label>
+          <input id="mi-key" ref="{{ keyInputRef }}" type="password" placeholder="sk-ant-…" value="{{ keyDraft }}" onChange="{{ onKeyDraft }}" aria-invalid="{{ keyInvalid }}" aria-describedby="mi-key-e" style="height:36px;padding:0 10px;border:1px solid {{ keyBorder }};border-radius:var(--r-md);background:var(--surface);font-family:var(--font-mono);font-size:13px">
+          <span id="mi-key-e" style="font-size:12px;color:var(--danger);min-height:16px">{{ keyErr }}</span>
+        </div>
+      </sc-if>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" onClick="{{ closeKey }}" style="height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-2);font-size:13px" style-hover="background:var(--surface-2)">Cancel</button>
+        <sc-if value="{{ keyShowInput }}"><button type="submit" style="height:32px;padding:0 14px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:500" style-hover="background:var(--accent-hover)">Save key</button></sc-if>
+        <sc-if value="{{ keyShowRemove }}"><button type="button" onClick="{{ removeKey }}" style="height:32px;padding:0 14px;border:1px solid var(--danger);border-radius:var(--r-md);background:transparent;color:var(--danger);font-size:13px;font-weight:500">Remove key</button></sc-if>
+      </div>
+    </form>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;apiKey&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;library&quot;,&quot;ask&quot;,&quot;meeting&quot;],&quot;default&quot;:&quot;ask&quot;,&quot;tsType&quot;:&quot;'library'|'ask'|'meeting'&quot;},&quot;emptyLibrary&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const SPK={priya:['Priya Raman','Priya','PR',1],marcus:['Marcus Chen','Marcus','MC',2],dana:['Dana Okafor','Dana','DO',3],leo:['Leo Silva','Leo','LS',4],sam:['Sam Whitford','Sam','SW',5],ana:['Ana Lund','Ana','AL',6],ruth:['Ruth Ames','Ruth','RA',5],jiwoo:['Ji-woo Park','Ji-woo','JP',6]};
+const person=k=>{const a=SPK[k];return {key:k,name:a[0],short:a[1],ini:a[2],color:`var(--spk-${a[3]})`};};
+const RAW=[
+{id:'m4',title:'Eng Weekly Sync',date:'Mon 3 Nov',dur:28,people:['leo','jiwoo','marcus'],talk:{leo:45,jiwoo:32,marcus:23},
+summary:'Search latency regressed after the index migration, which is being rolled back today. Billing proration for the January pricing change starts on 17 November, and on-call moves to a two-week rotation.',
+decisions:[{text:'Roll back the index migration and redo it behind a flag.',turn:2},{text:'On-call moves to a two-week rotation from next Monday.',turn:6}],
+actions:[{task:'Roll back the search index migration',owner:'jiwoo',due:'Mon 3 Nov',turn:3},{task:'Start billing proration work',owner:'leo',due:'Mon 17 Nov',turn:5}],
+turns:[['00:05','leo','Three things: billing proration, the search latency regression, and on-call.'],['02:30','jiwoo','Search p95 went from 180 to 420 milliseconds after the index migration. I think it is the missing keyword index.'],['06:12','leo','Let\'s roll back the migration today and redo it behind a flag.'],['06:30','jiwoo','I\'ll handle the rollback this afternoon.'],['12:44','marcus','Proration for the January pricing change, is that still one sprint?'],['13:01','leo','One sprint if pricing copy lands by December 1st. I\'ll start the billing work on the 17th.'],['22:18','leo','On-call moves to a two-week rotation starting next Monday.']]},
+{id:'m3',title:'Halden Logistics advisory call',date:'Fri 31 Oct',dur:51,people:['ruth','dana','priya'],talk:{ruth:44,dana:31,priya:25},
+summary:'Halden\'s ops leads want a weekly CSV export of decisions without logging in, and their security review requires SSO above 50 seats. We will scope the scheduled export and send the security pack.',
+decisions:[{text:'Scope a scheduled weekly CSV export of decisions for Halden.',turn:6}],
+actions:[{task:'Send Halden the security pack',owner:'dana',due:'Fri 7 Nov',turn:5},{task:'Come back to Halden with an export date',owner:'priya',due:'Fri 14 Nov',turn:6}],
+turns:[['00:20','dana','Thanks for making time, Ruth. We wanted to hear how the rollout to your dispatch team has gone.'],['04:12','ruth','Mostly well. The main gap is exports. Our ops leads want a weekly CSV of decisions without logging in.'],['11:37','priya','Is weekly enough, or do they need it closer to real time?'],['11:58','ruth','Weekly is fine. Monday morning, before their stand-up.'],['24:05','ruth','The other thing is SSO. Our security review flagged it for anything past 50 seats.'],['24:40','dana','SSO is on the Business plan. I\'ll send you the security pack this week.'],['46:30','priya','We\'ll scope the scheduled export and come back to you with a date.']]},
+{id:'m2',title:'Onboarding funnel retro',date:'Thu 30 Oct',dur:35,people:['sam','ana','priya'],talk:{sam:38,ana:33,priya:29},
+summary:'Activation rose from 31% to 38% after the shorter onboarding flow. The team kept it, made the teammate-invite step skippable with a day-two reminder, and will move the annual plan toggle above the fold.',
+decisions:[{text:'Keep the shorter onboarding flow.',turn:5},{text:'Make the invite step skippable, with a reminder on day two.',turn:5}],
+actions:[{task:'Spec the day-two invite reminder',owner:'sam',due:'Wed 5 Nov',turn:6},{task:'Move the annual toggle above the fold',owner:'ana',due:'Fri 31 Oct',turn:7},{task:'Re-check invite rates',owner:'priya',due:'Thu 20 Nov',turn:8}],
+turns:[['00:08','sam','Quick retro on the onboarding funnel changes from September. Headline: activation went from 31% to 38%.'],['03:41','ana','Most of the lift came from removing the workspace-naming step. People were stalling there for minutes.'],['09:15','priya','Where are we still losing people?'],['09:30','sam','Inviting teammates. Only 22% invite anyone in the first session.'],['14:20','ana','We also saw people hunting for the annual plan toggle at checkout. It\'s below the fold on smaller laptops.'],['21:02','priya','Decision: we keep the shorter flow and make the invite step skippable, with a reminder on day two.'],['21:30','sam','I\'ll spec the day-two reminder by next Wednesday.'],['27:48','ana','I\'ll move the annual toggle above the fold. Small change, I can ship it this week.'],['33:10','priya','Good. Let\'s look at invite rates again in three weeks.']]},
+{id:'m1',title:'Q3 Pricing Review',date:'Tue 28 Oct',dur:42,people:['priya','marcus','dana','leo'],talk:{priya:34,marcus:26,dana:24,leo:16},
+summary:'The team set the Team-tier annual discount at 20% from the January price change and kept existing annual customers on their current rate until renewal. The seat minimum stays at three until Dana\'s inbound data is in.',
+decisions:[{text:'Annual discount on the Team tier moves from 10% to 20%, effective with the January price change.',turn:6},{text:'Existing annual customers keep their current rate until renewal.',turn:6},{text:'Seat minimum stays at three until inbound data by company size is reviewed.',turn:12}],
+actions:[{task:'Send the revenue model to finance',owner:'marcus',due:'Fri 7 Nov',turn:8},{task:'Pull inbound numbers by company size',owner:'dana',due:'Fri 14 Nov',turn:13},{task:'Final pricing page copy',owner:'priya',due:'Mon 1 Dec',turn:15},{task:'Draft annual-offer email to monthly Team customers',owner:'dana',due:'Wk of 5 Jan',turn:17}],
+turns:[['00:12','priya','Okay, let\'s start. Goal today is to leave with a decision on annual pricing and the Team tier. Marcus, you have the numbers?'],['00:31','marcus','Yes. Monthly churn on Team is 4.1%. Annual customers churn at about a third of that. The problem is only 18% of new Team accounts pick annual.'],['02:47','dana','From the sales side, the 10% annual discount isn\'t moving anyone. Prospects compare us against tools that give two months free.'],['05:20','leo','If we change the discount, billing needs about a sprint. Proration is the tricky part, not the price itself.'],['08:15','marcus','I modelled 15% and 20%. At 20% we break even on revenue if annual uptake goes above 27%.'],['10:32','dana','Twenty percent is the number I hear in every competitive deal.'],['12:04','priya','Then let\'s decide it. Annual discount goes to 20% for Team, starting with the January price change. Existing annual customers keep their current rate until renewal.'],['12:40','marcus','Agreed. I\'ll write up the revenue model so finance can sign off.'],['13:02','priya','Marcus, can you have that to finance by Friday the 7th?'],['13:09','marcus','Friday works.'],['17:45','leo','On the Team tier seat minimum, I\'d keep it at three. Dropping to one breaks the shared-workspace onboarding.'],['18:30','dana','I\'d push back. Two-person agencies are a quarter of our inbound.'],['19:52','priya','Let\'s not decide the seat minimum today. Dana, pull the inbound numbers by company size and we\'ll revisit at the next review.'],['20:05','dana','Will do. I\'ll have it before the 14th.'],['26:18','leo','For the January change I need final copy for the pricing page by December 1st, otherwise we can\'t QA the billing flow.'],['26:40','priya','I\'ll own the pricing page copy. December 1st.'],['31:12','marcus','One more: we should email existing monthly Team customers about the annual offer before it goes live.'],['31:35','priya','Yes. Dana, can sales draft that email? Send it the week of January 5th.'],['31:50','dana','Yep.'],['38:02','priya','Recap: annual discount at 20% from January, seat minimum stays at three for now pending Dana\'s data, pricing page copy from me by December 1st. Thanks, all.']]}
+];
+const norm=r=>({...r,peopleMap:Object.fromEntries(r.people.map(k=>[k,person(k)])),turns:r.turns.map(t=>({ts:t[0],spk:t[1],text:t[2]}))});
+const SAMPLES=RAW.map(norm);
+const Q1='What did we decide about annual pricing, and who owns the follow-ups?';
+const ANSWERS={
+annual:{blocks:[
+ {text:'The team agreed to raise the annual discount on the Team tier from 10% to 20%, effective with the January price change. Existing annual customers keep their current rate until renewal.',cites:['m1-6']},
+ {text:'The case rested on Marcus\'s model: at 20%, revenue breaks even once annual uptake passes 27%, against 18% today.',cites:['m1-4','m1-1']},
+ {text:'Three follow-ups were assigned:',cites:[]},
+ {li:1,text:'Marcus sends the revenue model to finance by Friday 7 November.',cites:['m1-8']},
+ {li:1,text:'Priya owns the final pricing page copy, due 1 December.',cites:['m1-15']},
+ {li:1,text:'Dana\'s team drafts the annual-offer email to monthly Team customers, sent the week of 5 January.',cites:['m1-17']}],
+ chunks:[['m1-6',.84,.72],['m1-4',.77,.61],['m1-8',.63,.66],['m1-1',.68,.44],['m1-15',.58,.49],['m1-17',.55,.52],['m2-4',.49,.47],['m1-5',.52,.21]],
+ m:{inT:3912,outT:286,ret:84,emb:31,srch:18,rr:35,ttft:640,gen:2410}},
+seat:{blocks:[
+ {text:'Nothing was decided. Priya deferred the seat minimum to the next pricing review.',cites:['m1-12']},
+ {text:'The two positions on the table:',cites:[]},
+ {li:1,text:'Leo wants to keep the minimum at three, because dropping to one breaks shared-workspace onboarding.',cites:['m1-10']},
+ {li:1,text:'Dana argued for going lower, since two-person agencies make up about a quarter of inbound.',cites:['m1-11']},
+ {text:'Dana is pulling inbound numbers by company size before 14 November to settle it.',cites:['m1-13']}],
+ chunks:[['m1-12',.81,.77],['m1-10',.79,.74],['m1-11',.74,.52],['m1-13',.62,.38],['m1-19',.58,.55],['m2-3',.41,.12]],
+ m:{inT:3420,outT:168,ret:79,emb:29,srch:17,rr:33,ttft:590,gen:1720}},
+dana:{blocks:[
+ {text:'Dana has three open items across these meetings:',cites:[]},
+ {li:1,text:'Pull inbound numbers by company size, before 14 November.',cites:['m1-13']},
+ {li:1,text:'Draft the annual-offer email to monthly Team customers, for the week of 5 January.',cites:['m1-17']},
+ {li:1,text:'Send Halden Logistics the security pack this week.',cites:['m3-5']}],
+ chunks:[['m1-13',.72,.81],['m1-17',.70,.78],['m3-5',.66,.74],['m1-2',.44,.60],['m1-11',.40,.58]],
+ m:{inT:2980,outT:121,ret:76,emb:30,srch:16,rr:30,ttft:560,gen:1380}},
+refuse:{blocks:[],chunks:[['m1-10',.38,.10],['m1-11',.34,.08],['m2-0',.29,.05]],m:{ret:71,emb:30,srch:15,rr:26}}
+};
+const SUGG=['What\'s still open on the seat minimum?','List everything assigned to Dana','Did anyone discuss a free tier?'];
+const EXAMPLE=`[00:04] Rosa Meyer: Morning. Two things today: the support backlog and the Q1 roadmap.
+[00:31] Tom Hale: Backlog is at 212 tickets, down from 260 last week.
+[01:15] Rosa Meyer: Good. What's driving the rest?
+Tom Hale: Mostly SSO setup questions from new Business accounts.
+[02:02] Rosa Meyer: Then let's write a setup guide before we hire anyone else.
+[02:40] Tom Hale:
+[03:05] Ines Duarte: I can draft it. I'll send an outline on Friday.
+[03:75] Rosa Meyer: Perfect.
+[02:50] Ines Duarte: Should I loop in sales?
+[04:12] Tom Hale: On the roadmap, the export work slips to February.
+[04:40] Rosa Meyer: Fine. Let's confirm the new date in next week's sync.`;
+const hyb=(s,k)=>0.7*s+0.3*k;
+const cost=m=>m.inT?m.inT*3e-6+m.outT*15e-6:0;
+const fmtMs=ms=>ms>=1000?(ms/1000).toFixed(2)+' s':ms+' ms';
+const pad=n=>String(n).padStart(2,'0');
+const fmtSec=s=>s>=3600?`${Math.floor(s/3600)}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`:`${pad(Math.floor(s/60))}:${pad(s%60)}`;
+const est=n=>'~$'+(0.006+0.004*n).toFixed(2);
+
+function parseTranscript(text){
+ const good=[],errors=[];let last=-1,total=0;
+ text.split(/\r?\n/).forEach((raw,i)=>{
+  const line=raw.trim();if(!line)return;total++;
+  const m=line.match(/^\[?((?:\d{1,2}:)?\d{1,2}:\d{2})\]?\s+([^:\]]{1,48}?):\s*(.*)$/);
+  if(!m){let reason;
+   if(/^\[?\d{1,2}:\d{2}/.test(line))reason='No speaker label. Expected “Name:” after the timestamp.';
+   else if(/^[^:\[]{1,48}:\s/.test(line))reason='Missing timestamp. Expected [mm:ss] at the start of the line.';
+   else reason='Not a transcript turn. Expected “[mm:ss] Name: text”.';
+   errors.push({line:i+1,content:line,reason});return;}
+  const parts=m[1].split(':').map(Number);
+  if(parts[parts.length-1]>59||(parts.length===3&&parts[1]>59)){errors.push({line:i+1,content:line,reason:`Invalid timestamp ${m[1]}. Seconds must be 00–59.`});return;}
+  if(!m[3].trim()){errors.push({line:i+1,content:line,reason:`Empty turn. ${m[2].trim()} has no text.`});return;}
+  const s=parts.reduce((a,b)=>a*60+b,0);
+  if(s<last){errors.push({line:i+1,content:line,reason:`Timestamp goes backwards (${m[1]} after ${fmtSec(last)}).`});return;}
+  last=s;good.push({s,name:m[2].trim(),text:m[3].trim()});
+ });
+ return {good,errors,total};
+}
+
+class Component extends DCLogic {
+ state={screen:null,meetingId:'m1',themeO:null,keyO:null,samplesLoaded:false,imported:[],scope:['m1','m2','m3'],scopeOpen:false,
+  thread:[{id:'x1',key:'annual',q:Q1,mode:null,status:'done',shown:1e9,at:'10:42',scopeN:3}],
+  askInput:'',libInput:'',tab:'transcript',whyFor:'x1',activeTurn:'m1-6',tMeeting:'m1',panelOpen:false,
+  keyOpen:false,keyDraft:'',keyErr:'',upload:{mode:'idle'},pasteText:'',drag:false,width:1440,copiedJson:false,copiedEx:null,extracted:{},extracting:null};
+ rootRef=React.createRef();convRef=React.createRef();transcriptRef=React.createRef();detailRef=React.createRef();
+ askInputRef=React.createRef();libInputRef=React.createRef();fileRef=React.createRef();keyInputRef=React.createRef();
+ timers=[];
+
+ componentDidMount(){
+  this.attachRO();
+  this.onKey=e=>{
+   if(e.key==='Escape'){if(this.state.keyOpen)this.setState({keyOpen:false});else if(this.state.scopeOpen)this.setState({scopeOpen:false});else if(this.state.panelOpen)this.setState({panelOpen:false});}
+   const tag=(e.target.tagName||'').toLowerCase();
+   if(e.key==='/'&&!['input','textarea','select'].includes(tag)){const r=this.screen()==='library'?this.libInputRef:this.askInputRef;if(r.current){e.preventDefault();r.current.focus();}}
+  };
+  window.addEventListener('keydown',this.onKey);
+  this.timers.push(setTimeout(()=>this.scrollToTurn(this.state.activeTurn,false),350));
+ }
+ componentWillUnmount(){window.removeEventListener('keydown',this.onKey);this.timers.forEach(t=>{clearTimeout(t);clearInterval(t);});this.ro&&this.ro.disconnect();}
+ attachRO(){if(this.ro||!this.rootRef.current||!window.ResizeObserver)return;this.ro=new ResizeObserver(en=>{const w=en[0].contentRect.width;requestAnimationFrame(()=>{if(Math.abs(w-this.state.width)>1)this.setState({width:w});});});this.ro.observe(this.rootRef.current);}
+ componentDidUpdate(pp,ps){
+  this.attachRO();
+  const p=this.props;
+  if(pp.theme!==p.theme&&this.state.themeO)this.setState({themeO:null});
+  if(pp.apiKey!==p.apiKey&&this.state.keyO!==null)this.setState({keyO:null});
+  if(pp.startScreen!==p.startScreen&&this.state.screen)this.setState({screen:null});
+  if(pp.emptyLibrary!==p.emptyLibrary&&this.state.samplesLoaded)this.setState({samplesLoaded:false});
+  const last=this.state.thread[this.state.thread.length-1],plast=ps.thread[ps.thread.length-1];
+  if(last&&(ps.thread.length!==this.state.thread.length||(plast&&plast.id===last.id&&(plast.shown!==last.shown||plast.status!==last.status)))){const c=this.convRef.current;if(c)c.scrollTop=c.scrollHeight;}
+  if(this.state.keyOpen&&!ps.keyOpen)setTimeout(()=>this.keyInputRef.current&&this.keyInputRef.current.focus(),30);
+ }
+ screen(){return this.state.screen||this.props.startScreen||'ask';}
+ hasKey(){return this.state.keyO!==null?this.state.keyO:(this.props.apiKey??true);}
+ allMeetings(){return [...this.state.imported,...SAMPLES];}
+ getM(id){return this.allMeetings().find(m=>m.id===id)||SAMPLES[3];}
+ turnOf(tid){const i=tid.lastIndexOf('-');const m=this.getM(tid.slice(0,i));const t=m.turns[+tid.slice(i+1)];return {m,t,p:m.peopleMap[t.spk]};}
+ upd(id,patch){this.setState(s=>({thread:s.thread.map(x=>x.id===id?{...x,...patch}:x)}));}
+ scrollToTurn(id,smooth=true){requestAnimationFrame(()=>{const c=(this.screen()==='meeting'?this.detailRef:this.transcriptRef).current;if(!c)return;const el=c.querySelector(`[data-turn="${id}"]`);if(!el)return;const top=el.getBoundingClientRect().top-c.getBoundingClientRect().top+c.scrollTop-(this.screen()==='meeting'?120:64);c.scrollTo({top,behavior:smooth?'smooth':'auto'});});}
+ jump(tid,open=true){const mid=tid.slice(0,tid.lastIndexOf('-'));this.setState(s=>({activeTurn:tid,tMeeting:mid,tab:'transcript',panelOpen:open?true:s.panelOpen}),()=>this.scrollToTurn(tid));}
+ jumpDetail(tid){this.setState({activeTurn:tid},()=>this.scrollToTurn(tid));}
+ match(q){const l=q.toLowerCase();if(/seat/.test(l))return 'seat';if(/dana|assigned to|owe/.test(l))return 'dana';if(/annual|pricing|discount|decid|follow/.test(l))return 'annual';return 'refuse';}
+ tokenTotal(key){return ANSWERS[key].blocks.reduce((a,b)=>a+b.text.split(' ').length+b.cites.length,0);}
+ ask(q,fromLib){
+  q=(q||'').trim();if(!q)return;
+  const key=this.match(q),id='x'+Date.now(),mode=this.hasKey()?'answer':'retrieval';
+  const d=new Date(),at=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const scope=fromLib?this.allMeetings().map(m=>m.id):this.state.scope;
+  this.setState(s=>({thread:[...s.thread,{id,key,q,mode,status:'thinking',step:0,shown:0,at,scopeN:scope.length}],askInput:'',libInput:'',screen:'ask',scope,scopeOpen:false}));
+  this.timers.push(setTimeout(()=>this.upd(id,{step:1}),650));
+  this.timers.push(setTimeout(()=>{
+   if(mode==='answer'&&key!=='refuse'){
+    this.upd(id,{status:'streaming'});const total=this.tokenTotal(key);
+    const iv=setInterval(()=>{const ex=this.state.thread.find(x=>x.id===id);if(!ex){clearInterval(iv);return;}const n=ex.shown+2;if(n>=total){clearInterval(iv);this.finish(id);}else this.upd(id,{shown:n});},42);
+    this.timers.push(iv);
+   } else this.finish(id);
+  },1500));
+ }
+ finish(id){const ex=this.state.thread.find(x=>x.id===id);if(!ex)return;this.upd(id,{status:'done',shown:1e9});const A=ANSWERS[ex.key];const first=(A.blocks.find(b=>b.cites.length)||{cites:[A.chunks[0][0]]}).cites[0];const mid=first.slice(0,first.lastIndexOf('-'));this.setState({whyFor:id,activeTurn:first,tMeeting:mid},()=>this.state.tab==='transcript'&&this.scrollToTurn(first));}
+ runParse(text,title){
+  const r=parseTranscript(text||'');
+  if(!r.total){this.setState({upload:{mode:'error',title,errors:[{line:'—',content:title||'(empty)',reason:'The text is empty.'}],good:[],total:0}});return;}
+  if(!r.errors.length){this.importMeeting(title,r.good);return;}
+  this.setState({upload:{mode:'error',title,errors:r.errors,good:r.good,total:r.total}});
+ }
+ importMeeting(title,good){
+  const names=[...new Set(good.map(g=>g.name))];const peopleMap={};
+  names.forEach((n,i)=>{const k='p'+i;peopleMap[k]={key:k,name:n,short:n.split(' ')[0],ini:n.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase(),color:`var(--spk-${(i%6)+1})`};});
+  const kOf=n=>'p'+names.indexOf(n);
+  const words={};good.forEach(g=>{words[kOf(g.name)]=(words[kOf(g.name)]||0)+g.text.split(/\s+/).length;});
+  const tw=Object.values(words).reduce((a,b)=>a+b,0)||1;const talk={};Object.keys(words).forEach(k=>talk[k]=Math.round(words[k]/tw*100));
+  const id='u'+Date.now();
+  const m={id,title:title||'Pasted transcript',date:'Wed 4 Nov',dur:Math.max(1,Math.ceil(good[good.length-1].s/60)),people:Object.keys(peopleMap),peopleMap,talk,imported:true,isNew:true,turns:good.map(g=>({ts:fmtSec(g.s),spk:kOf(g.name),text:g.text}))};
+  this.setState(s=>({imported:[m,...s.imported],upload:{mode:'done',title:m.title,n:good.length},pasteText:''}));
+ }
+ extract(id){
+  this.setState({extracting:id});
+  this.timers.push(setTimeout(()=>{
+   const m=this.getM(id);const idx=t=>m.turns.findIndex(x=>x.text.includes(t));const own=t=>m.turns[idx(t)]?.spk;
+   let r;
+   if(idx('setup guide before')>=0){
+    r={summary:'The support backlog is down to 212 tickets, mostly SSO setup questions. The team will write a setup guide before hiring, and the export work slips to February.',
+     decisions:[{text:'Write an SSO setup guide before hiring more support staff.',turn:idx('setup guide before')},{text:'Export work moves to February, to be confirmed next week.',turn:idx('slips to February')}],
+     actions:[{task:'Send the setup guide outline',owner:own('outline'),due:'Fri 7 Nov',turn:idx('outline')},{task:'Confirm the new export date',owner:own('confirm the new date'),due:'Next sync',turn:idx('confirm the new date')}].filter(a=>a.turn>=0)};
+   } else r={summary:'No clear decisions or action items were found in this transcript.',decisions:[],actions:[]};
+   this.setState(s=>({extracting:null,extracted:{...s.extracted,[id]:r}}));
+  },1400));
+ }
+
+ renderVals(){
+  const s=this.state,p=this.props;
+  const theme=s.themeO||p.theme||'light';const hasKey=this.hasKey();const screen=this.screen();
+  const compact=s.width<1100;
+  const samplesOn=!p.emptyLibrary||s.samplesLoaded;
+  const meetings=[...s.imported,...(samplesOn?SAMPLES:[])];
+  const extOf=m=>m.imported?s.extracted[m.id]:m;
+  const chipFor=(tid,n)=>{const {m,t,p:pp}=this.turnOf(tid);const act=s.activeTurn===tid;return {isCite:true,n,label:`${t.ts} · ${pp.short}`,aria:`Source ${n}: ${m.title} at ${t.ts}, ${pp.name}`,bg:act?'var(--accent-soft)':'var(--surface)',border:act?'var(--accent)':'var(--border-strong)',onClick:()=>this.jump(tid)};};
+  const momentFor=(c,i,weak)=>{const {m,t,p:pp}=this.turnOf(c[0]);const h=hyb(c[1],c[2]);const act=s.activeTurn===c[0];return {rank:i+1,ts:t.ts,speaker:pp.short,color:pp.color,meeting:m.title,text:t.text,score:h.toFixed(2),scoreW:Math.round(h*100)+'%',barColor:weak?'var(--text-3)':'var(--accent)',bg:act?'var(--hl)':'var(--surface)',border:act?'var(--hl-text)':'var(--border)',onClick:()=>this.jump(c[0])};};
+  const citeMapOf=A=>{const map={};let n=0;A.blocks.forEach(b=>b.cites.forEach(c=>{if(!map[c])map[c]=++n;}));return map;};
+  const modeOf=ex=>ex.mode||(hasKey?'answer':'retrieval');
+
+  const exchanges=s.thread.map(ex=>{
+   const A=ANSWERS[ex.key],mode=modeOf(ex),refuse=ex.key==='refuse',map=citeMapOf(A);
+   const thinking=ex.status==='thinking';const done=ex.status==='done';
+   let blocks=[];
+   if(mode==='answer'&&!refuse&&!thinking){
+    let budget=done?Infinity:ex.shown;
+    for(const b of A.blocks){if(budget<=0)break;const parts=[];
+     for(const w of b.text.split(' ')){if(budget<=0)break;parts.push({isText:true,text:w+' '});budget--;}
+     for(const c of b.cites){if(budget<=0)break;parts.push(chipFor(c,map[c]));budget--;}
+     blocks.push({isLi:!!b.li,indent:b.li?'4px':'0',parts,caret:false});}
+    if(!done&&blocks.length)blocks[blocks.length-1].caret=true;
+   }
+   const m=A.m,c=cost(m);
+   const whyActive=s.tab==='why'&&s.whyFor===ex.id;
+   const thinkingText=ex.step===0?`Searching ${ex.scopeN} meeting${ex.scopeN>1?'s':''}`:refuse?'No strong matches · checking threshold':mode==='answer'?`Found ${A.chunks.length} moments · writing answer`:`Found ${A.chunks.length} moments · ranking`;
+   return {q:ex.q,meta:`${ex.scopeN} meeting${ex.scopeN>1?'s':''} · ${ex.at}${mode==='retrieval'?' · retrieval only':''}`,busy:!done,
+    isThinking:thinking,thinkingText,isAnswer:blocks.length>0,blocks,
+    isRefusal:done&&refuse,refusalNote:`Nothing in the ${ex.scopeN} meeting${ex.scopeN>1?'s':''} in scope covers this. These are the closest moments, all below the relevance threshold of 0.55.`,
+    hasMoments:done&&(refuse||mode==='retrieval'),momentsLabel:refuse?'Closest moments':`Best-matching moments · ${Math.min(5,A.chunks.length)} of ${A.chunks.length}`,
+    moments:(refuse?A.chunks:A.chunks.slice(0,5)).map((c,i)=>momentFor(c,i,refuse)),
+    isDone:done,whyLabel:mode==='answer'&&!refuse?'Why this answer':'Why these moments',
+    whyMeta:refuse?'generation skipped · $0.0000':mode==='answer'?`${A.chunks.length} chunks · ${((m.ret+m.gen)/1000).toFixed(2)}s · $${c.toFixed(4)}`:`${A.chunks.length} chunks · ${m.ret} ms · free`,
+    whyBg:whyActive?'var(--accent-soft)':'var(--surface)',whyBorder:whyActive?'var(--accent)':'var(--border)',
+    openWhy:()=>this.setState({whyFor:ex.id,tab:'why',panelOpen:true}),
+    canCopy:mode==='answer'&&!refuse,copyLabel:s.copiedEx===ex.id?'Copied':'Copy',
+    copy:()=>{const txt=A.blocks.map(b=>(b.li?'- ':'')+b.text+' '+b.cites.map(c=>`[${map[c]}]`).join('')).join('\n');navigator.clipboard&&navigator.clipboard.writeText(txt);this.setState({copiedEx:ex.id});this.timers.push(setTimeout(()=>this.setState({copiedEx:null}),1500));}};
+  });
+
+  // transcript panel
+  const scopeMs=this.allMeetings().filter(m=>s.scope.includes(m.id));
+  const tM=this.getM(s.tMeeting);
+  const tOpts=scopeMs.some(m=>m.id===tM.id)?scopeMs:[tM,...scopeMs];
+  const whyEx=s.thread.find(x=>x.id===s.whyFor);
+  const whyA=whyEx&&ANSWERS[whyEx.key];const whyMap=whyA?citeMapOf(whyA):{};
+  const whyAnswerMode=whyEx&&modeOf(whyEx)==='answer'&&whyEx.key!=='refuse';
+  const tTurns=tM.turns.map((t,i)=>{const id=`${tM.id}-${i}`;const pp=tM.peopleMap[t.spk];const act=s.activeTurn===id;const cn=whyAnswerMode?whyMap[id]:null;
+   return {id,ts:t.ts,speaker:pp.name,color:pp.color,text:t.text,textColor:'var(--text)',bg:act?'var(--hl)':'transparent',hasCite:!!cn,cite:cn?`[${cn}]`:'',aria:`Jump to ${t.ts}, ${pp.name}`,onClick:()=>this.setState({activeTurn:id})};});
+
+  // why panel
+  let whyCells=[],whyStages=[],whyRows=[],whyNote='',whyTotal='';
+  const whyReady=!!whyEx&&whyEx.status==='done';
+  if(whyReady){
+   const m=whyA.m,refuse=whyEx.key==='refuse',mode=modeOf(whyEx),gen=mode==='answer'&&!refuse;
+   const top=hyb(whyA.chunks[0][1],whyA.chunks[0][2]);
+   if(gen) whyCells=[{label:'Tokens',value:`${m.inT.toLocaleString('en-GB')} in · ${m.outT} out`,sub:`context: ${whyA.chunks.length} chunks`},{label:'Latency',value:fmtMs(m.ret+m.gen),sub:`${m.ttft} ms to first token`},{label:'Estimated cost',value:'$'+cost(m).toFixed(4),sub:'$3 in · $15 out per M'},{label:'Model',value:'Claude Sonnet',sub:'temperature 0'}];
+   else whyCells=[{label:'Tokens',value:'0',sub:refuse?'generation skipped':'no generation'},{label:'Latency',value:fmtMs(m.ret),sub:'retrieval only'},{label:'Estimated cost',value:'$0.0000',sub:'local embeddings'},{label:'Model',value:refuse&&hasKey?'Not called':'None',sub:refuse?`top score ${top.toFixed(2)} < 0.55`:'no API key'}];
+   whyNote=refuse?`Top hybrid score ${top.toFixed(3)} is below the 0.55 threshold, so no answer was generated.`:!gen?'No API key, so results are ranked moments without a written answer.':'';
+   const st=[{label:'Embed query',ms:m.emb},{label:'Hybrid search',ms:m.srch},{label:'Rerank',ms:m.rr}];if(gen)st.push({label:'Generate',ms:m.gen});
+   const tot=st.reduce((a,b)=>a+b.ms,0);let acc=0;
+   whyStages=st.map(x=>{const r={label:x.label,ms:fmtMs(x.ms),left:(acc/tot*100)+'%',width:Math.max(x.ms/tot*100,1.2)+'%'};acc+=x.ms;return r;});
+   whyTotal=gen?`total ${fmtMs(tot)} · TTFT ${m.ttft} ms`:`total ${fmtMs(tot)}`;
+   whyRows=whyA.chunks.map((c,i)=>{const {m:mm,t,p:pp}=this.turnOf(c[0]);const h=hyb(c[1],c[2]);const cn=whyMap[c[0]];
+    let tag,on;if(gen){tag=cn?`cited [${cn}]`:'not cited';on=!!cn;}else if(refuse){tag='below threshold';on=false;}else{tag=i<5?`shown #${i+1}`:'not shown';on=i<5;}
+    return {rank:i+1,ts:t.ts,speaker:pp.short,color:pp.color,meeting:mm.title,text:t.text,sem:c[1].toFixed(2),kw:c[2].toFixed(2),score:h.toFixed(3),semW:(0.7*c[1]*100)+'%',kwW:(0.3*c[2]*100)+'%',tag,tagBg:on?'var(--accent-soft)':'var(--surface-2)',tagColor:on?'var(--accent-soft-text)':'var(--text-3)',opacity:h<0.55?'0.78':'1',onClick:()=>this.jump(c[0])};});
+  }
+
+  // scope
+  const allIds=this.allMeetings().map(m=>m.id);
+  const scopeItems=meetings.map(m=>{const on=s.scope.includes(m.id);return {title:m.title,date:m.date,checked:on,mark:on?'✓':'',box:on?'var(--accent)':'var(--border-strong)',fill:on?'var(--accent)':'transparent',
+   toggle:()=>this.setState(st=>{const has=st.scope.includes(m.id);if(has&&st.scope.length===1)return null;return {scope:has?st.scope.filter(x=>x!==m.id):[...st.scope,m.id]};})};});
+  const allOn=meetings.every(m=>s.scope.includes(m.id));
+  const n=s.scope.length;
+
+  // detail
+  const dmRaw=this.getM(s.meetingId);const ext=extOf(dmRaw);
+  const dTurns=dmRaw.turns.map((t,i)=>{const id=`${dmRaw.id}-${i}`;const pp=dmRaw.peopleMap[t.spk];return {id,ts:t.ts,speaker:pp.name,color:pp.color,text:t.text,bg:s.activeTurn===id?'var(--hl)':'transparent',aria:`Highlight ${t.ts}, ${pp.name}`,onClick:()=>this.jumpDetail(id)};});
+  const src=i=>{const t=dmRaw.turns[i];const pp=dmRaw.peopleMap[t.spk];return {t,pp,id:`${dmRaw.id}-${i}`};};
+  const dDecisions=ext?ext.decisions.map(d=>{const {t,pp,id}=src(d.turn);return {text:d.text,label:`${t.ts} · ${pp.short}`,aria:`Source: ${t.ts}, ${pp.name}`,onClick:()=>this.jumpDetail(id)};}):[];
+  const dActions=ext?ext.actions.map(a=>{const {t,id}=src(a.turn);const o=dmRaw.peopleMap[a.owner];return {task:a.task,owner:o?o.name:'Unassigned',color:o?o.color:'var(--text-3)',due:a.due,ts:t.ts,aria:`Source for “${a.task}”: ${t.ts}`,onClick:()=>this.jumpDetail(id)};}):[];
+  const talk=Object.entries(dmRaw.talk).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const pp=dmRaw.peopleMap[k];return {name:pp.name,color:pp.color,w:v+'%',pct:v+'%',mins:Math.max(1,Math.round(dmRaw.dur*v/100))+' min'};});
+
+  const totalMin=meetings.reduce((a,m)=>a+m.dur,0);
+  const libEmpty=meetings.length===0;
+  const up=s.upload;
+  const dots=React.createElement('span',{'aria-hidden':true,style:{display:'inline-flex',gap:4}},[0,1,2].map(i=>React.createElement('span',{key:i,style:{width:5,height:5,borderRadius:3,background:'var(--text-2)',animation:`mi-pulse 1.2s ${i*0.16}s infinite ease-in-out`}})));
+  const caret=React.createElement('span',{'aria-hidden':true,style:{display:'inline-block',width:7,height:15,marginLeft:1,verticalAlign:-2,background:'var(--accent)',animation:'mi-blink 1s steps(1) infinite'}});
+  const askValid=s.askInput.trim().length>0;
+  const navBg=on=>on?'var(--surface-3)':'transparent';
+
+  return {
+   rootRef:this.rootRef,convRef:this.convRef,transcriptRef:this.transcriptRef,detailRef:this.detailRef,askInputRef:this.askInputRef,libInputRef:this.libInputRef,fileRef:this.fileRef,keyInputRef:this.keyInputRef,
+   theme,compact,showLabels:!compact,sideW:compact?'60px':'232px',
+   isLibrary:screen==='library',isAsk:screen==='ask',isMeeting:screen==='meeting',
+   libNavBg:navBg(screen==='library'),askNavBg:navBg(screen==='ask'),libCurrent:screen==='library'?'page':'false',askCurrent:screen==='ask'?'page':'false',
+   meetingCount:meetings.length,
+   sideMeetings:meetings.map(m=>({title:m.title,bg:navBg(screen==='meeting'&&s.meetingId===m.id),open:()=>this.setState({screen:'meeting',meetingId:m.id,activeTurn:null},()=>this.detailRef.current&&(this.detailRef.current.scrollTop=0))})),
+   goLibrary:()=>this.setState({screen:'library'}),goAsk:()=>this.setState({screen:'ask'},()=>this.scrollToTurn(this.state.activeTurn,false)),
+   keyTitle:hasKey?'Anthropic key added':'No API key',keySub:hasKey?'sk-ant-…3f2a':'Retrieval only',keyDot:hasKey?'var(--ok)':'var(--text-3)',
+   openKey:()=>this.setState({keyOpen:true,keyDraft:'',keyErr:''}),closeKey:()=>this.setState({keyOpen:false}),stop:e=>e.stopPropagation(),
+   keyModalTitle:hasKey?'Your Anthropic key':'Add your Anthropic key',keyShowInput:!hasKey,keyShowRemove:hasKey,
+   keyDraft:s.keyDraft,keyErr:s.keyErr,keyInvalid:!!s.keyErr,keyBorder:s.keyErr?'var(--danger)':'var(--border-strong)',
+   onKeyDraft:e=>this.setState({keyDraft:e.target.value,keyErr:''}),
+   saveKey:e=>{e.preventDefault();const v=s.keyDraft.trim();if(!v.startsWith('sk-ant-')){this.setState({keyErr:v?'Anthropic keys start with sk-ant-':'Paste a key to continue.'});return;}this.setState({keyO:true,keyOpen:false});},
+   removeKey:()=>this.setState({keyO:false,keyOpen:false}),
+   toggleTheme:()=>this.setState({themeO:theme==='dark'?'light':'dark'}),themeLabel:theme==='dark'?'Light theme':'Dark theme',
+   showBanner:!hasKey&&screen!=='meeting',
+   // library
+   libSummary:libEmpty?'Nothing here yet':`${meetings.length} meetings · ${Math.floor(totalMin/60)}h ${totalMin%60}m of transcript`,
+   libInput:s.libInput,onLibInput:e=>this.setState({libInput:e.target.value}),libEmpty,libFormOpacity:libEmpty?'0.6':'1',
+   libPlaceholder:libEmpty?'Add a meeting to start asking':`Ask across all ${meetings.length} meetings…`,
+   libAskLabel:hasKey?'Ask':'Search',libCost:hasKey?est(meetings.length):'free',
+   submitLib:e=>{e.preventDefault();this.ask(s.libInput,true);},
+   upIdle:up.mode==='idle'||up.mode==='done',upPaste:up.mode==='paste',upError:up.mode==='error',upDone:up.mode==='done',
+   dropBorder:s.drag?'var(--accent)':'var(--border-strong)',dropBg:s.drag?'var(--accent-soft)':'var(--surface-2)',
+   onDragOver:e=>{e.preventDefault();if(!s.drag)this.setState({drag:true});},onDragLeave:()=>this.setState({drag:false}),
+   onDrop:e=>{e.preventDefault();this.setState({drag:false});const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)this.handleFile(f);},
+   chooseFile:()=>this.fileRef.current&&this.fileRef.current.click(),onFile:e=>{const f=e.target.files[0];if(f)this.handleFile(f);e.target.value='';},
+   openPaste:()=>this.setState(st=>({upload:{mode:'paste'},pasteText:st.upload.mode==='error'&&st.upload.text?st.upload.text:st.pasteText})),
+   pasteText:s.pasteText,onPaste:e=>this.setState({pasteText:e.target.value}),fillExample:()=>this.setState({pasteText:EXAMPLE}),
+   runPaste:()=>{const t=s.pasteText;this.runParse(t,'Pasted transcript');this.setState(st=>({upload:{...st.upload,text:t}}));},
+   cancelUpload:()=>this.setState({upload:{mode:'idle'}}),
+   errTitle:up.mode==='error'?(up.total?`${up.errors.length} of ${up.total} lines couldn't be parsed`:'Nothing to import'):'',
+   errSub:up.mode==='error'?(up.good&&up.good.length?`${up.title}. The other ${up.good.length} lines are valid turns. Fix the lines below, or import without them.`:`${up.title||'This file'} has no valid turns.`):'',
+   errRows:(up.errors||[]).map(e=>({line:typeof e.line==='number'?'L'+e.line:e.line,content:e.content,reason:e.reason})),
+   errCanImport:!!(up.good&&up.good.length),errImportLabel:up.good?`Import ${up.good.length} turns anyway`:'',
+   importAnyway:()=>this.importMeeting(up.title,up.good),
+   doneText:up.mode==='done'?`Imported “${up.title}” · ${up.n} turns`:'',
+   loadSamples:()=>this.setState({samplesLoaded:true}),hasMeetings:!libEmpty,
+   cards:meetings.map(m=>{const e=extOf(m);return {title:m.title,isNew:!!m.isNew,meta:`${m.date} · ${m.dur} min`,people:m.people.map(k=>m.peopleMap[k]),speakersLabel:'Speakers: '+m.people.map(k=>m.peopleMap[k].name).join(', '),
+    showCounts:hasKey&&!!e,dec:e?e.decisions.length:0,act:e?e.actions.length:0,locked:!hasKey,notExtracted:hasKey&&!e,
+    open:()=>this.setState({screen:'meeting',meetingId:m.id,activeTurn:null})};}),
+   // ask
+   scopeOpen:s.scopeOpen,toggleScope:()=>this.setState({scopeOpen:!s.scopeOpen}),
+   scopeLabel:allOn?`All ${meetings.length} meetings`:n===1?this.getM(s.scope[0]).title:`${n} meetings`,
+   scopeItems,allChecked:allOn,allMark:allOn?'✓':'',allBox:allOn?'var(--accent)':'var(--border-strong)',allFill:allOn?'var(--accent)':'transparent',
+   selectAll:()=>this.setState({scope:allIds}),
+   newThread:()=>this.setState({thread:[],whyFor:null}),threadEmpty:s.thread.length===0,
+   togglePanel:()=>this.setState({panelOpen:!s.panelOpen}),panelOpen:s.panelOpen,
+   exchanges,dots,caret,
+   askInput:s.askInput,onAskInput:e=>this.setState({askInput:e.target.value}),
+   onAskKey:e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();this.ask(s.askInput);}},
+   submitAsk:e=>{e.preventDefault();this.ask(s.askInput);},
+   askDisabled:!askValid,askOpacity:askValid?'1':'0.55',askBtnLabel:hasKey?'Ask':'Search',askCost:hasKey?est(n):'free',
+   composerScope:`Searching ${allOn?'all ':''}${n} meeting${n>1?'s':''}${hasKey?'':' · no key, moments only'}`,
+   suggestions:SUGG.map(q=>({q,onClick:()=>this.ask(q)})),
+   panelW:compact?'min(480px, 92%)':'clamp(400px, 38%, 540px)',panelPos:compact?'absolute':'relative',panelDisplay:compact&&!s.panelOpen?'none':'flex',panelShadow:compact?'var(--shadow-lg)':'none',
+   tabIsT:s.tab==='transcript',tabIsW:s.tab==='why',tabT:()=>this.setState({tab:'transcript'},()=>this.scrollToTurn(this.state.activeTurn,false)),tabW:()=>this.setState({tab:'why'}),
+   tabTColor:s.tab==='transcript'?'var(--text)':'var(--text-3)',tabWColor:s.tab==='why'?'var(--text)':'var(--text-3)',tabTLine:s.tab==='transcript'?'var(--text)':'transparent',tabWLine:s.tab==='why'?'var(--text)':'transparent',
+   tMeetingId:tM.id,tOptions:tOpts.map(m=>({id:m.id,title:m.title})),onTMeeting:e=>this.setState({tMeeting:e.target.value}),
+   tMeta:`${tM.dur} min · ${tM.people.length} speakers`,tTurns,
+   whyPending:!!whyEx&&!whyReady||!whyEx,whyReady,whyKicker:whyAnswerMode?'Why this answer':'Why these moments',whyQ:whyEx?whyEx.q:'',whyNote,whyCells,whyStages,whyTotal,whyRows,
+   copyJsonLabel:s.copiedJson?'Copied':'Copy as JSON',
+   copyJson:()=>{if(!whyReady)return;const data={question:whyEx.q,mode:modeOf(whyEx),alpha:0.7,threshold:0.55,metrics:whyA.m,costUsd:+cost(whyA.m).toFixed(4),chunks:whyA.chunks.map((c,i)=>{const {m,t,p:pp}=this.turnOf(c[0]);return {rank:i+1,meeting:m.title,ts:t.ts,speaker:pp.name,semantic:c[1],keyword:c[2],hybrid:+hyb(c[1],c[2]).toFixed(3),cited:whyMap[c[0]]||null};})};navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(data,null,2));this.setState({copiedJson:true});this.timers.push(setTimeout(()=>this.setState({copiedJson:false}),1500));},
+   // detail
+   dm:{title:dmRaw.title,meta:`${dmRaw.date} 2026 · ${dmRaw.dur} min · ${dmRaw.people.length} speakers · ${dmRaw.turns.length} turns`,durLabel:`${dmRaw.dur} min`,turnsLabel:`${dmRaw.turns.length} turns`},
+   askThis:()=>this.setState({screen:'ask',scope:[dmRaw.id],tMeeting:dmRaw.id}),
+   dLocked:!hasKey,dNeedsExtract:hasKey&&!ext,dHas:hasKey&&!!ext,dExtracting:s.extracting===dmRaw.id,extractLabel:s.extracting===dmRaw.id?'Extracting…':'Extract decisions and actions',extract:()=>this.extract(dmRaw.id),
+   dExtractMeta:dmRaw.imported?'extracted just now · $0.0091':`extracted ${dmRaw.date} · $0.0108`,dSummary:ext?ext.summary:'',
+   dDecisions,dActions,dDecCount:String(dDecisions.length),dActCount:String(dActions.length),dNoDec:!!ext&&!dDecisions.length,dNoAct:!!ext&&!dActions.length,dHasAct:dActions.length>0,
+   talk,talkAria:'Talk time: '+talk.map(t=>`${t.name} ${t.pct}`).join(', '),dTurns,
+   keyOpen:s.keyOpen
+  };
+ }
+ handleFile(f){
+  const name=f.name.replace(/\.[^.]+$/,'');
+  if(!/\.txt$/i.test(f.name)&&f.type!=='text/plain'){this.setState({upload:{mode:'error',title:f.name,errors:[{line:'—',content:f.name,reason:'Only plain-text .txt files can be imported.'}],good:[],total:0}});return;}
+  f.text().then(t=>{this.runParse(t,name);this.setState(st=>({upload:{...st.upload,text:t}}));});
+ }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+:root,[data-theme="light"]{--bg:#F6F6F4;--surface:#FFFFFF;--surface-2:#F1F1EE;--surface-3:#E7E7E3;--border:#E2E2DE;--border-strong:#CDCDC7;--text:#17171A;--text-2:#4C4C54;--text-3:#67676F;--accent:#3352C6;--accent-hover:#2A45AD;--on-accent:#FFFFFF;--accent-soft:#EBEFFC;--accent-soft-text:#2A45AD;--chart-2:#C8891E;--hl:#FFF2C7;--hl-text:#5C4200;--ok:#1E7347;--ok-soft:#E5F3EA;--warn:#8A5A00;--warn-soft:#FBF1DA;--danger:#B3261E;--danger-soft:#FCEBE9;--focus:#3352C6;--spk-1:oklch(0.53 0.14 35);--spk-2:oklch(0.5 0.1 195);--spk-3:oklch(0.5 0.14 300);--spk-4:oklch(0.5 0.12 145);--spk-5:oklch(0.52 0.11 75);--spk-6:oklch(0.52 0.15 355);--shadow:0 1px 2px rgba(23,23,26,.05),0 2px 8px rgba(23,23,26,.04);--shadow-lg:0 12px 40px rgba(23,23,26,.14),0 2px 6px rgba(23,23,26,.06);--font-sans:"Geist",ui-sans-serif,system-ui,sans-serif;--font-mono:"Geist Mono",ui-monospace,monospace;--r-sm:4px;--r-md:6px;--r-lg:10px;--r-xl:14px;--r-pill:999px;color-scheme:light}
+[data-theme="dark"]{--bg:#0E0E10;--surface:#161618;--surface-2:#1C1C1F;--surface-3:#26262A;--border:#28282D;--border-strong:#3A3A41;--text:#EDEDF0;--text-2:#B2B2BA;--text-3:#8F8F98;--accent:#8EA4F6;--accent-hover:#A8BAF8;--on-accent:#0E0E10;--accent-soft:#1D2442;--accent-soft-text:#BCC9FA;--chart-2:#E0AE55;--hl:#3B3115;--hl-text:#F3DC9A;--ok:#5FCB91;--ok-soft:#13281C;--warn:#E3B45C;--warn-soft:#2D2311;--danger:#F28B82;--danger-soft:#341818;--focus:#8EA4F6;--spk-1:oklch(0.76 0.11 35);--spk-2:oklch(0.76 0.09 195);--spk-3:oklch(0.76 0.11 300);--spk-4:oklch(0.76 0.1 145);--spk-5:oklch(0.78 0.1 80);--spk-6:oklch(0.76 0.12 355);--shadow:0 1px 2px rgba(0,0,0,.5);--shadow-lg:0 16px 48px rgba(0,0,0,.55),0 0 0 1px #2A2A30;color-scheme:dark}
+body{margin:0;background:#E9E9E6;font-family:var(--font-sans);-webkit-font-smoothing:antialiased}*{box-sizing:border-box}button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+a{color:var(--accent)}a:hover{color:var(--accent-hover)}
+</style>
+</helmet>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:0;min-height:100vh">
+<sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+<div data-theme="{{ th.id }}" style="background:var(--bg);color:var(--text);padding:48px;display:flex;flex-direction:column;gap:36px;font-size:14px">
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-3)">{{ th.label }}</span>
+    <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em">Graphite tokens</h1>
+    <p style="margin:0;color:var(--text-2);max-width:520px">CSS variables consumed by Tailwind via theme.extend (colors: { surface: 'var(--surface)' … }). Spacing follows Tailwind's 4px scale.</p>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Colour</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px">
+      <sc-for list="{{ colors }}" as="c" hint-placeholder-count="20">
+        <div style="display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--surface)">
+          <span style="height:40px;background:var({{ c }})"></span>
+          <span style="padding:6px 8px;font-family:var(--font-mono);font-size:11px;color:var(--text-2)">{{ c }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Type · Geist / Geist Mono</h2>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface)">
+      <div style="display:grid;grid-template-columns:120px 1fr;align-items:baseline;gap:12px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">display 24/600</span><span style="font-size:24px;font-weight:600;letter-spacing:-0.02em">Q3 Pricing Review</span></div>
+      <div style="display:grid;grid-template-columns:120px 1fr;align-items:baseline;gap:12px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">question 17/600</span><span style="font-size:17px;font-weight:600">What did we decide about annual pricing?</span></div>
+      <div style="display:grid;grid-template-columns:120px 1fr;align-items:baseline;gap:12px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">answer 15/1.72</span><span style="font-size:15px;line-height:1.72">The team agreed to raise the annual discount to 20%.</span></div>
+      <div style="display:grid;grid-template-columns:120px 1fr;align-items:baseline;gap:12px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">ui 13.5/400</span><span style="font-size:13.5px;color:var(--text-2)">Searching 3 meetings</span></div>
+      <div style="display:grid;grid-template-columns:120px 1fr;align-items:baseline;gap:12px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">mono 12/400</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-3)">12:04 · 3,912 in · $0.0160</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Radii</h2>
+      <div style="display:flex;gap:10px">
+        <sc-for list="{{ radii }}" as="r" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:48px;height:48px;border:1.5px solid var(--border-strong);background:var(--surface);border-radius:var({{ r.v }})"></span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">{{ r.l }}</span></div></sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Spacing (Tailwind 1 = 4px)</h2>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <sc-for list="{{ space }}" as="sp" hint-placeholder-count="7"><div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:{{ sp.px }};height:{{ sp.px }};background:var(--accent-soft);border:1px solid var(--accent)"></span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">{{ sp.l }}</span></div></sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <h2 style="margin:0;font-size:13px;font-weight:500;color:var(--text-2)">Components</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button type="button" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13.5px;font-weight:500">Ask<span style="font-family:var(--font-mono);font-size:12px;padding-left:8px;border-left:1px solid currentColor">~$0.03</span></button>
+      <button type="button" style="height:32px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);font-size:13px;font-weight:500">Secondary</button>
+      <button type="button" style="height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:transparent;color:var(--text-2);font-size:13px">Ghost</button>
+      <button type="button" style="height:32px;padding:0 12px;border:1px solid var(--danger);border-radius:var(--r-md);background:transparent;color:var(--danger);font-size:13px;font-weight:500">Destructive</button>
+      <button type="button" disabled="" style="height:32px;padding:0 12px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:13px;opacity:.55">Disabled</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="display:inline-flex;align-items:center;gap:5px;padding:0 7px 0 3px;height:21px;border:1px solid var(--border-strong);border-radius:5px;background:var(--surface);font-family:var(--font-mono);font-size:11.5px;color:var(--text-2)"><span style="display:inline-grid;place-items:center;min-width:15px;height:15px;border-radius:3px;background:var(--surface-3);color:var(--text);font-size:10.5px">1</span>12:04 · Priya</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;padding:0 7px 0 3px;height:21px;border:1px solid var(--accent);border-radius:5px;background:var(--accent-soft);font-family:var(--font-mono);font-size:11.5px;color:var(--text-2)"><span style="display:inline-grid;place-items:center;min-width:15px;height:15px;border-radius:3px;background:var(--surface-3);color:var(--text);font-size:10.5px">2</span>08:15 · Marcus</span>
+      <span style="height:28px;padding:0 10px;border:1px solid var(--border);border-radius:var(--r-pill);background:var(--surface);font-size:12.5px;color:var(--text-2);display:inline-flex;align-items:center">Suggestion chip</span>
+      <span style="font-family:var(--font-mono);font-size:10.5px;padding:2px 6px;border-radius:3px;background:var(--accent-soft);color:var(--accent-soft-text)">cited [1]</span>
+      <span style="font-size:11px;font-weight:500;padding:2px 6px;border-radius:var(--r-sm);background:var(--ok-soft);color:var(--ok)">New</span>
+      <span style="display:flex;gap:4px"><span style="width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:10.5px;font-weight:600;border:1.5px solid var(--spk-1);color:var(--spk-1)">PR</span><span style="width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:10.5px;font-weight:600;border:1.5px solid var(--spk-2);color:var(--spk-2)">MC</span><span style="width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:10.5px;font-weight:600;border:1.5px solid var(--spk-3);color:var(--spk-3)">DO</span></span>
+    </div>
+    <div role="status" style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:var(--r-md);background:var(--accent-soft);color:var(--accent-soft-text);font-size:13px"><span style="flex:1">Showing the best-matching moments. Add your own Anthropic key for written answers.</span><span style="height:26px;padding:0 10px;border:1px solid currentColor;border-radius:var(--r-md);display:inline-flex;align-items:center;font-size:12.5px;font-weight:500">Add key</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;border:1px solid var(--border-strong);border-radius:var(--r-lg);background:var(--surface)"><span style="flex:1;color:var(--text-3);font-size:15px">Ask across all 4 meetings…</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:1px 6px">/</span></div>
+    <div style="display:flex;gap:20px;height:40px;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:500;box-shadow:inset 0 -2px 0 var(--text);display:flex;align-items:center">Transcript</span><span style="font-size:13px;font-weight:500;color:var(--text-3);display:flex;align-items:center">Why this answer</span></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 220px;padding:16px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px"><span style="font-weight:600">Card</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-3)">surface · border · r-lg · shadow</span></div>
+      <div style="flex:1 1 220px;padding:16px;border-radius:var(--r-lg);background:var(--hl);color:var(--text);display:flex;flex-direction:column;gap:4px"><span style="font-weight:600">Cited turn highlight</span><span style="font-family:var(--font-mono);font-size:12px;color:var(--hl-text)">--hl / --hl-text</span></div>
+    </div>
+  </div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      themes: [{ id: 'light', label: 'data-theme="light"' }, { id: 'dark', label: 'data-theme="dark"' }],
+      colors: ['--bg','--surface','--surface-2','--surface-3','--border','--border-strong','--text','--text-2','--text-3','--accent','--accent-soft','--chart-2','--hl','--ok','--warn','--danger','--spk-1','--spk-2','--spk-3','--spk-4','--spk-5','--spk-6'],
+      radii: [{ v: '--r-sm', l: 'sm 4' }, { v: '--r-md', l: 'md 6' }, { v: '--r-lg', l: 'lg 10' }, { v: '--r-xl', l: 'xl 14' }, { v: '--r-pill', l: 'pill' }],
+      space: [1, 2, 3, 4, 6, 8, 12].map(n => ({ px: n * 4 + 'px', l: String(n) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

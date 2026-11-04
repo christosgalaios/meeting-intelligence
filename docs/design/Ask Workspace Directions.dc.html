@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E9E9E6}*{box-sizing:border-box}a{color:#3352C6}a:hover{color:#2A45AD}</style>
+</helmet>
+<section style="padding:64px;display:flex;flex-direction:column;gap:32px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#17171A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:900px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#67676F">Turn 1 · Ask workspace, two visual directions</span>
+    <h1 style="margin:0;font-size:32px;font-weight:600;letter-spacing:-0.02em">Paper vs Graphite</h1>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#4C4C54;text-wrap:pretty"><a href="#1a">1a</a> Paper is editorial: warm stock, serif answers, citations as quiet inline references, transcript set like a margin column. <a href="#1b">1b</a> Graphite is a tool: cool neutrals, one sans and one mono, bordered chips, tabs on the source panel, denser rhythm. 1b is the live prototype and was carried to every other screen, because its chips, tabs and mono metadata scale to the “Why this answer” panel and to dense tables. Paper's serif answers are worth keeping in mind for a reading mode later.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="1a" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;padding:3px 8px;border-radius:4px;background:#17171A;color:#fff">1a</span><span style="font-size:15px;font-weight:500">Paper · editorial</span></div>
+      <div style="width:1440px;height:900px;display:flex;flex-direction:column;background:#F4F1EA;color:#1F1D1A;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+        <header style="height:60px;display:flex;align-items:center;gap:28px;padding:0 40px;border-bottom:1px solid #E0DAD0">
+          <span style="font-family:'Newsreader',serif;font-size:21px;font-style:italic">Meeting Intelligence</span>
+          <nav style="display:flex;gap:22px;font-size:14px;color:#5B564E"><span>Library</span><span style="color:#1F1D1A;font-weight:500;box-shadow:inset 0 -1px 0 #1F1D1A;padding-bottom:2px">Ask</span></nav>
+          <span style="flex:1"></span>
+          <span style="font-size:13px;color:#5B564E">Searching <span style="color:#1F1D1A;font-weight:500;border-bottom:1px dotted #8A847A">Q3 Pricing Review, Onboarding retro, Halden call</span></span>
+        </header>
+        <div style="flex:1;display:flex;min-height:0">
+          <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+            <div style="flex:1;overflow:hidden;padding:56px 0 0">
+              <article style="max-width:660px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A746A;letter-spacing:.04em;text-transform:uppercase">Asked 10:42 · 3 meetings</span>
+                <h2 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:32px;line-height:1.2;letter-spacing:-0.01em">What did we decide about annual pricing, and who owns the follow-ups?</h2>
+                <p style="margin:0;font-family:'Newsreader',serif;font-size:20px;line-height:1.6;text-wrap:pretty">The team agreed to raise the annual discount on the Team tier from 10% to 20%, effective with the January price change. Existing annual customers keep their current rate until renewal <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8A4B2E;background:#EFE3D6;padding:2px 6px;border-radius:3px">12:04 Priya</span></p>
+                <p style="margin:0;font-family:'Newsreader',serif;font-size:20px;line-height:1.6;text-wrap:pretty">The case rested on Marcus's model: at 20%, revenue breaks even once annual uptake passes 27%, against 18% today <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8A4B2E;border-bottom:1px solid #C9A38E">08:15 Marcus</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8A4B2E;border-bottom:1px solid #C9A38E">00:31 Marcus</span></p>
+                <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px;border-top:1px solid #E0DAD0">
+                  <span style="font-size:13px;font-weight:600;letter-spacing:.02em;color:#5B564E;padding-top:14px">Follow-ups</span>
+                  <div style="display:grid;grid-template-columns:96px 1fr 110px;gap:12px;font-size:15px;align-items:baseline"><span style="font-weight:500">Marcus</span><span>Revenue model to finance</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8A4B2E">Fri 7 Nov · 13:02</span></div>
+                  <div style="display:grid;grid-template-columns:96px 1fr 110px;gap:12px;font-size:15px;align-items:baseline"><span style="font-weight:500">Priya</span><span>Final pricing page copy</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8A4B2E">1 Dec · 26:40</span></div>
+                  <div style="display:grid;grid-template-columns:96px 1fr 110px;gap:12px;font-size:15px;align-items:baseline"><span style="font-weight:500">Dana</span><span>Annual-offer email to monthly customers</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8A4B2E">wk 5 Jan · 31:35</span></div>
+                </div>
+                <span style="font-size:13px;color:#5B564E;text-decoration:underline;text-underline-offset:3px">How this answer was found</span>
+              </article>
+            </div>
+            <div style="padding:20px 0 32px">
+              <div style="max-width:660px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:14px 0;border-top:1.5px solid #1F1D1A">
+                <span style="flex:1;font-family:'Newsreader',serif;font-size:19px;color:#7A746A">Ask a follow-up…</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A746A">~$0.02</span>
+                <span style="font-size:14px;font-weight:500;padding:8px 16px;border-radius:999px;background:#1F1D1A;color:#F4F1EA">Ask</span>
+              </div>
+            </div>
+          </div>
+          <aside style="width:500px;border-left:1px solid #E0DAD0;background:#FBFAF6;padding:36px 36px 0;display:flex;flex-direction:column;gap:22px;overflow:hidden">
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'Newsreader',serif;font-size:22px">Q3 Pricing Review</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A746A">Tue 28 Oct · 42 min</span></div>
+            <div style="display:grid;grid-template-columns:52px 1fr;gap:6px 14px;font-size:15px;line-height:1.6">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A746A;padding-top:3px">10:32</span><div><span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B4C8A">Dana</span><p style="margin:2px 0 14px;font-family:'Newsreader',serif;font-size:17px">Twenty percent is the number I hear in every competitive deal.</p></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A4B2E;padding-top:3px;font-weight:500">12:04</span><div style="background:#F1E6D2;margin:-8px -12px 6px;padding:8px 12px;border-radius:4px"><span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8A4B2E">Priya</span><p style="margin:2px 0 0;font-family:'Newsreader',serif;font-size:17px">Then let's decide it. Annual discount goes to 20% for Team, starting with the January price change. Existing annual customers keep their current rate until renewal.</p></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A746A;padding-top:3px">12:40</span><div><span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2F6E6A">Marcus</span><p style="margin:2px 0 14px;font-family:'Newsreader',serif;font-size:17px">Agreed. I'll write up the revenue model so finance can sign off.</p></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A746A;padding-top:3px">13:02</span><div><span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8A4B2E">Priya</span><p style="margin:2px 0 14px;font-family:'Newsreader',serif;font-size:17px">Marcus, can you have that to finance by Friday the 7th?</p></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7A746A;padding-top:3px">13:09</span><div><span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2F6E6A">Marcus</span><p style="margin:2px 0 14px;font-family:'Newsreader',serif;font-size:17px">Friday works.</p></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <div id="1b" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;padding:3px 8px;border-radius:4px;background:#3352C6;color:#fff">1b</span><span style="font-size:15px;font-weight:500">Graphite · tool (chosen, live)</span></div>
+      <div style="width:1440px;height:900px;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+        <dc-import name="Meeting Intelligence" start-screen="ask" style="width:1440px;height:900px;display:block" hint-size="1440px,900px"></dc-import>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>
