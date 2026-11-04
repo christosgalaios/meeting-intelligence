@@ -1,7 +1,7 @@
 {
   "gate": {
-    "recallAt8": 0.4,
-    "mrr": 0.33,
+    "recallAt8": 0.58,
+    "mrr": 0.64,
     "recallAllRetrieved": 0.8
   },
   "metrics": {
