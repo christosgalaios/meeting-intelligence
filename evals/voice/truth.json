@@ -1,0 +1,62 @@
+[
+  {
+    "speaker": "Microsoft Hazel Desktop",
+    "start": 0.0,
+    "end": 12.1,
+    "text": "Good morning everyone. Let's start with the roadmap for the next quarter. We need to decide whether the search feature ships in October or slips to November."
+  },
+  {
+    "speaker": "Microsoft David Desktop",
+    "start": 12.7,
+    "end": 23.2,
+    "text": "I think October is realistic if we cut the export options. The backend work is mostly done, and the remaining effort is on the user interface and testing."
+  },
+  {
+    "speaker": "Microsoft George",
+    "start": 23.8,
+    "end": 33.39,
+    "text": "I disagree a little. The testing backlog is bigger than it looks. We still have around forty open bugs, and three of them block the release."
+  },
+  {
+    "speaker": "Microsoft Hazel Desktop",
+    "start": 33.98,
+    "end": 45.27,
+    "text": "That is fair. Can we agree to review the bug list on Friday, and then make a final call? I will send out the calendar invite this afternoon."
+  },
+  {
+    "speaker": "Microsoft David Desktop",
+    "start": 45.87,
+    "end": 54.74,
+    "text": "Sounds good to me. I will also prepare a short summary of the performance numbers, so we can see where the slowest queries are."
+  },
+  {
+    "speaker": "Microsoft George",
+    "start": 55.33,
+    "end": 65.15,
+    "text": "Great. One more thing, the customer in Manchester asked for a demo next week. Should I schedule it, or wait until the bugs are fixed?"
+  },
+  {
+    "speaker": "Microsoft Hazel Desktop",
+    "start": 65.75,
+    "end": 75.44,
+    "text": "Schedule it for Thursday, but keep the demo focused on the dashboard only. We can show the search feature once it is stable."
+  },
+  {
+    "speaker": "Microsoft David Desktop",
+    "start": 76.04,
+    "end": 83.49,
+    "text": "Agreed. I will update the documentation tonight, and share the link in the team channel tomorrow morning."
+  },
+  {
+    "speaker": "Microsoft George",
+    "start": 84.09,
+    "end": 90.49,
+    "text": "Perfect. Then I think we are done. Thanks everyone, talk on Friday."
+  },
+  {
+    "speaker": "Microsoft Hazel Desktop",
+    "start": 91.09,
+    "end": 94.74,
+    "text": "Thanks all. Have a good week."
+  }
+]
