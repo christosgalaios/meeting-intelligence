@@ -10,7 +10,7 @@ import { cx } from '../lib/cx';
 import { formatDuration, plural } from '../lib/format';
 
 export function LibraryPage() {
-  const { meetings, meetingsLoading, reloadMeetings, mode, ask, setScope, askCost } = useApp();
+  const { meetings, meetingsLoading, reloadMeetings, mode, ask, setScope, askCost, voiceAvailable } = useApp();
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
   const input = useRef<HTMLInputElement>(null);
@@ -102,7 +102,7 @@ export function LibraryPage() {
           </button>
         </form>
 
-        <UploadDropzone onUploaded={reloadMeetings} />
+        <UploadDropzone onUploaded={reloadMeetings} {...(voiceAvailable === null ? {} : { voiceAvailable })} />
 
         {empty && (
           <div className="flex flex-col items-start gap-3 rounded-xl border border-line bg-surface-2 p-10">
