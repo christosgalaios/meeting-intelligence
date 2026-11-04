@@ -6,6 +6,7 @@ import {
   MeetingDetail,
   MeetingSummary,
   QueryTrace,
+  Transcription,
   type AskRequest,
   type UploadRequest,
 } from './types';
@@ -38,6 +39,13 @@ async function send(path: string, init?: RequestInit): Promise<Response> {
     throw new ApiClientError('NETWORK', 'Could not reach the API.');
   }
   if (res.ok) return res;
+  // nginx answers an oversized body with an HTML 413 before the API sees it.
+  if (res.status === 413) {
+    const apiBody = ApiError.safeParse(await res.json().catch(() => null));
+    if (!apiBody.success) throw new ApiClientError('TOO_LARGE', 'The upload is too large.', 413);
+    const { message, requestId } = apiBody.data.error;
+    throw new ApiClientError('TOO_LARGE', message, 413, requestId);
+  }
   const parsed = ApiError.safeParse(await res.json().catch(() => null));
   if (parsed.success) {
     const { code, message, requestId } = parsed.data.error;
@@ -73,6 +81,20 @@ export const extractMeeting = (id: string) => sendJson(`/meetings/${encodeURICom
 
 /** Loads the bundled sample transcripts. No model call; safe to repeat. */
 export const seedSamples = () => sendJson('/seed', z.object({ added: z.number().int(), skipped: z.number().int() }), post());
+
+/** Sends 16 kHz mono 16-bit WAV bytes. Answers 202 with a queued draft; poll getTranscription. */
+export const startTranscription = (wav: Blob, numSpeakers?: number) =>
+  sendJson(
+    `/transcriptions${numSpeakers === undefined ? '' : `?numSpeakers=${numSpeakers}`}`,
+    Transcription,
+    { method: 'POST', headers: { 'content-type': 'audio/wav' }, body: wav },
+  );
+
+export const getTranscription = (id: string, signal?: AbortSignal) =>
+  sendJson(`/transcriptions/${encodeURIComponent(id)}`, Transcription, signal ? { signal } : undefined);
+
+/** Frees the finished draft on the API early. Failure is harmless: it expires on its own. */
+export const deleteTranscription = (id: string) => send(`/transcriptions/${encodeURIComponent(id)}`, { method: 'DELETE' }).then(() => undefined);
 
 export const getTrace = (id: string, signal?: AbortSignal) =>
   sendJson(`/traces/${encodeURIComponent(id)}`, QueryTrace, signal ? { signal } : undefined);
