@@ -112,6 +112,26 @@ jobs:
             -H 'content-type: application/json' \
             -d '{"question":"What price was agreed for the Starter plan?"}' | tee ask-web.txt
           grep -q 'event: done' ask-web.txt
+      - name: Health reports voice available
+        run: |
+          set -o pipefail
+          curl --fail-with-body -sS http://localhost:3001/api/health | jq -e '.voice.available == true'
+      - name: One audio file is transcribed to a draft with speakers
+        # Goes through port 5173 so it exercises the nginx 64m body limit and the /api/transcriptions location.
+        # The 3-speaker check is the measured result on this clip; if it flakes on the runner's CPU, relax it to >= 2.
+        run: |
+          set -o pipefail
+          id=$(curl --fail-with-body -sS -X POST http://localhost:5173/api/transcriptions             -H 'content-type: audio/wav' --data-binary @evals/voice/clip.wav | jq -r .id)
+          for i in $(seq 1 60); do
+            body=$(curl --fail-with-body -sS http://localhost:5173/api/transcriptions/$id)
+            status=$(echo "$body" | jq -r .status); echo "transcription: $status"
+            [ "$status" = done ] && break
+            [ "$status" = failed ] && { echo "$body"; exit 1; }
+            sleep 3
+          done
+          echo "$body" | jq -e '.status == "done" and (.speakers | length) == 3 and (.transcript | test("^[[]00:00:0[0-9][]] Speaker 1: "))'
+          # The draft is accepted by the real ingest path through nginx.
+          echo "$body" | jq '{filename: "ci-voice.txt", text: .transcript}'             | curl --fail-with-body -sS -X POST http://localhost:5173/api/meetings -H 'content-type: application/json' -d @-             | jq -e '.turnCount >= 2'
       - name: Tear down
         if: always()
         run: docker compose down -v

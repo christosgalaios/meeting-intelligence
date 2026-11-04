@@ -6,7 +6,7 @@ Reading order for an implementer: 1 (layout), 5 (contract), then your own workst
 
 ## 0. Product in one paragraph
 
-A user uploads a meeting transcript (plain text, one speaker turn per line with a timestamp). The app parses it into turns, chunks the turns, embeds them locally, and stores them in Postgres with pgvector. The user asks a question. The API retrieves the best chunks with hybrid search (vector + full text, fused with RRF), and either streams a Claude answer that cites turn ids and timestamps (key set) or returns the ranked turns themselves (no key). Every query writes a trace the UI can show as "why this answer". With a key, each upload also extracts decisions and action items into tables shown on a meeting summary card.
+A user uploads a meeting transcript (plain text, one speaker turn per line with a timestamp). The app parses it into turns, chunks the turns, embeds them locally, and stores them in Postgres with pgvector. The user asks a question. The API retrieves the best chunks with hybrid search (vector + full text, fused with RRF), and either streams a Claude answer that cites turn ids and timestamps (key set) or returns the ranked turns themselves (no key). Every query writes a trace the UI can show as "why this answer". With a key, each upload also extracts decisions and action items into tables shown on a meeting summary card. A user can also upload audio: the browser converts it to 16 kHz mono WAV, the API transcribes and diarizes it locally into a draft transcript, and the user reviews it before it goes through the same `POST /api/meetings` path as any other transcript (ADR 0011).
 
 Two modes, decided once at API start from `ANTHROPIC_API_KEY`:
 
@@ -317,7 +317,24 @@ export const Health = z.object({
   db: z.boolean(),
   embeddings: z.object({ model: z.literal('Xenova/bge-small-en-v1.5'), ready: z.boolean() }),
   models: z.object({ answer: z.string().nullable(), extraction: z.string().nullable() }),
+  // Added with voice transcription (additive; older clients ignore it). available = the runner exists and the model files are on disk.
+  voice: z.object({ available: z.boolean(), models: z.string().nullable() }),
   version: z.string(),
+});
+
+// Voice transcription (additive). A draft held in API memory: never stored, never ingested until the user imports it.
+export const Transcription = z.object({
+  id: z.string(),
+  status: z.enum(['queued', 'running', 'done', 'failed']),
+  queuePosition: z.number().int().nullable(), // 1-based among active jobs, the running one counts; null once running
+  stage: z.object({ name: z.enum(['diarizing', 'transcribing']), done: z.number().int(), total: z.number().int() }).nullable(),
+  durationSeconds: z.number().int(),
+  numSpeakers: z.number().int().nullable(), // speakers found; null until done
+  speakers: z.array(z.string()), // 'Speaker 1'..'Speaker N'
+  segments: z.array(z.object({ start: z.number(), end: z.number(), speaker: z.number().int(), text: z.string() })),
+  transcript: z.string().nullable(), // '[hh:mm:ss] Speaker N: text' lines, ready for POST /api/meetings
+  error: z.string().nullable(),
+  createdAt: z.string(),
 });
 
 export const MeetingSummary = z.object({
@@ -447,6 +464,9 @@ export type AskEvent = z.infer<typeof AskEvent>;
 | `POST /api/meetings` | `UploadRequest` JSON. The browser reads the file with `File.text()`. | `201 MeetingDetail`. Synchronous: parse, chunk, embed, insert. Extraction (full mode) starts after the response (seeded meetings are the exception: seeding never calls the model, they are `skipped`, and the user starts extraction); `extractionStatus` is `pending`, poll `GET /api/meetings/:id` until it changes. In retrieval-only mode it is `skipped` immediately. | `400 VALIDATION`, `422 VALIDATION` (not a text transcript, under 2 turns, under half the lines timestamped, a turn over 2,000 words: checked before any embedding or model call), `400 EMPTY_TRANSCRIPT`, `413 TOO_LARGE`, `503 EMBEDDINGS_NOT_READY` |
 | `POST /api/meetings/:id/extract` | none. User-clicked from the summary card. id = uuid or slug. | `202 MeetingDetail` with `extractionStatus: 'pending'`; poll `GET /api/meetings/:id`. Runs the same extraction as an upload, once, on a meeting that is `skipped` or `failed`. | `409 CONFLICT` when the API has no key, or the meeting is already `pending` or `done`; `404 NOT_FOUND` |
 | `POST /api/seed` | none. User-clicked from the empty library. | `200 { added, skipped }`. Loads the bundled sample transcripts; meetings that already exist are skipped, so it is idempotent. Never calls the model: seeded meetings are `skipped`. | `503 EMBEDDINGS_NOT_READY` |
+| `POST /api/transcriptions` | Body is a 16 kHz mono 16-bit PCM WAV with `content-type: audio/wav`. Optional `?numSpeakers=1..20`. Body limit 64 MiB. | `202 Transcription` with `status: 'queued'`. The audio is parsed in memory and handed to a worker thread; it is never written to disk. | `400 VALIDATION` (not a WAV body, bad `numSpeakers`), `422 VALIDATION` (not a WAV, wrong format, under half a second), `413 TOO_LARGE` (over 30 minutes or 64 MiB), `409 CONFLICT` (voice not available on this API, or 4 jobs already active) |
+| `GET /api/transcriptions/:id` | none | `200 Transcription`. While `running`, `stage` shows progress; when `done`, `transcript` and `segments` are set. A job that finished is kept for 60 minutes. | `404 NOT_FOUND` (unknown, expired, or lost in an API restart) |
+| `DELETE /api/transcriptions/:id` | none | `204`. Evicts a finished job early. | `404 NOT_FOUND`, `409 CONFLICT` while still queued or running |
 | `GET /api/meetings` | none | `200 { meetings: MeetingSummary[] }`, newest first | none |
 | `GET /api/meetings/:id` | id = uuid or slug | `200 MeetingDetail` (turns in n order) | `404 NOT_FOUND` |
 | `POST /api/ask` | `AskRequest` JSON. | `200 text/event-stream` of `AskEvent`. Order: `meta`, `sources`, then either `refusal` + `done`, or `token`* + `done`, or `done` alone (retrieval-only). `error` can replace `done`. Headers: `Cache-Control: no-cache`, `X-Accel-Buffering: no`. | `400 VALIDATION` (JSON, before stream starts), `404 NOT_FOUND` for an unknown meetingId, `503 EMBEDDINGS_NOT_READY`; after the stream starts errors arrive as an `error` event |

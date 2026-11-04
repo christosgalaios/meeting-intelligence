@@ -79,6 +79,7 @@ Or pass it for one run: `ANTHROPIC_API_KEY=sk-ant-... docker compose up --build`
 ### Using it
 
 - Upload a `.txt` file or paste text. One turn per line: `[00:12:04] Priya Raman: Then let's decide it.` The shorter `[12:04]` form also works. Files up to 2 MB. A file that does not look like a transcript is rejected before anything is embedded: no timestamps on at least half its lines, fewer than 2 turns, binary content, or a turn over 2,000 words.
+- Or use **Transcribe audio** on the library page: pick a recording (anything your browser can play: MP3, M4A, WAV), wait for it to be transcribed, then review the draft. Rename or merge speakers, set the speaker count and re-run if the diarizer got it wrong, and press Import. Nothing is added to the library until you do. The browser converts the audio to 16 kHz mono WAV, the API transcribes it on the CPU with sherpa-onnx (pyannote segmentation, wespeaker speaker embeddings, Whisper base.en int8), and the audio is never stored. It takes about 13.5 seconds per minute of audio on 2 threads and needs no key. The models add about 216 MiB to the API image (checked with `du` on the image filesystem: 509 MiB before, 725 MiB after). Measured on a 95 second three-speaker synthetic clip: 570 MB peak memory, 3.2% word error rate, 3 of 3 speakers found. That is the easy case: distinct voices. `npm run voice:eval --workspace apps/api` repeats the measurement (see `evals/voice/README.md`).
 - Ask across all meetings, or scope a question to one.
 - Stop with `docker compose down`. Add `-v` to delete the database volume.
 - The app has no login. All ports are bound to `127.0.0.1`, so it is reachable only from your own machine.
@@ -199,7 +200,8 @@ The brief asks for my thoughts, not an LLM's direct output, so here is what is w
 
 ## Known limits
 
-- Only plain-text transcripts in the `[hh:mm:ss] Speaker: text` shape. No audio, WebVTT or SRT.
+- Transcripts are plain text in the `[hh:mm:ss] Speaker: text` shape, or audio transcribed locally (English, up to 30 minutes, speakers labelled by diarization) and reviewed before import. No WebVTT or SRT.
+- Voice: similar voices can be merged or split by the diarizer. Set the speaker count and re-run, or merge and rename in the review step. Memory is measured only up to a 95 second clip (570 MB peak), so recordings over 30 minutes are refused rather than attempted. One recording is transcribed at a time; the API holds at most four. An API restart loses a job in progress.
 - English only: the full-text index uses the English configuration and the embedding model is English.
 - The refusal threshold catches few unanswerable questions on its own (1 of 6 in the eval). In full mode the model does most of the refusing, and I have not measured it. See `docs/adr/0006-two-layer-refusal.md`.
 - A citation check shows the model cited a turn it was given. It does not show that the turn supports the claim.
