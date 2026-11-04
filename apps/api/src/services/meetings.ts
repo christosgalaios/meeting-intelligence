@@ -86,7 +86,7 @@ export async function getMeetingDetail(pool: Pool, idOrSlug: string): Promise<Me
 
 /** Accepts uuids or slugs and returns uuids. An unknown id is a 404 before any stream starts. */
 export async function resolveMeetingIds(pool: Pool, ids: string[]): Promise<string[]> {
-  const unique = [...new Set(ids)];
+  const unique = [...new Set(ids.map((id) => id.toLowerCase()))];
   const { rows } = await pool.query<{ id: string; slug: string }>(
     'SELECT id, slug FROM meetings WHERE id::text = ANY($1) OR slug = ANY($1)',
     [unique],
@@ -98,7 +98,7 @@ export async function resolveMeetingIds(pool: Pool, ids: string[]): Promise<stri
   }
   const resolved = new Set<string>();
   for (const id of unique) {
-    const found = byKey.get(id.toLowerCase()) ?? byKey.get(id);
+    const found = byKey.get(id);
     if (!found) throw new AppError('NOT_FOUND', `Meeting not found: ${id}`);
     resolved.add(found);
   }

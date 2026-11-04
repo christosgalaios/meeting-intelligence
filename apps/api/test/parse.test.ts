@@ -45,7 +45,7 @@ describe('parseTranscript', () => {
   });
 
   it('strips a BOM', () => {
-    const { turns } = parseTranscript('﻿[00:00:01] A: hi', 'x');
+    const { turns } = parseTranscript('\uFEFF[00:00:01] A: hi', 'x');
     expect(turns).toHaveLength(1);
   });
 

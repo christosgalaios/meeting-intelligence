@@ -21,7 +21,6 @@ const words = (t: ChunkTurn) => render(t).split(/\s+/).filter(Boolean).length;
 export function chunkTurns(turns: ChunkTurn[]): ChunkDraft[] {
   const chunks: ChunkDraft[] = [];
   let start = 0;
-  let prevStart = -1;
 
   while (start < turns.length) {
     let end = start; // inclusive
@@ -45,9 +44,8 @@ export function chunkTurns(turns: ChunkTurn[]): ChunkDraft[] {
     });
 
     if (end >= turns.length - 1) break;
-    prevStart = start;
     // Overlap, but always move forward.
-    start = Math.max(end - OVERLAP_TURNS + 1, prevStart + 1);
+    start = Math.max(end - OVERLAP_TURNS + 1, start + 1);
   }
   return chunks;
 }

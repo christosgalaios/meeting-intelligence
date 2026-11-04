@@ -35,7 +35,13 @@ export interface LlmClient {
   readonly enabled: boolean;
   readonly answerModel: string | null;
   readonly extractionModel: string | null;
-  streamAnswer(args: { meetings: PromptMeeting[]; question: string; onToken: (text: string) => void }): Promise<AnswerResult>;
+  streamAnswer(args: {
+    meetings: PromptMeeting[];
+    question: string;
+    onToken: (text: string) => void;
+    /** Aborted when the client disconnects, so the upstream stream stops and stops costing tokens. */
+    signal?: AbortSignal;
+  }): Promise<AnswerResult>;
   extract(args: { meeting: PromptMeeting }): Promise<ExtractResult>;
 }
 
@@ -66,20 +72,28 @@ export class AnthropicLlmClient implements LlmClient {
   readonly extractionModel = EXTRACTION_MODEL;
   private readonly client: Anthropic;
 
-  constructor(apiKey: string) {
-    this.client = new Anthropic({ apiKey });
+  constructor(apiKey: string, opts: { fetch?: typeof fetch; maxRetries?: number } = {}) {
+    this.client = new Anthropic({ apiKey, ...opts });
   }
 
-  async streamAnswer(args: { meetings: PromptMeeting[]; question: string; onToken: (text: string) => void }): Promise<AnswerResult> {
+  async streamAnswer(args: {
+    meetings: PromptMeeting[];
+    question: string;
+    onToken: (text: string) => void;
+    signal?: AbortSignal;
+  }): Promise<AnswerResult> {
     // No thinking, temperature, top_p, top_k, prefill or forced tools: all are 400s on these models (spec 6.4).
     // server-side fallbacks are a beta-only parameter in this SDK, so they are not used (spec 11.4).
-    const stream = this.client.messages.stream({
-      model: ANSWER_MODEL,
-      max_tokens: 1024,
-      system: [{ type: 'text', text: ANSWER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: formatContext(args.meetings, args.question) }],
-      output_config: { effort: 'low' },
-    });
+    const stream = this.client.messages.stream(
+      {
+        model: ANSWER_MODEL,
+        max_tokens: 1024,
+        system: [{ type: 'text', text: ANSWER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: formatContext(args.meetings, args.question) }],
+        output_config: { effort: 'low' },
+      },
+      args.signal ? { signal: args.signal } : undefined,
+    );
     stream.on('text', (delta) => args.onToken(delta));
     const message = await stream.finalMessage();
     const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('');

@@ -6,7 +6,7 @@ import { REFUSAL_TEXT, isModelRefusal, parseCitations, validateCitations } from 
 import type { LlmClient } from '../llm/client.js';
 import type { PromptMeeting } from '../llm/prompts.js';
 import { expandToTurns } from '../retrieval/expand.js';
-import { hybridSearch } from '../retrieval/search.js';
+import { hybridSearch, type SearchResult } from '../retrieval/search.js';
 import { finishTrace, insertTrace } from '../trace/trace.js';
 import { AskEvent, type Mode, type RankedChunk, type SourceTurn } from '../types.js';
 import { resolveMeetingIds } from './meetings.js';
@@ -22,15 +22,27 @@ export interface AskDeps {
 export interface PreparedAsk {
   traceId: string;
   /** Streams the events. Never throws: failures after this point become an `error` event. */
-  run(emit: (event: AskEvent) => void): Promise<void>;
+  run(emit: (event: AskEvent) => void, signal?: AbortSignal): Promise<void>;
 }
 
-/** The refusal rule from spec 4: weak vector evidence and no keyword hit at all. */
+/** The refusal rule: weak vector evidence and no keyword hit at all. A text hit always overrides the threshold. */
 export function isBelowThreshold(chunks: RankedChunk[], minScore: number): { topVectorScore: number | null; belowThreshold: boolean } {
   const scores = chunks.flatMap((c) => (c.vectorScore === null ? [] : [c.vectorScore]));
   const topVectorScore = scores.length ? Math.max(...scores) : null;
   const hasTextHit = chunks.some((c) => c.textRank !== null);
   return { topVectorScore, belowThreshold: (topVectorScore === null || topVectorScore < minScore) && !hasTextHit };
+}
+
+interface Ctx {
+  deps: AskDeps;
+  question: string;
+  traceId: string;
+  search: SearchResult;
+  turns: SourceTurn[];
+  topVectorScore: number | null;
+  emit: (event: AskEvent) => void;
+  signal: AbortSignal | undefined;
+  timings: (llmMs: number | null) => { embedMs: number; searchMs: number; llmMs: number | null; totalMs: number };
 }
 
 /**
@@ -48,7 +60,7 @@ export async function prepareAsk(
 
   const search = await hybridSearch(pool, embedder, { question: input.question, meetingIds });
   const turns = await expandToTurns(pool, search.chunks);
-  const { topVectorScore, belowThreshold } = isBelowThreshold(search.chunks, deps.retrievalMinScore);
+  const { topVectorScore, belowThreshold: refuse } = isBelowThreshold(search.chunks, deps.retrievalMinScore);
 
   const traceId = await insertTrace(pool, {
     requestId: input.requestId,
@@ -67,112 +79,139 @@ export async function prepareAsk(
       candidatesText: search.candidatesText,
       fused: search.chunks.length,
       topVectorScore,
-      belowThreshold,
+      belowThreshold: refuse,
       embedMs: search.embedMs,
       searchMs: search.searchMs,
     },
     'ask.retrieved',
   );
 
-  const run = async (rawEmit: (event: AskEvent) => void): Promise<void> => {
+  const run = async (rawEmit: (event: AskEvent) => void, signal?: AbortSignal): Promise<void> => {
     // Every event is checked against the contract before it leaves the API.
     const emit = (event: AskEvent) => rawEmit(AskEvent.parse(event));
-    const timings = (llmMs: number | null) => ({
-      embedMs: search.embedMs,
-      searchMs: search.searchMs,
-      llmMs,
-      totalMs: Math.round(performance.now() - t0),
-    });
+    const ctx: Ctx = {
+      deps,
+      question: input.question,
+      traceId,
+      search,
+      turns,
+      topVectorScore,
+      emit,
+      signal,
+      timings: (llmMs) => ({
+        embedMs: search.embedMs,
+        searchMs: search.searchMs,
+        llmMs,
+        totalMs: Math.round(performance.now() - t0),
+      }),
+    };
 
     emit({ type: 'meta', traceId, mode, model: llm.answerModel });
     emit({ type: 'sources', chunks: search.chunks, turns });
 
     try {
-      if (belowThreshold) {
-        emit({ type: 'refusal', reason: 'below_threshold', topVectorScore });
-        const answer = llm.enabled ? REFUSAL_TEXT : null;
-        const tm = timings(null);
-        await finishTrace(pool, traceId, {
-          refused: true, refusalReason: 'below_threshold', answer, totalMs: tm.totalMs,
-        });
-        log.info({ traceId, model: null, citations: 0, droppedCitations: 0, refusalReason: 'below_threshold', totalMs: tm.totalMs }, 'ask.answered');
-        emit({ type: 'done', answer, citations: [], droppedCitations: [], refusalReason: 'below_threshold', usage: null, timings: tm });
-        return;
-      }
-
-      if (!llm.enabled) {
-        const tm = timings(null);
-        await finishTrace(pool, traceId, { totalMs: tm.totalMs });
-        emit({ type: 'done', answer: null, citations: [], droppedCitations: [], refusalReason: null, usage: null, timings: tm });
-        return;
-      }
-
-      const l0 = performance.now();
-      const result = await llm.streamAnswer({
-        meetings: await promptMeetings(pool, turns),
-        question: input.question,
-        onToken: (text) => emit({ type: 'token', text }),
-      });
-      const llmMs = Math.round(performance.now() - l0);
-
-      if (result.stopReason === 'refusal') {
-        throw new AppError('LLM_ERROR', 'The model declined this request.');
-      }
-      if (result.stopReason === 'max_tokens') log.warn({ traceId }, 'ask.truncated');
-
-      const refusal = isModelRefusal(result.text);
-      const { valid, dropped } = validateCitations(parseCitations(result.text), turns);
-      const tm = timings(llmMs);
-      await finishTrace(pool, traceId, {
-        refused: refusal,
-        refusalReason: refusal ? 'model_declined' : null,
-        answer: result.text,
-        citations: valid,
-        droppedCitations: dropped,
-        model: llm.answerModel,
-        usage: result.usage,
-        llmMs,
-        totalMs: tm.totalMs,
-      });
-      log.info(
-        {
-          traceId,
-          model: llm.answerModel,
-          inputTokens: result.usage.inputTokens,
-          outputTokens: result.usage.outputTokens,
-          cacheReadTokens: result.usage.cacheReadTokens,
-          llmMs,
-          totalMs: tm.totalMs,
-          citations: valid.length,
-          droppedCitations: dropped.length,
-          refusalReason: refusal ? 'model_declined' : null,
-        },
-        'ask.answered',
-      );
-      emit({
-        type: 'done',
-        answer: result.text,
-        citations: valid,
-        droppedCitations: dropped,
-        refusalReason: refusal ? 'model_declined' : null,
-        usage: result.usage,
-        timings: tm,
-      });
+      if (refuse) await belowThreshold(ctx);
+      else if (!llm.enabled) await retrievalOnly(ctx);
+      else await withLlm(ctx);
     } catch (err) {
-      // The detail goes to the log; the client only gets a generic message unless we wrote it ourselves.
-      const message = err instanceof AppError ? err.message : 'The answer could not be generated.';
-      const code = err instanceof AppError ? err.code : 'LLM_ERROR';
-      log.error({ traceId, code, message: err instanceof Error ? err.message : String(err) }, 'ask.failed');
-      await finishTrace(pool, traceId, { error: message, totalMs: timings(null).totalMs, model: llm.answerModel }).catch(() => undefined);
-      try {
-        emit({ type: 'error', code, message });
-      } catch {
-        // the stream is already gone
-      }
+      await failAsk(ctx, err);
     }
   };
 
   return { traceId, run };
+}
+
+/** Weak evidence: no model call. Full mode says so in words, retrieval-only mode leaves the answer null. */
+async function belowThreshold(c: Ctx): Promise<void> {
+  const { pool, llm, log } = c.deps;
+  c.emit({ type: 'refusal', reason: 'below_threshold', topVectorScore: c.topVectorScore });
+  const answer = llm.enabled ? REFUSAL_TEXT : null;
+  const tm = c.timings(null);
+  await finishTrace(pool, c.traceId, { refused: true, refusalReason: 'below_threshold', answer, totalMs: tm.totalMs });
+  log.info({ traceId: c.traceId, model: null, citations: 0, droppedCitations: 0, refusalReason: 'below_threshold', totalMs: tm.totalMs }, 'ask.answered');
+  c.emit({ type: 'done', answer, citations: [], droppedCitations: [], refusalReason: 'below_threshold', usage: null, timings: tm });
+}
+
+/** No key: the ranked turns are the result. */
+async function retrievalOnly(c: Ctx): Promise<void> {
+  const { pool, log } = c.deps;
+  const tm = c.timings(null);
+  await finishTrace(pool, c.traceId, { totalMs: tm.totalMs });
+  log.info({ traceId: c.traceId, model: null, citations: 0, droppedCitations: 0, refusalReason: null, totalMs: tm.totalMs }, 'ask.answered');
+  c.emit({ type: 'done', answer: null, citations: [], droppedCitations: [], refusalReason: null, usage: null, timings: tm });
+}
+
+async function withLlm(c: Ctx): Promise<void> {
+  const { pool, llm, log } = c.deps;
+  const l0 = performance.now();
+  const result = await llm.streamAnswer({
+    meetings: await promptMeetings(pool, c.turns),
+    question: c.question,
+    onToken: (text) => c.emit({ type: 'token', text }),
+    ...(c.signal ? { signal: c.signal } : {}),
+  });
+  const llmMs = Math.round(performance.now() - l0);
+
+  if (result.stopReason === 'refusal') throw new AppError('LLM_ERROR', 'The model declined this request.');
+  if (result.stopReason === 'max_tokens') log.warn({ traceId: c.traceId }, 'ask.truncated');
+
+  const refusal = isModelRefusal(result.text);
+  const { valid, dropped } = validateCitations(parseCitations(result.text), c.turns);
+  const tm = c.timings(llmMs);
+  await finishTrace(pool, c.traceId, {
+    refused: refusal,
+    refusalReason: refusal ? 'model_declined' : null,
+    answer: result.text,
+    citations: valid,
+    droppedCitations: dropped,
+    model: llm.answerModel,
+    usage: result.usage,
+    llmMs,
+    totalMs: tm.totalMs,
+  });
+  log.info(
+    {
+      traceId: c.traceId,
+      model: llm.answerModel,
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+      cacheReadTokens: result.usage.cacheReadTokens,
+      llmMs,
+      totalMs: tm.totalMs,
+      citations: valid.length,
+      droppedCitations: dropped.length,
+      refusalReason: refusal ? 'model_declined' : null,
+    },
+    'ask.answered',
+  );
+  c.emit({
+    type: 'done',
+    answer: result.text,
+    citations: valid,
+    droppedCitations: dropped,
+    refusalReason: refusal ? 'model_declined' : null,
+    usage: result.usage,
+    timings: tm,
+  });
+}
+
+/** The detail goes to the log; the client only gets a generic message unless we wrote it ourselves. */
+async function failAsk(c: Ctx, err: unknown): Promise<void> {
+  const { pool, llm, log } = c.deps;
+  if (c.signal?.aborted) {
+    log.info({ traceId: c.traceId }, 'ask.aborted');
+    await finishTrace(pool, c.traceId, { error: 'client disconnected', totalMs: c.timings(null).totalMs, model: llm.answerModel }).catch(() => undefined);
+    return;
+  }
+  const message = err instanceof AppError ? err.message : 'The answer could not be generated.';
+  const code = err instanceof AppError ? err.code : 'LLM_ERROR';
+  log.error({ traceId: c.traceId, code, message: err instanceof Error ? err.message : String(err) }, 'ask.failed');
+  await finishTrace(pool, c.traceId, { error: message, totalMs: c.timings(null).totalMs, model: llm.answerModel }).catch(() => undefined);
+  try {
+    c.emit({ type: 'error', code, message });
+  } catch {
+    // the stream is already gone
+  }
 }
 
 /** Group the retrieved turns by meeting, with the title the prompt needs. */

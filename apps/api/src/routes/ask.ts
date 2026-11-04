@@ -18,22 +18,31 @@ export function registerAskRoutes(app: FastifyInstance): void {
       { question: parsed.data.question, meetingIds: parsed.data.meetingIds, requestId: req.id },
     );
 
-    // Taking over the socket skips Fastify's header handling, so copy x-request-id and CORS headers across.
+    // Taking over the socket skips Fastify's header handling, so copy x-request-id across.
     reply.hijack();
     const res = reply.raw;
-    res.writeHead(200, {
-      ...reply.getHeaders(),
-      'content-type': 'text/event-stream; charset=utf-8',
-      'cache-control': 'no-cache',
-      'x-accel-buffering': 'no',
-      connection: 'keep-alive',
-    } as Record<string, string>);
-    res.flushHeaders();
-
-    await prepared.run((event) => {
-      if (res.destroyed || res.writableEnded) return;
-      res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+    // A client that goes away before the answer is finished stops the upstream model stream too.
+    const controller = new AbortController();
+    res.on('close', () => {
+      if (!res.writableEnded) controller.abort();
     });
-    res.end();
+
+    try {
+      res.writeHead(200, {
+        ...reply.getHeaders(),
+        'content-type': 'text/event-stream; charset=utf-8',
+        'cache-control': 'no-cache',
+        'x-accel-buffering': 'no',
+        connection: 'keep-alive',
+      } as Record<string, string>);
+      res.flushHeaders();
+
+      await prepared.run((event) => {
+        if (res.destroyed || res.writableEnded) return;
+        res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+      }, controller.signal);
+    } finally {
+      if (!res.writableEnded) res.end();
+    }
   });
 }

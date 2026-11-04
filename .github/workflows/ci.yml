@@ -53,6 +53,7 @@ jobs:
         run: docker compose up -d --build
       - name: Wait for the api to be healthy
         run: |
+          set -o pipefail
           for i in $(seq 1 36); do
             status=$(docker inspect --format '{{.State.Health.Status}}' "$(docker compose ps -q api)")
             echo "api health: $status"
@@ -62,9 +63,12 @@ jobs:
           docker compose logs api
           exit 1
       - name: Health reports retrieval-only
-        run: curl --fail-with-body -sS http://localhost:3001/api/health | jq -e '.mode == "retrieval-only"'
+        run: |
+          set -o pipefail
+          curl --fail-with-body -sS http://localhost:3001/api/health | jq -e '.mode == "retrieval-only"'
       - name: One ask streams to done
         run: |
+          set -o pipefail
           curl --fail-with-body -sS -N -X POST http://localhost:3001/api/ask \
             -H 'content-type: application/json' \
             -d '{"question":"What price was agreed for the Starter plan?"}' | tee ask.txt

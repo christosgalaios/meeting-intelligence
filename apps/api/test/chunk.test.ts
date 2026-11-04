@@ -26,8 +26,7 @@ describe('chunkTurns', () => {
     expect([c[0]!.firstTurnN, c[0]!.lastTurnN]).toEqual([1, 6]);
   });
 
-  // Spec 3.2 stops once the last turn is in a chunk, so 10 turns are [1-6] and [5-10].
-  // The spec's test list says "1, 5, 9", which would add a chunk wholly inside [5-10]; see report.
+  // Chunking stops once the last turn is in a chunk, so a third window [9-10] (wholly inside [5-10]) is never emitted.
   it('slides with a 2-turn overlap and the last chunk includes turn 10', () => {
     const c = chunkTurns(turns(10));
     expect(c.map((x) => [x.firstTurnN, x.lastTurnN])).toEqual([[1, 6], [5, 10]]);

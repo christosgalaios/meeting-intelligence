@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { DEFAULT_RETRIEVAL_MIN_SCORE } from './config.js';
 import type { Pool } from './db/pool.js';
@@ -55,8 +54,6 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     retrievalMinScore: deps.retrievalMinScore ?? DEFAULT_RETRIEVAL_MIN_SCORE,
   });
   app.decorate('extractionQueue', new ExtractionQueue());
-
-  void app.register(cors, { origin: true });
 
   app.addHook('onRequest', (req, reply, done) => {
     void reply.header('x-request-id', req.id);

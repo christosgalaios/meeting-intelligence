@@ -63,7 +63,7 @@ export class FakeLlm implements LlmClient {
   extractCalls = 0;
   constructor(private readonly answerText = FAKE_ANSWER) {}
 
-  async streamAnswer(args: { meetings: PromptMeeting[]; question: string; onToken: (t: string) => void }): Promise<AnswerResult> {
+  async streamAnswer(args: { meetings: PromptMeeting[]; question: string; onToken: (t: string) => void; signal?: AbortSignal }): Promise<AnswerResult> {
     this.answerCalls++;
     for (const piece of this.answerText.match(/\S+\s*/g) ?? []) args.onToken(piece);
     return { text: this.answerText, stopReason: 'end_turn', usage: { inputTokens: 120, outputTokens: 30, cacheReadTokens: 0 } };

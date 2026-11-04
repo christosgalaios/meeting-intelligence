@@ -39,6 +39,7 @@ describe('API in retrieval-only mode (no key)', () => {
   let env: Env;
   beforeAll(async () => {
     env = await setup(new NullLlmClient());
+    expect((await upload(env.app, 'x.txt', PRICING)).statusCode).toBe(201);
   });
   afterAll(async () => {
     await env.app.close();
@@ -54,20 +55,20 @@ describe('API in retrieval-only mode (no key)', () => {
   });
 
   it('upload returns 201 with turns and extractionStatus skipped', async () => {
-    const res = await upload(env.app, 'x.txt', PRICING);
+    const res = await upload(env.app, 'up.txt', PRICING);
     expect(res.statusCode).toBe(201);
     const m = MeetingDetail.parse(res.json());
-    expect(m).toMatchObject({ slug: 'x', turnCount: 7, extractionStatus: 'skipped', speakers: ['Priya', 'Tomasz', 'Hui Min'] });
-    expect(m.turns[0]).toMatchObject({ id: 'x#1', n: 1, timestampLabel: '00:00:03' });
+    expect(m).toMatchObject({ slug: 'up', turnCount: 7, extractionStatus: 'skipped', speakers: ['Priya', 'Tomasz', 'Hui Min'] });
+    expect(m.turns[0]).toMatchObject({ id: 'up#1', n: 1, timestampLabel: '00:00:03' });
     expect(m.decisions).toEqual([]);
   });
 
-  it('uploading the same filename twice gives slugs x and x-2', async () => {
-    const res = await upload(env.app, 'x.txt', PRICING);
-    expect(res.statusCode).toBe(201);
-    expect(MeetingDetail.parse(res.json()).slug).toBe('x-2');
-    const list = await env.app.inject({ method: 'GET', url: '/api/meetings' });
-    expect(MeetingSummary.array().parse(list.json().meetings).map((m) => m.slug).sort()).toEqual(['x', 'x-2']);
+  it('uploading the same filename twice gives slugs dup and dup-2', async () => {
+    const first = await upload(env.app, 'dup.txt', PRICING);
+    const second = await upload(env.app, 'dup.txt', PRICING);
+    expect(MeetingDetail.parse(first.json()).slug).toBe('dup');
+    expect(second.statusCode).toBe(201);
+    expect(MeetingDetail.parse(second.json()).slug).toBe('dup-2');
   });
 
   it('upload of an empty file gives 400 EMPTY_TRANSCRIPT', async () => {
@@ -89,13 +90,17 @@ describe('API in retrieval-only mode (no key)', () => {
   });
 
   it('list is newest first and detail accepts uuid or slug', async () => {
+    await upload(env.app, 'order-a.txt', PRICING);
+    await upload(env.app, 'order-b.txt', PRICING);
     const list = await env.app.inject({ method: 'GET', url: '/api/meetings' });
     const meetings = MeetingSummary.array().parse(list.json().meetings);
-    expect(meetings[0]!.slug).toBe('x-2');
-    const byId = await env.app.inject({ method: 'GET', url: `/api/meetings/${meetings[1]!.id}` });
+    const slugs = meetings.map((m) => m.slug);
+    expect(slugs.indexOf('order-b')).toBeLessThan(slugs.indexOf('order-a'));
+    const x = meetings.find((m) => m.slug === 'x')!;
+    const byId = await env.app.inject({ method: 'GET', url: `/api/meetings/${x.id}` });
     const bySlug = await env.app.inject({ method: 'GET', url: '/api/meetings/x' });
     expect(MeetingDetail.parse(byId.json()).slug).toBe('x');
-    expect(MeetingDetail.parse(bySlug.json()).id).toBe(meetings[1]!.id);
+    expect(MeetingDetail.parse(bySlug.json()).id).toBe(x.id);
     const missing = await env.app.inject({ method: 'GET', url: '/api/meetings/nope' });
     expect(missing.statusCode).toBe(404);
     expect(ApiError.parse(missing.json()).error.code).toBe('NOT_FOUND');
@@ -165,6 +170,9 @@ describe('API in full mode (fake LLM)', () => {
   beforeAll(async () => {
     llm = new FakeLlm();
     env = await setup(llm);
+    await upload(env.app, 'x.txt', PRICING);
+    await upload(env.app, 'offsite.txt', OFFSITE);
+    await env.app.extractionQueue.idle();
   });
   afterAll(async () => {
     await env.app.close();
@@ -177,15 +185,15 @@ describe('API in full mode (fake LLM)', () => {
   });
 
   it('upload is pending, then done after the extraction queue is idle', async () => {
-    const res = await upload(env.app, 'x.txt', PRICING);
+    const res = await upload(env.app, 'ex.txt', PRICING);
     expect(res.statusCode).toBe(201);
     expect(MeetingDetail.parse(res.json()).extractionStatus).toBe('pending');
     await env.app.extractionQueue.idle();
-    const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/x' })).json());
+    const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/ex' })).json());
     expect(detail.extractionStatus).toBe('done');
     expect(detail.decisions).toHaveLength(1);
-    expect(detail.decisions[0]!.turnId).toBe('x#1');
-    expect(detail.actionItems.map((a) => a.turnId)).toEqual(['x#1', null]); // unknown turn id is unlinked, item kept
+    expect(detail.decisions[0]!.turnId).toBe('ex#1');
+    expect(detail.actionItems.map((a) => a.turnId)).toEqual(['ex#1', null]); // unknown turn id is unlinked, item kept
     expect(detail.actionItems[0]).toMatchObject({ owner: 'Priya', due: 'next Friday' });
   });
 
@@ -203,8 +211,6 @@ describe('API in full mode (fake LLM)', () => {
   });
 
   it('ask streams tokens; done has the answer, the valid citation and the dropped one', async () => {
-    await upload(env.app, 'offsite.txt', OFFSITE);
-    await env.app.extractionQueue.idle();
     const { events } = await ask(env.app, { question: 'Starter plan priced per seat' });
     const kinds = events.map((e) => e.event);
     expect(kinds.slice(0, 2)).toEqual(['meta', 'sources']);

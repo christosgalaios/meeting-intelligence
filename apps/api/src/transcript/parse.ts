@@ -20,7 +20,7 @@ const LINE = /^\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]\s+([^:]{1,80}):\s?(.*)$/;
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export function parseTranscript(input: string, slug: string): ParseResult {
-  const text = input.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+  const text = input.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
   const turns: ParsedTurn[] = [];
   const warnings: string[] = [];
 
@@ -33,6 +33,9 @@ export function parseTranscript(input: string, slug: string): ParseResult {
       const [, a, b, c, speaker, body] = m as unknown as [string, string, string, string | undefined, string, string];
       const [h, mi, s] = c === undefined ? [0, Number(a), Number(b)] : [Number(a), Number(b), Number(c)];
       const startSeconds = h * 3600 + mi * 60 + s;
+      if (mi >= 60 || s >= 60) {
+        warnings.push(`turn ${turns.length + 1}: timestamp ${pad(h)}:${pad(mi)}:${pad(s)} has minutes or seconds of 60 or more`);
+      }
       const n = turns.length + 1;
       const prev = turns[turns.length - 1];
       if (prev && startSeconds < prev.startSeconds) {

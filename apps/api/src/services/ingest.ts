@@ -124,6 +124,14 @@ export async function ingestTranscript(
   }
 }
 
+/** At boot: an extraction that was pending when the process died will never finish. */
+export async function failInterruptedExtractions(pool: Pool): Promise<number> {
+  const r = await pool.query(
+    "UPDATE meetings SET extraction_status = 'failed', extraction_error = 'interrupted' WHERE extraction_status = 'pending'",
+  );
+  return r.rowCount ?? 0;
+}
+
 /** Runs after the upload response. Failure is recorded on the meeting and never retried. */
 export async function runExtraction(deps: Pick<IngestDeps, 'pool' | 'llm' | 'log'>, meetingId: string): Promise<void> {
   const { pool, llm, log } = deps;
