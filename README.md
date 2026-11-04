@@ -10,7 +10,7 @@ The README follows the brief's sections a to i. Sections a, b and f describe wha
 
 Taken from the running app. The full-mode shots use `claude-sonnet-5-5` with the four sample meetings loaded.
 
-![The library: four meetings, an ask box with a cost hint, and an upload area that takes a .txt file or pasted text](docs/screenshots/01-library.png)
+![The library: four meetings, an ask box with a cost hint, and an upload area that takes a .txt file, pasted text or audio, with a note that importing also runs a paid extraction](docs/screenshots/01-library.png)
 
 **Library.** Meeting cards show the date, length, speakers, and decision and action counts once a meeting has been extracted.
 
@@ -41,6 +41,10 @@ Taken from the running app. The full-mode shots use `claude-sonnet-5-5` with the
 ![The same ask view in the dark theme](docs/screenshots/08-dark-theme.png)
 
 **Dark theme.**
+
+![Reviewing a transcribed recording: three speakers found and renamed, merge and re-run controls in one row, and the draft transcript below. Nothing is saved until Import](docs/screenshots/09-voice-review.png)
+
+**Reviewing a transcribed recording before import.**
 
 ## a. Quick setup
 
