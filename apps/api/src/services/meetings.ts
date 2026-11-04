@@ -15,10 +15,16 @@ interface MeetingRow {
   extraction_status: ExtractionStatus;
   extraction_error: string | null;
   created_at: Date;
+  meeting_date: string | null;
+  decision_count: number;
+  action_item_count: number;
 }
 
 const MEETING_COLS =
-  'id, slug, title, source_filename, turn_count, duration_seconds, speakers, extraction_status, extraction_error, created_at';
+  `id, slug, title, source_filename, turn_count, duration_seconds, speakers, extraction_status, extraction_error, created_at,
+   to_char(meeting_date, 'YYYY-MM-DD') AS meeting_date,
+   (SELECT count(*)::int FROM decisions d WHERE d.meeting_id = meetings.id) AS decision_count,
+   (SELECT count(*)::int FROM action_items a WHERE a.meeting_id = meetings.id) AS action_item_count`;
 
 const toSummary = (r: MeetingRow): MeetingSummary => ({
   id: r.id,
@@ -30,6 +36,9 @@ const toSummary = (r: MeetingRow): MeetingSummary => ({
   speakers: r.speakers,
   extractionStatus: r.extraction_status,
   createdAt: r.created_at.toISOString(),
+  meetingDate: r.meeting_date,
+  decisionCount: r.decision_count,
+  actionItemCount: r.action_item_count,
 });
 
 export async function listMeetings(pool: Pool): Promise<MeetingSummary[]> {

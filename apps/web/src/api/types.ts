@@ -38,6 +38,9 @@ export const MeetingSummary = z.object({
   speakers: z.array(z.string()),
   extractionStatus: ExtractionStatus,
   createdAt: z.string(),
+  meetingDate: z.string().nullable(), // YYYY-MM-DD from the filename prefix; null -> use createdAt
+  decisionCount: z.number().int(),
+  actionItemCount: z.number().int(),
 });
 export type MeetingSummary = z.infer<typeof MeetingSummary>;
 

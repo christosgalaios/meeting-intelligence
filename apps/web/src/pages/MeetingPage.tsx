@@ -7,7 +7,7 @@ import { MeetingSummaryCard } from '../components/MeetingSummaryCard';
 import { TranscriptView, type TurnFocus } from '../components/TranscriptView';
 import { btnSecondary } from '../components/ui';
 import { useMeeting } from '../hooks/useMeeting';
-import { formatDate, formatDuration, plural } from '../lib/format';
+import { formatDuration, meetingDateLabel, plural } from '../lib/format';
 import { speakerColor } from '../lib/speakers';
 import type { MeetingDetail } from '../api/types';
 
@@ -68,7 +68,7 @@ export function MeetingPage() {
           <div className="flex flex-col gap-1.5">
             <h1 className="m-0 text-2xl font-semibold tracking-[-0.02em]">{meeting.title}</h1>
             <span className="font-mono text-xs text-fg-3">
-              {formatDate(meeting.createdAt)} · {formatDuration(meeting.durationSeconds)} · {plural(meeting.speakers.length, 'speaker')} · {plural(meeting.turnCount, 'turn')}
+              {meetingDateLabel(meeting)} · {formatDuration(meeting.durationSeconds)} · {plural(meeting.speakers.length, 'speaker')} · {plural(meeting.turnCount, 'turn')}
             </span>
           </div>
           <button

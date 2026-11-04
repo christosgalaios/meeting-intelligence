@@ -19,7 +19,7 @@ export async function seedTranscripts(deps: IngestDeps, dir = SEED_DIR): Promise
       skipped++;
       continue;
     }
-    await ingestTranscript(deps, { filename: file, text: await readFile(path.join(dir, file), 'utf8') });
+    await ingestTranscript(deps, { filename: file, text: await readFile(path.join(dir, file), 'utf8'), skipExtraction: true });
     added++;
   }
   deps.log.info({ added, skipped }, 'seed.done');

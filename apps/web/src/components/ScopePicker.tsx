@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MeetingSummary } from '../api/types';
-import { formatDate, plural } from '../lib/format';
+import { meetingDateLabel, plural } from '../lib/format';
 import { cx } from '../lib/cx';
 import { IconChevron } from './icons';
 
@@ -99,7 +99,7 @@ export function ScopePicker({ meetings, scope, onChange }: Props) {
               >
                 <Box on={on} />
                 <span className="min-w-0 flex-1 truncate">{m.title}</span>
-                <span className="font-mono text-[11.5px] text-fg-3">{formatDate(m.createdAt)}</span>
+                <span className="font-mono text-[11.5px] text-fg-3">{meetingDateLabel(m)}</span>
               </button>
             );
           })}

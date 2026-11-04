@@ -1,13 +1,22 @@
 import { Link } from 'react-router-dom';
-import type { ExtractionStatus, MeetingSummary, Mode } from '../api/types';
-import { formatDate, formatDuration } from '../lib/format';
+import type { MeetingSummary, Mode } from '../api/types';
+import { formatDuration, meetingDateLabel } from '../lib/format';
 import { initials, speakerColor } from '../lib/speakers';
 import { IconLock } from './icons';
 
-function ExtractionLine({ status, mode }: { status: ExtractionStatus; mode: Mode | null }) {
-  switch (status) {
+function ExtractionLine({ meeting, mode }: { meeting: MeetingSummary; mode: Mode | null }) {
+  switch (meeting.extractionStatus) {
     case 'done':
-      return <span>Decisions and action items extracted</span>;
+      return (
+        <>
+          <span>
+            <b className="font-semibold text-fg">{meeting.decisionCount}</b> {meeting.decisionCount === 1 ? 'decision' : 'decisions'}
+          </span>
+          <span>
+            <b className="font-semibold text-fg">{meeting.actionItemCount}</b> action {meeting.actionItemCount === 1 ? 'item' : 'items'}
+          </span>
+        </>
+      );
     case 'pending':
       return <span className="text-fg-2">Extracting&hellip;</span>;
     case 'failed':
@@ -36,7 +45,7 @@ export function MeetingList({ meetings, mode }: { meetings: readonly MeetingSumm
             <div className="flex w-full flex-col gap-1">
               <span className="min-w-0 text-[15px] font-semibold tracking-[-0.01em]">{m.title}</span>
               <span className="font-mono text-xs text-fg-3">
-                {formatDate(m.createdAt)} · {formatDuration(m.durationSeconds)} · {m.turnCount} turns
+                {meetingDateLabel(m)} · {formatDuration(m.durationSeconds)} · {m.turnCount} turns
               </span>
             </div>
             <div className="flex gap-1" aria-label={`Speakers: ${m.speakers.join(', ')}`}>
@@ -53,7 +62,7 @@ export function MeetingList({ meetings, mode }: { meetings: readonly MeetingSumm
               {m.speakers.length > 6 && <span className="grid size-[26px] place-items-center text-[11px] text-fg-3">+{m.speakers.length - 6}</span>}
             </div>
             <div className="mt-auto flex w-full gap-3.5 border-t border-line pt-3 text-[12.5px] text-fg-2">
-              <ExtractionLine status={m.extractionStatus} mode={mode} />
+              <ExtractionLine meeting={m} mode={mode} />
             </div>
           </Link>
         </li>
