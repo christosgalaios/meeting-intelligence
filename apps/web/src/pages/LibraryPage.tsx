@@ -5,9 +5,10 @@ import { useApp } from '../AppContext';
 import { IconSearch } from '../components/icons';
 import { MeetingList } from '../components/MeetingList';
 import { UploadDropzone } from '../components/UploadDropzone';
-import { btnPrimary, ButtonHint } from '../components/ui';
+import { btnPrimary, ButtonHint, ErrorRef } from '../components/ui';
 import { cx } from '../lib/cx';
 import { extractionImportHint } from '../lib/cost';
+import { errorRef } from '../lib/friendly';
 import { formatDuration, plural } from '../lib/format';
 
 export function LibraryPage() {
@@ -16,7 +17,7 @@ export function LibraryPage() {
   const [question, setQuestion] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const [loadingSamples, setLoadingSamples] = useState(false);
-  const [sampleError, setSampleError] = useState<string | null>(null);
+  const [sampleError, setSampleError] = useState<{ message: string; ref: string | null } | null>(null);
   const empty = !meetingsLoading && meetings.length === 0;
 
   // The library asks across every meeting. The list refreshes while an extraction is still running.
@@ -55,7 +56,7 @@ export function LibraryPage() {
       await seedSamples();
       reloadMeetings();
     } catch (err) {
-      setSampleError(err instanceof Error ? err.message : 'Could not load the samples.');
+      setSampleError({ message: err instanceof Error ? err.message : 'Could not load the samples.', ref: errorRef(err) });
     } finally {
       setLoadingSamples(false);
     }
@@ -116,8 +117,9 @@ export function LibraryPage() {
               {loadingSamples ? 'Loading samples…' : 'Load sample meetings'}
             </button>
             {sampleError && (
-              <p role="alert" className="m-0 text-[13px] text-danger">
-                {sampleError}
+              <p role="alert" className="m-0 flex flex-col gap-0.5 text-[13px] text-danger">
+                {sampleError.message}
+                <ErrorRef id={sampleError.ref} />
               </p>
             )}
           </div>

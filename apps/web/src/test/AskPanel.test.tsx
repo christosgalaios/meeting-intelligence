@@ -68,8 +68,9 @@ describe('AskPanel', () => {
   });
 
   it('shows the error card for an error event', () => {
-    setup([{ ...fullExchange, status: 'error', answer: '', done: null, error: { code: 'LLM_ERROR', message: 'The model declined this request.' } }]);
+    setup([{ ...fullExchange, status: 'error', answer: '', done: null, error: { code: 'LLM_ERROR', message: 'The model declined this request.', ref: 'trace-123' } }]);
     expect(screen.getByRole('alert')).toHaveTextContent('The model declined this request.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Ref: trace-123');
   });
 
   it('asks on Enter, not on Shift+Enter', async () => {

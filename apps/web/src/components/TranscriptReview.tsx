@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { deleteTranscription, uploadMeeting } from '../api/client';
 import type { MeetingDetail, Transcription } from '../api/types';
-import { friendly } from '../lib/friendly';
+import { errorRef, friendly } from '../lib/friendly';
 import { plural } from '../lib/format';
 import { speakerColor } from '../lib/speakers';
 import {
   draftFilename, hasClearedName, isoDate, mergeSpeakers, newDraft, renameSpeaker, renderTranscript, speakerLabel,
   speakerNumbers, timestampLabel, turnCount, withNewSegments, type Draft,
 } from '../lib/transcriptDraft';
-import { btnGhost, btnPrimary, btnSecondary } from './ui';
+import { btnGhost, btnPrimary, btnSecondary, ErrorRef } from './ui';
 
 const field = 'h-8 w-full rounded-md border border-line bg-surface-2 px-2.5 text-[13px]';
 
@@ -34,7 +34,7 @@ export function TranscriptReview({ transcription, busy, importHint, onRerun, onI
   });
   const [rerunCount, setRerunCount] = useState(String(Math.max(2, transcription.numSpeakers ?? 2)));
   const [importing, setImporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; ref: string | null } | null>(null);
 
   // A re-run arrives as a new transcription: new segments, but the title, date and surviving names stay.
   useEffect(() => {
@@ -61,7 +61,7 @@ export function TranscriptReview({ transcription, busy, importHint, onRerun, onI
       void deleteTranscription(transcription.id).catch(() => undefined);
       onImported(meeting);
     } catch (err) {
-      setError(friendly(err));
+      setError({ message: friendly(err), ref: errorRef(err) });
       setImporting(false);
     }
   };
@@ -147,8 +147,9 @@ export function TranscriptReview({ transcription, busy, importHint, onRerun, onI
       </div>
 
       {error && (
-        <p role="alert" className="m-0 text-[13px] text-danger">
-          {error}
+        <p role="alert" className="m-0 flex flex-col gap-0.5 text-[13px] text-danger">
+          {error.message}
+          <ErrorRef id={error.ref} />
         </p>
       )}
 

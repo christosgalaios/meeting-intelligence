@@ -102,7 +102,10 @@ describe('applyEvent', () => {
 
   it('records a refusal and an error', () => {
     expect(applyEvent(fresh, { type: 'refusal', reason: 'below_threshold', topVectorScore: 0.3 }).refusal).toEqual({ topVectorScore: 0.3 });
-    expect(applyEvent(fullExchange, { type: 'error', code: 'LLM_ERROR', message: 'x' })).toMatchObject({ status: 'error', error: { code: 'LLM_ERROR' } });
+    expect(applyEvent(fullExchange, { type: 'error', code: 'LLM_ERROR', message: 'x' })).toMatchObject({
+      status: 'error',
+      error: { code: 'LLM_ERROR', ref: fullExchange.traceId }, // the trace id from the meta event is what finds the log line
+    });
   });
 });
 

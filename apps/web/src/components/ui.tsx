@@ -12,6 +12,11 @@ export function ButtonHint({ children }: { children: string }) {
   return <span className="border-l border-current pl-2 font-mono text-xs">{children}</span>;
 }
 
+/** The id that ties an error on screen to a line in the API log. Renders nothing when there is none. */
+export function ErrorRef({ id }: { id: string | null | undefined }) {
+  return id ? <span className="font-mono text-xs text-fg-3">Ref: {id}</span> : null;
+}
+
 export function Dots() {
   return (
     <span aria-hidden="true" className="inline-flex gap-1">

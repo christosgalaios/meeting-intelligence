@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiClientError, askStream, createSseParser } from '../api/client';
+import { ApiClientError, askStream, createSseParser, getHealth } from '../api/client';
 import type { AskEvent } from '../api/types';
 import { meta, sources, timings } from './fixtures';
 
@@ -73,6 +73,16 @@ describe('askStream', () => {
     const onEvent = vi.fn();
     await expect(askStream('q', undefined, { onEvent })).rejects.toMatchObject({ code: 'EMBEDDINGS_NOT_READY', status: 503, requestId: 'r1' });
     expect(onEvent).not.toHaveBeenCalled();
+  });
+
+  it('returns the health body when the API answers 503 while degraded', async () => {
+    const body = {
+      status: 'degraded', mode: 'retrieval-only', db: true,
+      embeddings: { model: 'Xenova/bge-small-en-v1.5', ready: false },
+      models: { answer: null, extraction: null }, voice: { available: false, models: null }, version: '0.1.0',
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status: 503 })));
+    await expect(getHealth()).resolves.toMatchObject({ status: 'degraded', embeddings: { ready: false } });
   });
 
   it('maps a network failure to NETWORK', async () => {

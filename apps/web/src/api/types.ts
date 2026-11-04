@@ -9,7 +9,7 @@ export type ExtractionStatus = z.infer<typeof ExtractionStatus>;
 export const ApiError = z.object({
   error: z.object({
     code: z.enum([
-      'VALIDATION', 'NOT_FOUND', 'EMPTY_TRANSCRIPT', 'TOO_LARGE',
+      'VALIDATION', 'UNPROCESSABLE', 'NOT_FOUND', 'TOO_LARGE',
       'EMBEDDINGS_NOT_READY', 'LLM_ERROR', 'CONFLICT', 'INTERNAL',
     ]),
     message: z.string(),

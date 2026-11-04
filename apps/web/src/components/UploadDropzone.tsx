@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { uploadMeeting } from '../api/client';
 import type { MeetingDetail } from '../api/types';
 import { cx } from '../lib/cx';
-import { friendly } from '../lib/friendly';
-import { btnGhost, btnPrimary, btnSecondary } from './ui';
+import { errorRef, friendly } from '../lib/friendly';
+import { btnGhost, btnPrimary, btnSecondary, ErrorRef } from './ui';
 import { VoiceImport } from './VoiceImport';
 
 export const MAX_BYTES = 2_000_000;
@@ -15,7 +15,7 @@ type State =
   | { kind: 'paste' }
   | { kind: 'parsing'; name: string }
   | { kind: 'voice'; file: File }
-  | { kind: 'error'; title: string; message: string }
+  | { kind: 'error'; title: string; message: string; ref: string | null }
   | { kind: 'done'; meeting: MeetingDetail };
 
 /** Returns an error message when the file cannot be uploaded, otherwise null. Checked before any request. */
@@ -42,7 +42,7 @@ export function UploadDropzone({ onUploaded, voiceAvailable, importHint }: { onU
       setPasted('');
       onUploaded(meeting);
     } catch (err) {
-      setState({ kind: 'error', title, message: friendly(err) });
+      setState({ kind: 'error', title, message: friendly(err), ref: errorRef(err) });
     }
   };
 
@@ -53,7 +53,7 @@ export function UploadDropzone({ onUploaded, voiceAvailable, importHint }: { onU
     }
     const reason = rejectFile(file);
     if (reason) {
-      setState({ kind: 'error', title: file.name, message: reason });
+      setState({ kind: 'error', title: file.name, message: reason, ref: null });
       return;
     }
     await send(file.name, await file.text(), file.name);
@@ -186,6 +186,7 @@ export function UploadDropzone({ onUploaded, voiceAvailable, importHint }: { onU
           <div className="flex flex-col gap-0.5 bg-danger-soft px-4 py-3.5">
             <div className="font-semibold text-danger">{state.title} could not be imported</div>
             <div className="text-[13px] text-fg-2">{state.message}</div>
+            <ErrorRef id={state.ref} />
           </div>
           <div className="flex gap-2 px-4 py-3">
             <button type="button" onClick={() => setState({ kind: 'paste' })} className={btnSecondary}>
