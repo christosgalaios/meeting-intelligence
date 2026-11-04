@@ -5,7 +5,7 @@ import { AppError } from '../errors.js';
 import { REFUSAL_TEXT, isModelRefusal, parseCitations, validateCitations } from '../llm/citations.js';
 import type { LlmClient } from '../llm/client.js';
 import type { PromptMeeting } from '../llm/prompts.js';
-import { expandToTurns } from '../retrieval/expand.js';
+import { expandToTurns, rescoreTurns } from '../retrieval/expand.js';
 import { hybridSearch, type SearchResult } from '../retrieval/search.js';
 import { finishTrace, insertTrace } from '../trace/trace.js';
 import { AskEvent, type Mode, type RankedChunk, type SourceTurn } from '../types.js';
@@ -65,7 +65,9 @@ export async function prepareAsk(
   const meetingIds = input.meetingIds ? await resolveMeetingIds(pool, input.meetingIds) : null;
 
   const search = await hybridSearch(pool, embedder, { question: input.question, meetingIds });
-  const turns = await expandToTurns(pool, search.chunks);
+  const r0 = performance.now();
+  const turns = await rescoreTurns(embedder, input.question, await expandToTurns(pool, search.chunks));
+  const embedMs = search.embedMs + Math.round(performance.now() - r0); // rescoring the turns is embedding work too
   const { topVectorScore, belowThreshold: refuse } = isBelowThreshold(search.chunks, deps.retrievalMinScore, search.strictTextHit);
 
   const traceId = await insertTrace(pool, {
@@ -74,7 +76,7 @@ export async function prepareAsk(
     meetingIds,
     mode,
     retrieval: search.chunks,
-    embedMs: search.embedMs,
+    embedMs,
     searchMs: search.searchMs,
     totalMs: Math.round(performance.now() - t0),
   });
@@ -86,7 +88,7 @@ export async function prepareAsk(
       fused: search.chunks.length,
       topVectorScore,
       belowThreshold: refuse,
-      embedMs: search.embedMs,
+      embedMs,
       searchMs: search.searchMs,
     },
     'ask.retrieved',
@@ -105,7 +107,7 @@ export async function prepareAsk(
       emit,
       signal,
       timings: (llmMs) => ({
-        embedMs: search.embedMs,
+        embedMs,
         searchMs: search.searchMs,
         llmMs,
         totalMs: Math.round(performance.now() - t0),

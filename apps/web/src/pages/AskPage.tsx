@@ -176,7 +176,7 @@ export function AskPage() {
           </>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-[22px] overflow-auto px-4 pb-8 pt-4 [&>*]:shrink-0">
-            <WhyThisAnswer exchange={whyEx ?? (lastExchange && !whyId ? lastExchange : null)} onSelectTurn={onCite} />
+            <WhyThisAnswer exchange={whyEx ?? (lastExchange && !whyId ? lastExchange : null)} onSelectTurn={onCite} titleOf={titleOf} />
           </div>
         )}
       </aside>

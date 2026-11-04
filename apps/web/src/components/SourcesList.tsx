@@ -22,7 +22,6 @@ export function SourcesList({ turns, label, activeTurnId = null, titleOf, onSele
   const [expanded, setExpanded] = useState(false);
   if (turns.length === 0) return null;
   const shown = expanded ? turns : turns.slice(0, limit);
-  const max = Math.max(...turns.map((t) => t.score), Number.EPSILON);
   const suffix = turns.length > shown.length ? ` · ${shown.length} of ${turns.length}` : '';
 
   return (
@@ -56,11 +55,11 @@ export function SourcesList({ turns, label, activeTurnId = null, titleOf, onSele
                   <span className="text-pretty text-sm leading-[1.55]">{t.text}</span>
                 </span>
                 <span className="flex flex-col items-end gap-1.5 pt-0.5">
-                  <span className="font-mono text-xs text-fg-2" title="Reciprocal rank fusion score">
+                  <span className="font-mono text-xs text-fg-2" title="Cosine similarity of this turn to the question">
                     {formatScore(t.score)}
                   </span>
                   <span aria-hidden="true" className="block h-1 w-14 overflow-hidden rounded-sm bg-surface-3">
-                    <span className={cx('block h-full', weak ? 'bg-fg-3' : 'bg-accent')} style={{ width: `${Math.round((t.score / max) * 100)}%` }} />
+                    <span className={cx('block h-full', weak ? 'bg-fg-3' : 'bg-accent')} style={{ width: `${Math.round(Math.min(Math.max(t.score, 0), 1) * 100)}%` }} />
                   </span>
                 </span>
               </button>

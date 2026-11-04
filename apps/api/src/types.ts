@@ -103,7 +103,7 @@ export const RankedChunk = z.object({
 });
 export type RankedChunk = z.infer<typeof RankedChunk>;
 
-export const SourceTurn = Turn.extend({ score: z.number() }); // best rrfScore of a containing chunk
+export const SourceTurn = Turn.extend({ score: z.number() }); // cosine similarity of the turn text to the question
 export type SourceTurn = z.infer<typeof SourceTurn>;
 
 export const Citation = z.object({

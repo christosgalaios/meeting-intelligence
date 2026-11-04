@@ -9,6 +9,7 @@ import { btnSecondary } from './ui';
 interface Props {
   exchange: Exchange | null;
   onSelectTurn: (turnId: string, meetingId: string) => void;
+  titleOf?: (meetingId: string) => string | undefined;
 }
 
 const clockLabel = (seconds: number): string => {
@@ -20,13 +21,17 @@ function Kicker({ children }: { children: string }) {
   return <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-fg-3">{children}</span>;
 }
 
-/** The first retrieved turn inside a chunk's range, so the row can show what the chunk says. */
+/**
+ * The turn a chunk opens with, so the row shows what that chunk starts with. Chunks overlap, so showing "any turn inside"
+ * made two rows repeat the same text under different times; each chunk's first turn is its own.
+ */
 function turnFor(chunk: RankedChunk, turns: readonly SourceTurn[]): SourceTurn | undefined {
-  return turns.find((t) => t.meetingId === chunk.meetingId && t.n >= chunk.firstTurnN && t.n <= chunk.lastTurnN);
+  const inside = turns.filter((t) => t.meetingId === chunk.meetingId && t.n >= chunk.firstTurnN && t.n <= chunk.lastTurnN);
+  return inside.find((t) => t.n === chunk.firstTurnN) ?? inside.sort((a, b) => a.n - b.n)[0];
 }
 
 /** Everything here comes from the stream (meta, sources, done). GET /api/traces/:id serves the same data after a reload. */
-export function WhyThisAnswer({ exchange: ex, onSelectTurn }: Props) {
+export function WhyThisAnswer({ exchange: ex, onSelectTurn, titleOf }: Props) {
   const [copied, setCopied] = useState(false);
 
   if (!ex || ex.status === 'searching' || ex.status === 'thinking' || ex.status === 'streaming') {
@@ -180,14 +185,17 @@ export function WhyThisAnswer({ exchange: ex, onSelectTurn }: Props) {
             >
               <span className="flex w-full items-center gap-2 text-xs">
                 <span className="w-[22px] font-mono text-fg-3">#{i + 1}</span>
-                <span className="font-mono text-accent">{clockLabel(c.startSeconds)}</span>
+                <span className="font-mono text-accent">
+                  {clockLabel(c.startSeconds)}
+                  {c.endSeconds > c.startSeconds ? `–${clockLabel(c.endSeconds)}` : ''}
+                </span>
                 {turn && (
                   <span className="font-semibold" style={{ color: speakerColor(turn.speaker) }}>
                     {turn.speaker}
                   </span>
                 )}
                 <span className="min-w-0 flex-1 truncate text-fg-3">
-                  {c.meetingSlug} · turns {c.firstTurnN}–{c.lastTurnN}
+                  {titleOf?.(c.meetingId) ?? c.meetingSlug} · turns {c.firstTurnN}–{c.lastTurnN}
                 </span>
                 <span className={`whitespace-nowrap rounded-[3px] px-1.5 py-0.5 font-mono text-[10.5px] ${on ? 'bg-accent-soft text-accent-soft-fg' : 'bg-surface-2 text-fg-3'}`}>{tag}</span>
               </span>
