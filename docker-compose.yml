@@ -1,0 +1,19 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment: { POSTGRES_USER: meetings, POSTGRES_PASSWORD: meetings, POSTGRES_DB: meetings }
+    ports: ["5432:5432"]
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U meetings"], interval: 5s, retries: 20 }
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment:
+      DATABASE_URL: postgres://meetings:meetings@db:5432/meetings
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PORT: 3001
+      SEED_ON_START: "true"
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["3001:3001"]
+    healthcheck: { test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>r.json()).then(j=>process.exit(j.embeddings.ready?0:1))"], interval: 10s, retries: 30 }
+  # The web service is added by the frontend workstream (F9).
+volumes: { dbdata: {} }
