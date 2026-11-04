@@ -1,0 +1,93 @@
+[00:00:03] Priya Nandakumar: Okay, let's get going, I think most of us are here. Obadiah said he'd be a few minutes late.
+[00:00:16] Tomasz Wierzba: Morning. Can you hear me alright? My headset has been doing something odd since Friday.
+[00:00:26] Hui Min Teo: Yeah, loud and clear.
+[00:00:34] Priya Nandakumar: Great. So this is the kickoff for the Tallyboard pricing rework. Goal for today is to agree the shape of the plans, not every final number.
+[00:00:52] Declan Ashworth: Sounds good.
+[00:01:00] Priya Nandakumar: Quick context for the notes. Brindlecombe sells Tallyboard on one plan today, a flat forty-nine pounds per workspace per month.
+[00:01:15] Declan Ashworth: And that's the problem I keep hearing on calls. Three-person agencies say forty-nine is steep, and a forty-seat company signs without blinking.
+[00:01:33] Marguerite Oyelaran: Right, yeah.
+[00:01:42] Priya Nandakumar: So proposal one is tiered plans. I'd like to float three, Starter, Team and Business.
+[00:01:51] Tomasz Wierzba: Can you say what actually differs between them? If it's only seat count that's easy, if it's features then that's a lot of gating work on my side.
+[00:02:09] Priya Nandakumar: It's a mix. Starter is one workspace, up to three seats, basic dashboards. Team adds shared dashboards, scheduled reports and unlimited seats, priced per seat. Business adds single sign-on, an audit log and priority support.
+[00:02:28] Declan Ashworth: SSO in Business only? Okay, enterprise buyers always ask for that first.
+[00:02:37] Hui Min Teo: Audit log comes up in support tickets a lot too, so that fits.
+[00:02:50] Marguerite Oyelaran: Um, I'll need the names to be final before I start on the pricing page, that's my only worry.
+[00:03:00] Priya Nandakumar: Fair. Any objection to three tiers called Starter, Team and Business?
+[00:03:10] Tomasz Wierzba: Fine by me.
+[00:03:14] Declan Ashworth: Yep, no objection.
+[00:03:19] Priya Nandakumar: Then that's decision one. Three tiers, Starter, Team and Business.
+[00:03:31] Obadiah Pryce: Sorry, sorry, I'm here. Awful train. What did I miss?
+[00:03:43] Priya Nandakumar: Welcome, Obadiah. We just agreed three tiers. Money is next.
+[00:03:54] Obadiah Pryce: Great, thanks.
+[00:04:02] Priya Nandakumar: So Starter first. I'd propose nineteen pounds per workspace per month.
+[00:04:10] Declan Ashworth: Nineteen feels right. It's under the twenty pound line that people treat as a no-brainer.
+[00:04:22] Hui Min Teo: Yeah, small teams tell me they'd pay about that.
+[00:04:31] Obadiah Pryce: Is that before or after VAT?
+[00:04:37] Priya Nandakumar: Before VAT, same as today.
+[00:04:47] Obadiah Pryce: Okay, just checking so the model is consistent.
+[00:04:54] Tomasz Wierzba: Starter at nineteen, no issue from engineering.
+[00:05:05] Priya Nandakumar: Decision two then, Starter is nineteen pounds per workspace per month, capped at three seats.
+[00:05:15] Marguerite Oyelaran: Noted.
+[00:05:19] Priya Nandakumar: Team is the interesting one. Per seat. I was thinking twelve pounds per seat per month with a three seat minimum.
+[00:05:34] Declan Ashworth: Twelve is low compared with what I've seen out there, but I haven't pulled the numbers yet.
+[00:05:48] Priya Nandakumar: That's actually an action for you in a second.
+[00:06:00] Declan Ashworth: Ha, I walked into that.
+[00:06:09] Tomasz Wierzba: Three seat minimum means the smallest Team workspace pays thirty-six. That's less than the flat forty-nine today.
+[00:06:25] Obadiah Pryce: Right, that's a good flag. We'd be giving a discount to small teams who are currently paying more.
+[00:06:39] Priya Nandakumar: That's the intent, partly. But let's hold that thought and see what Obadiah's model says later.
+[00:06:49] Obadiah Pryce: Yeah, I'll want to run that properly.
+[00:06:57] Priya Nandakumar: For now, decision three, Team is twelve pounds per seat per month, three seat minimum. We can revisit once we have the data.
+[00:07:09] Declan Ashworth: Works for me as a starting point.
+[00:07:18] Hui Min Teo: Okay.
+[00:07:24] Priya Nandakumar: Business we leave open until we see competitor pricing. I'm not going to guess at it today.
+[00:07:35] Declan Ashworth: Agreed, I'd rather not stick a number in the air.
+[00:07:46] Tomasz Wierzba: Sorry, one second, my screen share is... no. Never mind. Is anyone else's coffee machine broken in the office?
+[00:07:58] Hui Min Teo: Oh, the one on the second floor? It's been out since Monday.
+[00:08:10] Marguerite Oyelaran: It makes this noise like a dying walrus.
+[00:08:19] Tomasz Wierzba: I've been walking to the cafe across the road. Four pounds twenty for a flat white, it's criminal.
+[00:08:30] Declan Ashworth: Honestly, I just bought a little Italian stovetop one for my desk. Best forty quid I've spent.
+[00:08:42] Priya Nandakumar: Right, lovely, back to pricing, I'd like to protect the hour.
+[00:08:53] Tomasz Wierzba: Sorry, sorry.
+[00:08:59] Priya Nandakumar: Free trial. Today there's a fourteen day trial on the single plan. Do we keep it?
+[00:09:09] Hui Min Teo: From the support side, fourteen days has been fine. Most people either get value in the first week or never.
+[00:09:25] Declan Ashworth: I'd keep it. Short trials create urgency for sales.
+[00:09:35] Tomasz Wierzba: And it limits infrastructure costs for trial workspaces, which is not nothing.
+[00:09:46] Priya Nandakumar: Any argument for longer?
+[00:09:55] Marguerite Oyelaran: Not from me.
+[00:10:02] Priya Nandakumar: Decision four, we keep a fourteen day free trial on all paid tiers.
+[00:10:12] Obadiah Pryce: Does Starter get a trial too, or only Team and Business?
+[00:10:22] Priya Nandakumar: All paid tiers, so Starter included.
+[00:10:29] Obadiah Pryce: Okay.
+[00:10:33] Priya Nandakumar: Now timing. I'd like to aim to launch the new pricing on the twenty-fourth of November.
+[00:10:45] Tomasz Wierzba: That's seven weeks. It depends what the billing work looks like. Seat based billing isn't what we have today.
+[00:10:59] Priya Nandakumar: Right, which is why I want your estimate by next week. But as a target?
+[00:11:09] Tomasz Wierzba: As a target I can live with it. I won't promise it.
+[00:11:17] Declan Ashworth: Sales would love it before the December push.
+[00:11:25] Priya Nandakumar: Then decision five, target launch is the twenty-fourth of November, to be confirmed once Tomasz has estimated the billing work.
+[00:11:37] Tomasz Wierzba: That wording I'm happy with.
+[00:11:46] Hui Min Teo: Can I ask something about existing customers? What happens to them?
+[00:11:55] Priya Nandakumar: Good question and a big one. Not for today, I'd like it on the agenda for a later session.
+[00:12:04] Hui Min Teo: Okay, I'll hold on to it.
+[00:12:14] Declan Ashworth: Yeah, because a lot of my accounts will ask me the second this leaks.
+[00:12:25] Priya Nandakumar: Understood. Let's move on to actions, since we're at fifty minutes.
+[00:12:36] Priya Nandakumar: Declan, can you pull competitor pricing for five competitors by next Tuesday, the thirteenth?
+[00:12:51] Declan Ashworth: Yep, five competitors, thirteenth. I'll put it in the shared sheet.
+[00:13:00] Priya Nandakumar: Tomasz, an effort estimate for seat-based billing, also by the thirteenth.
+[00:13:10] Tomasz Wierzba: Yes. Rough estimate with the risks called out, by the thirteenth.
+[00:13:20] Priya Nandakumar: Hui Min, could you survey twenty existing customers on what they'd pay and what they'd expect, by the sixteenth?
+[00:13:34] Hui Min Teo: Twenty customers by the sixteenth. Short survey, I can do that. I'd need a list from Declan though.
+[00:13:48] Declan Ashworth: I'll send you accounts today.
+[00:13:54] Hui Min Teo: Perfect.
+[00:13:59] Priya Nandakumar: Marguerite, a mockup of the pricing page by the twentieth?
+[00:14:09] Marguerite Oyelaran: Twentieth, okay. Can I use the three names and the nineteen and twelve as placeholders?
+[00:14:18] Priya Nandakumar: Yes, mark Business as to be confirmed.
+[00:14:25] Marguerite Oyelaran: Will do.
+[00:14:33] Priya Nandakumar: Obadiah, can you check what our payment processor fees will be on per-seat subscriptions, by this Friday the ninth?
+[00:14:48] Obadiah Pryce: Friday the ninth, yes. I'll email our account manager this afternoon.
+[00:14:58] Priya Nandakumar: And I'll draft a pricing FAQ by the twentieth, mostly for support and sales.
+[00:15:09] Hui Min Teo: That would help me a lot.
+[00:15:17] Priya Nandakumar: Okay. Anything else before we stop?
+[00:15:24] Declan Ashworth: Nope.
+[00:15:29] Tomasz Wierzba: No, I'm good.
+[00:15:38] Marguerite Oyelaran: All good.
+[00:15:43] Priya Nandakumar: Thanks everyone, same time next Tuesday.

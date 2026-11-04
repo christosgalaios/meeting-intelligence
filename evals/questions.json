@@ -1,0 +1,185 @@
+[
+  {
+    "id": "q01",
+    "question": "What price was agreed for the Starter plan, and how many seats does it allow?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#29"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q02",
+    "question": "Who was asked to collect competitor pricing, and did they deliver it?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#73",
+      "2026-10-13-pricing-model-review#5"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q03",
+    "question": "What did Declan say about how his half marathon went?",
+    "expectedTurnIds": [
+      "2026-10-27-pricing-revision-checkpoint#2",
+      "2026-10-27-pricing-revision-checkpoint#4"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q04",
+    "question": "What are the payment processor fees for UK cards?",
+    "expectedTurnIds": [
+      "2026-10-13-pricing-model-review#38"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q05",
+    "question": "Why did the team decide to buy rather than build seat-based billing?",
+    "expectedTurnIds": [
+      "2026-10-13-pricing-model-review#24",
+      "2026-10-13-pricing-model-review#28"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q06",
+    "question": "What is the history of the pricing page mockup, from the original due date to its completion?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#81",
+      "2026-10-13-pricing-model-review#53",
+      "2026-10-27-pricing-revision-checkpoint#45"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q07",
+    "question": "What is the current length of the free trial and what was it before?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#57",
+      "2026-10-27-pricing-revision-checkpoint#40"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q08",
+    "question": "What is the Team plan price per seat now, and what was it originally?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#39",
+      "2026-10-27-pricing-revision-checkpoint#28"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q09",
+    "question": "When is the launch planned, and how did that date change over the meetings?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#66",
+      "2026-10-27-pricing-revision-checkpoint#18",
+      "2026-11-03-launch-readiness#28"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q10",
+    "question": "What happened with Hui Min's customer survey?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#77",
+      "2026-10-13-pricing-model-review#43",
+      "2026-10-13-pricing-model-review#45",
+      "2026-10-27-pricing-revision-checkpoint#34"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q11",
+    "question": "What happened with Declan's sales one-pager on the three tiers?",
+    "expectedTurnIds": [
+      "2026-10-13-pricing-model-review#89",
+      "2026-10-27-pricing-revision-checkpoint#50",
+      "2026-10-27-pricing-revision-checkpoint#52",
+      "2026-11-03-launch-readiness#38"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q12",
+    "question": "Who joined the first meeting late?",
+    "expectedTurnIds": [
+      "2026-10-06-pricing-kickoff#19"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q13",
+    "question": "What did a survey respondent type into the free text box, and how did the team react?",
+    "expectedTurnIds": [
+      "2026-10-13-pricing-model-review#57",
+      "2026-10-13-pricing-model-review#58",
+      "2026-10-13-pricing-model-review#59"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q14",
+    "question": "What happens to existing flat-plan customers when the new pricing launches?",
+    "expectedTurnIds": [
+      "2026-10-27-pricing-revision-checkpoint#58",
+      "2026-10-27-pricing-revision-checkpoint#64",
+      "2026-11-03-launch-readiness#54"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q15",
+    "question": "Why did the launch move from the 24th of November, and what was the reason given?",
+    "expectedTurnIds": [
+      "2026-10-27-pricing-revision-checkpoint#9"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q16",
+    "question": "Who is responsible for confirming VAT handling on invoices, and by when?",
+    "expectedTurnIds": [
+      "2026-11-03-launch-readiness#20"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "q17",
+    "question": "What is the plan for a mobile app version of Tallyboard?",
+    "expectedTurnIds": [],
+    "answerable": false
+  },
+  {
+    "id": "q18",
+    "question": "How will Tallyboard be priced in US dollars?",
+    "expectedTurnIds": [],
+    "answerable": false
+  },
+  {
+    "id": "q19",
+    "question": "Is there a discount for charities or educational institutions?",
+    "expectedTurnIds": [],
+    "answerable": false
+  },
+  {
+    "id": "q20",
+    "question": "When is the SOC 2 certification expected to complete?",
+    "expectedTurnIds": [],
+    "answerable": false
+  },
+  {
+    "id": "q21",
+    "question": "Which promo code or coupon will be offered at the launch of the new pricing?",
+    "expectedTurnIds": [],
+    "answerable": false
+  },
+  {
+    "id": "q22",
+    "question": "Which payment provider was chosen for the seat-based subscriptions, and who signed the contract?",
+    "expectedTurnIds": [],
+    "answerable": false
+  }
+]

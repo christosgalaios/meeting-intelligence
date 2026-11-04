@@ -1,0 +1,84 @@
+[00:00:03] Priya Nandakumar: Morning all. Hui Min messaged to say she's stuck on a delayed bus, so we'll start without her and loop her in.
+[00:00:14] Declan Ashworth: Morning. I ran the half marathon, by the way, in case anyone was wondering.
+[00:00:25] Marguerite Oyelaran: Wait, how did it go?
+[00:00:33] Declan Ashworth: Two hours twelve. I walked up the hill at mile ten and I'm not ashamed.
+[00:00:42] Tomasz Wierzba: That's honestly impressive.
+[00:00:50] Declan Ashworth: My knees would disagree.
+[00:00:55] Priya Nandakumar: Well done. Okay, let's do status, then revisions. There are some things we need to change. Tomasz, the spec.
+[00:01:11] Tomasz Wierzba: Spec was done on the twentieth, on time. But writing it surfaced a problem, so let me be straight about it.
+[00:01:22] Tomasz Wierzba: The provider handles adding seats mid cycle fine. Removing seats mid cycle does not behave the way we assumed. If a customer drops from ten seats to six in the middle of a month, the provider issues a credit against the next invoice, but it doesn't let us choose to refund to the card instead. Finance told us last week they want refunds going back to the card in some cases, so we have to build a credit note flow ourselves on top. That adds two weeks.
+[00:02:01] Priya Nandakumar: So what does that do to the date?
+[00:02:07] Tomasz Wierzba: Seat billing on staging by the seventeenth of November, which is the milestone I can stand behind. Then a couple of weeks of testing and the migration path for the flat plan customers. I would not launch on the twenty-fourth.
+[00:02:26] Declan Ashworth: So when?
+[00:02:30] Tomasz Wierzba: The eighth of December is realistic. That's a week of buffer.
+[00:02:42] Priya Nandakumar: Any objections to moving?
+[00:02:49] Declan Ashworth: Annoying for sales, but I'd rather launch right than launch broken.
+[00:03:01] Obadiah Pryce: Finance is fine with the eighth.
+[00:03:07] Marguerite Oyelaran: Fine for the page too, more time.
+[00:03:13] Priya Nandakumar: Okay. Decision one, launch moves from the twenty-fourth of November to the eighth of December.
+[00:03:23] Tomasz Wierzba: Thank you.
+[00:03:27] Priya Nandakumar: Obadiah, your scenarios.
+[00:03:34] Obadiah Pryce: Yes. So let me explain what I did, because the headline number hides a detail. I took all of our current flat plan workspaces, about the same size mix as the survey, and modelled what each would pay under the new tiers if everyone moved over on day one. Under the plan we set two weeks ago, with Team at twelve pounds per seat, revenue from the existing base goes down by about six percent. The reason is the small teams. A four seat workspace pays forty-eight at twelve pounds, which is a pound less than today, and a three seat one pays thirty-six, thirteen pounds less. The large workspaces pay more, but there are fewer of them, and several are already on negotiated rates. If I change only the Team price to fourteen pounds, revenue goes up by about ten percent, and a four seat workspace pays fifty-six, which is seven pounds more than today.
+[00:04:34] Priya Nandakumar: That's helpful. And the survey says fourteen is about where people land, Hui Min's number from last week.
+[00:04:49] Obadiah Pryce: Right, which is the encouraging bit.
+[00:04:56] Declan Ashworth: And Quillstat is fourteen. And Gridwell fifteen. So fourteen isn't an outlier.
+[00:05:05] Priya Nandakumar: Anyone against raising Team?
+[00:05:11] Tomasz Wierzba: No.
+[00:05:16] Marguerite Oyelaran: No, the card gets neater with fourteen anyway.
+[00:05:25] Priya Nandakumar: Then decision two, Team goes from twelve to fourteen pounds per seat per month, three seat minimum unchanged.
+[00:05:39] Obadiah Pryce: I'll update the model.
+[00:05:49] Hui Min Teo: Sorry! Sorry, I'm here. The bus just stopped for twenty minutes outside the Galleries. Where are we?
+[00:06:03] Priya Nandakumar: Welcome. We moved launch to the eighth of December, and Team is now fourteen pounds per seat.
+[00:06:16] Hui Min Teo: Okay, wow, ok. That's quick. That's actually consistent with my survey, can I give the results?
+[00:06:26] Priya Nandakumar: Please.
+[00:06:31] Hui Min Teo: So I finished it on the twenty-first, a day after the date I gave, and I got seventeen of the twenty. The headline is people are okay paying around fourteen per seat for Team. The surprise was the trial. Thirteen of the seventeen said fourteen days is too short, because their reporting runs on a month-end cycle and they won't see a real month-end report inside two weeks.
+[00:07:03] Declan Ashworth: Huh. That's a good point. They need a full close to evaluate it.
+[00:07:15] Hui Min Teo: Right, and a couple said they'd want thirty days.
+[00:07:24] Priya Nandakumar: Thirty is a lot. Tomasz?
+[00:07:29] Tomasz Wierzba: Thirty days of trial workspaces roughly doubles the infrastructure cost of trials compared with fourteen, and it makes abuse easier. Twenty-one would be tolerable. That's three weeks, so it at least covers a mid-month report.
+[00:07:51] Declan Ashworth: Twenty-one covers most month-end problems if they start the trial near the start of the month, and I'd rather not fight about thirty.
+[00:08:07] Priya Nandakumar: Compromise it is. Decision three, the free trial goes from fourteen days to twenty-one days on all paid tiers.
+[00:08:18] Hui Min Teo: Good, I think that'll land well.
+[00:08:24] Marguerite Oyelaran: That needs updating on the page too.
+[00:08:31] Priya Nandakumar: Yes, that's your action in a second.
+[00:08:38] Priya Nandakumar: Marguerite, the mockup.
+[00:08:44] Marguerite Oyelaran: It's done. I sent it on the twenty-third, which is the date I gave you last time. Three tier cards, annual toggle, and a comparison table underneath. Business is a bit crowded.
+[00:09:02] Declan Ashworth: One suggestion, put a most popular badge on Team.
+[00:09:12] Marguerite Oyelaran: I can mock that up, sure.
+[00:09:22] Priya Nandakumar: Let's see it next time.
+[00:09:30] Priya Nandakumar: Declan, the one-pager.
+[00:09:40] Declan Ashworth: Ah. Not done. It was due the twenty-second. The advisory customer search ate my week, then I was waiting on the final Team number before I put it on paper.
+[00:09:57] Priya Nandakumar: Fair, and that's another reason to have waited. When can you do it?
+[00:10:05] Declan Ashworth: Third of November, when the numbers are final.
+[00:10:15] Priya Nandakumar: Okay, third of November.
+[00:10:23] Priya Nandakumar: The advisory call, I held it on Thursday the twenty-second. Four customers came, one dropped at the last minute.
+[00:10:37] Hui Min Teo: What did they say?
+[00:10:46] Priya Nandakumar: Two things. They liked the three tiers. And the existing customers were all asking what happens to them.
+[00:11:01] Hui Min Teo: That's the question I raised at kickoff.
+[00:11:10] Priya Nandakumar: It is. So here's my proposal. Anyone on the current flat plan keeps their current price for six months after launch before moving to the new tiers.
+[00:11:27] Declan Ashworth: That helps my conversations a lot.
+[00:11:38] Obadiah Pryce: Cost to us is small, since most would pay more under the new tiers anyway. Six months of delay is cheap goodwill.
+[00:11:50] Tomasz Wierzba: It does mean we run the flat plan alongside the new tiers for six months. Not hard, but it's a flag in the code.
+[00:12:06] Priya Nandakumar: That's acceptable?
+[00:12:13] Tomasz Wierzba: Yes.
+[00:12:22] Priya Nandakumar: Decision four, existing flat plan customers keep their current price for six months after launch.
+[00:12:37] Hui Min Teo: Good. I'd like to draft the email about it.
+[00:12:48] Priya Nandakumar: Good, that's in the actions. Let's do them.
+[00:12:59] Priya Nandakumar: Tomasz, seat billing on staging by the seventeenth of November.
+[00:13:10] Tomasz Wierzba: Seventeenth, staging.
+[00:13:15] Priya Nandakumar: Declan, one-pager by the third.
+[00:13:25] Declan Ashworth: Third.
+[00:13:29] Priya Nandakumar: Hui Min, a draft of the email to existing customers about the six month price protection, by the sixth of November.
+[00:13:43] Hui Min Teo: Sixth, okay.
+[00:13:47] Priya Nandakumar: Marguerite, update the pricing page with fourteen and twenty-one days, by the third, and add the most popular badge idea.
+[00:14:04] Marguerite Oyelaran: Third, got it.
+[00:14:08] Priya Nandakumar: Obadiah, update the revenue model with Team at fourteen by the third.
+[00:14:21] Obadiah Pryce: Third, yes.
+[00:14:30] Priya Nandakumar: And I'll draft the launch announcement by the tenth of November.
+[00:14:38] Declan Ashworth: Can I flag a risk? If this leaks to customers before the email is out, we'll get a lot of calls.
+[00:14:50] Priya Nandakumar: Yes, which is why the email should go before launch. We'll fix the send date next time.
+[00:14:59] Hui Min Teo: Agreed.
+[00:15:06] Priya Nandakumar: Anything else?
+[00:15:10] Tomasz Wierzba: No.
+[00:15:16] Marguerite Oyelaran: No.
+[00:15:21] Priya Nandakumar: Great. Thanks all, see you on the third.

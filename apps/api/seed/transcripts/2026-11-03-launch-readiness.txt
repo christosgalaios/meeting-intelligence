@@ -1,0 +1,90 @@
+[00:00:03] Priya Nandakumar: Okay, morning. Declan is on a customer call that's running over, he'll join when it ends.
+[00:00:16] Tomasz Wierzba: Morning. I'll be quick, I have a deploy at eleven.
+[00:00:27] Marguerite Oyelaran: Morning, all.
+[00:00:36] Hui Min Teo: Hi.
+[00:00:42] Obadiah Pryce: Morning. Hello.
+[00:00:50] Priya Nandakumar: This is the launch readiness check, a month out from the eighth of December. Let's go through last meeting's actions first. Marguerite.
+[00:01:05] Marguerite Oyelaran: Pricing page is updated. Team is fourteen, trial is twenty-one days, and I added the most popular badge on Team. It's in the design file and ready for engineering.
+[00:01:22] Priya Nandakumar: Great. Anyone object to the badge?
+[00:01:28] Obadiah Pryce: It's a good nudge, no objection.
+[00:01:37] Hui Min Teo: It works for me. Support will point people at Team anyway.
+[00:01:47] Tomasz Wierzba: Fine.
+[00:01:51] Priya Nandakumar: Then decision one, the most popular badge goes on the Team plan.
+[00:02:00] Marguerite Oyelaran: Okay, noted.
+[00:02:04] Priya Nandakumar: Obadiah.
+[00:02:09] Obadiah Pryce: Revenue model is updated with fourteen, done on the third, this morning. With Team at fourteen, and six month price protection for existing customers, there's a revenue dip for six months and then it recovers. I'll share the sheet. The part I want to flag is VAT on the invoices.
+[00:02:32] Priya Nandakumar: Go on.
+[00:02:37] Obadiah Pryce: If we move to per-seat lines and credit notes, the invoice needs to show VAT per line and for credit notes. Our accountant wants a sample before we go live. I don't know if Tomasz's template does that.
+[00:02:57] Tomasz Wierzba: It doesn't yet. Credit notes are in the work, VAT per line is a template change, maybe two days.
+[00:03:12] Priya Nandakumar: So an action for Obadiah to confirm the requirement with the accountant.
+[00:03:23] Obadiah Pryce: Yes, I'll confirm the VAT handling on invoices by the twelfth.
+[00:03:34] Priya Nandakumar: Okay. Tomasz, staging.
+[00:03:44] Tomasz Wierzba: Not due until the seventeenth, and I'm on track for that. Seat quantities and the annual toggle work on staging today. Credit notes are about half built.
+[00:04:03] Priya Nandakumar: Anything that could move the eighth?
+[00:04:14] Tomasz Wierzba: The migration of flat plan customers. I'd say it's the one risk. But with price protection for six months, we don't need to migrate them on launch day. That removes the pressure.
+[00:04:32] Priya Nandakumar: That's a good point. So confirm the eighth?
+[00:04:42] Tomasz Wierzba: I'm comfortable with the eighth.
+[00:04:48] Hui Min Teo: Support is too.
+[00:04:52] Priya Nandakumar: Decision two, launch stays on the eighth of December, with a go or no-go check on the twenty-sixth of November.
+[00:05:05] Tomasz Wierzba: Good.
+[00:05:14] Priya Nandakumar: Hui Min, the email draft.
+[00:05:22] Hui Min Teo: So that was due the sixth, but it's the third, and I did write a first draft. I'm not calling it done though. Our solicitor needs to approve the wording on the price protection, because it's a promise to customers.
+[00:05:40] Priya Nandakumar: Fair. So not done. What date?
+[00:05:46] Hui Min Teo: I'd say the final by the tenth, with the solicitor's comments in.
+[00:05:58] Priya Nandakumar: Tenth, final.
+[00:06:06] Hui Min Teo: Yes.
+[00:06:14] Declan Ashworth: Sorry, sorry, I'm in, just finished. Did I miss the decisions?
+[00:06:26] Priya Nandakumar: You missed one about the badge and one about the eighth. Quick catch up after. Your one-pager?
+[00:06:38] Declan Ashworth: Done. I sent it this morning, three pages, and I trimmed it to one because nobody reads three.
+[00:06:48] Priya Nandakumar: Good.
+[00:06:53] Declan Ashworth: It does assume the badge on Team, which I saw on Marguerite's page.
+[00:07:05] Marguerite Oyelaran: Yeah, it's in.
+[00:07:13] Priya Nandakumar: My own action, the announcement draft, is due the tenth of November. It's in progress. I have an outline and I'll have a draft by Friday.
+[00:07:28] Declan Ashworth: I'd like to read it before it goes anywhere.
+[00:07:37] Priya Nandakumar: Of course, nothing goes out without the founders anyway.
+[00:07:45] Priya Nandakumar: Now, existing customers. Hui Min, when does the email go?
+[00:07:53] Hui Min Teo: I think two weeks before launch, so around the twenty-fourth of November. That gives them time to ask questions.
+[00:08:04] Declan Ashworth: I agree. Any earlier and they'll forget, any later and I'm on the phone for days.
+[00:08:18] Priya Nandakumar: Okay. Decision three, the existing customer email goes on the twenty-fourth of November.
+[00:08:32] Hui Min Teo: Great.
+[00:08:36] Obadiah Pryce: Does the price protection run from launch day or from the email?
+[00:08:46] Priya Nandakumar: From launch. Six months from the eighth of December, so up to the eighth of June.
+[00:08:57] Obadiah Pryce: Good, just wanted it written down.
+[00:09:07] Declan Ashworth: That's useful, because I will be quoting it.
+[00:09:18] Priya Nandakumar: Decision four, price protection runs six months from the eighth of December, ending the eighth of June.
+[00:09:28] Hui Min Teo: Okay.
+[00:09:33] Tomasz Wierzba: Sorry, completely off topic. Has anyone noticed the office plants are looking ill? They've been moved by the window and there's a draught.
+[00:09:46] Marguerite Oyelaran: That was me. I thought they'd like the light.
+[00:09:56] Tomasz Wierzba: The little fern looks like it's in mourning.
+[00:10:03] Hui Min Teo: I'll move it back, don't worry.
+[00:10:12] Marguerite Oyelaran: Sorry, fern.
+[00:10:21] Priya Nandakumar: Alright, last topics. Support readiness. Hui Min.
+[00:10:29] Hui Min Teo: Support needs a pricing FAQ. Priya started it, and it's not final. We also need canned replies for trial length, annual discount and what happens to existing plans. I'd like to train the team before launch.
+[00:10:50] Priya Nandakumar: I'll finish the customer FAQ and publish it by the twentieth.
+[00:11:03] Hui Min Teo: Thank you.
+[00:11:12] Declan Ashworth: And sales needs a session on the tiers. I want to run one for the whole sales team before the end of the month.
+[00:11:26] Priya Nandakumar: When?
+[00:11:34] Declan Ashworth: The nineteenth of November. An hour, I'll book it.
+[00:11:44] Priya Nandakumar: Good.
+[00:11:53] Marguerite Oyelaran: One more thing from me. In the app, there'll be an upgrade prompt for Starter users at the third seat. I haven't designed it.
+[00:12:08] Priya Nandakumar: Can you design the in-app banner by the thirteenth?
+[00:12:18] Marguerite Oyelaran: Thirteenth, yes.
+[00:12:27] Tomasz Wierzba: Is that banner going into the eighth of December release or after?
+[00:12:38] Priya Nandakumar: In the eighth, ideally. Marguerite, to hit that, the thirteenth works?
+[00:12:46] Marguerite Oyelaran: Yes.
+[00:12:51] Tomasz Wierzba: Then I can fit it, as long as I get the design by then.
+[00:13:03] Priya Nandakumar: Perfect. Let me restate actions. Hui Min, the final email by the tenth.
+[00:13:16] Hui Min Teo: Tenth.
+[00:13:25] Priya Nandakumar: Tomasz, seat billing on staging by the seventeenth.
+[00:13:35] Tomasz Wierzba: Seventeenth.
+[00:13:39] Priya Nandakumar: Me, customer FAQ published by the twentieth.
+[00:13:48] Priya Nandakumar: Declan, sales training session on the nineteenth.
+[00:13:56] Declan Ashworth: Nineteenth.
+[00:14:05] Priya Nandakumar: Obadiah, VAT handling confirmed with the accountant by the twelfth.
+[00:14:16] Obadiah Pryce: Twelfth.
+[00:14:21] Priya Nandakumar: Marguerite, in-app upgrade banner design by the thirteenth.
+[00:14:33] Marguerite Oyelaran: Thirteenth.
+[00:14:40] Priya Nandakumar: Anything else?
+[00:14:45] Declan Ashworth: Nope.
+[00:14:53] Tomasz Wierzba: Nothing, I need to go deploy.
+[00:14:58] Priya Nandakumar: Go. Thank you all, we're in good shape.
