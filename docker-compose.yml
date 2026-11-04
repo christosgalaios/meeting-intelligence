@@ -11,17 +11,25 @@ services:
       DATABASE_URL: postgres://meetings:${POSTGRES_PASSWORD:-meetings}@db:5432/meetings
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       PORT: 3001
+      # Read by apps/api/src/config.ts. The defaults here match the ones in config.ts.
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RETRIEVAL_MIN_SCORE: ${RETRIEVAL_MIN_SCORE:-0.58}
       SEED_ON_START: "true"
       # The Dockerfile bakes the voice models in here. Unset it to turn voice transcription off.
       VOICE_MODELS_DIR: /models/voice
+      VOICE_MAX_SECONDS: ${VOICE_MAX_SECONDS:-1800}
+      VOICE_THREADS: ${VOICE_THREADS:-2}
+      VOICE_MAX_QUEUE: ${VOICE_MAX_QUEUE:-4}
     # 30 minutes of audio is the cap because memory is measured only to 95 s (570 MB); this is the backstop.
     mem_limit: 2g
     depends_on: { db: { condition: service_healthy } }
     ports: ["127.0.0.1:3001:3001"]
-    healthcheck: { test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>r.json()).then(j=>process.exit(j.embeddings.ready?0:1))"], interval: 10s, retries: 30 }
+    # healthy means status 'ok': the database answers and the embedding model is loaded.
+    healthcheck: { test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>r.json()).then(j=>process.exit(j.status==='ok'?0:1))"], interval: 10s, retries: 30 }
   web:
     build: { context: ., dockerfile: apps/web/Dockerfile }
     depends_on: { api: { condition: service_healthy } }
     # Loopback only: the app has no auth, so it is not offered to the network.
     ports: ["127.0.0.1:5173:8080"]
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"], interval: 10s, retries: 6 }
 volumes: { dbdata: {} }
