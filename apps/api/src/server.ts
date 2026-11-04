@@ -20,6 +20,8 @@ export interface ServerDeps {
   retrievalMinScore?: number;
   logLevel?: string;
   pretty?: boolean;
+  /** Tests capture log output here. */
+  logStream?: { write(line: string): void };
 }
 
 declare module 'fastify' {
@@ -38,6 +40,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
       // Never logged: the API key, transcript text, chunk content, full answers.
       redact: ['req.headers.authorization', 'req.headers["x-api-key"]'],
       ...(deps.pretty ? { transport: { target: 'pino-pretty' } } : {}),
+      ...(deps.logStream ? { stream: deps.logStream } : {}),
     },
     genReqId: () => randomUUID(),
     requestIdHeader: false,
@@ -59,6 +62,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     void reply.header('x-request-id', req.id);
     // Every line carries reqId (Fastify adds it), route and method.
     req.log = req.log.child({ route: req.routeOptions.url ?? req.url, method: req.method });
+    reply.log = req.log; // so Fastify's own 'request completed' line carries the same fields
     done();
   });
 
