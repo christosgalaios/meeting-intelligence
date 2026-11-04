@@ -57,7 +57,7 @@ docker compose up --build
 Open <http://127.0.0.1:5173> (use the IP: the port is bound to 127.0.0.1 only, and `localhost` can resolve to IPv6 first).
 
 - The first build is slower because the embedding model is downloaded into the API image. After that, start-up needs no network.
-- The API reports healthy only after the model has loaded and warmed up, and the web container waits for that. `docker compose ps` shows the state.
+- The API reports healthy only after the model has loaded and warmed up, and the web container waits for that. `docker compose ps` shows the state. While it is still loading, `GET /api/health` answers 503.
 - Four sample meetings are loaded at start. If the library is ever empty (for example after `docker compose down -v`), a **Load sample meetings** button calls `POST /api/seed` and loads them again. Loading them is safe to repeat and never calls a model.
 - With no key the app is in retrieval-only mode. You can upload transcripts, search across them, and see the best-matching speaker turns with scores. You do not get written answers or extracted decisions. See `docs/adr/0001-no-key-retrieval-only-default.md`.
 
@@ -163,12 +163,13 @@ What I followed:
 - **Tests.**
   - Unit tests for the parser, chunker, RRF, citations, extraction schema, config and log hygiene.
   - API tests run against a real Postgres with pgvector, using a fake embedder and a fake model, so they need no key. Each test file gets its own schema.
-  - Web tests for the SSE client, the ask panel and the library.
+  - Web tests for the SSE client, the ask panel, the library, the upload and voice flows and the paid extract button (its cost estimate, one request per click, disabled while pending).
+  - Coverage is measured with `npm run test:coverage --workspace apps/api` (or `apps/web`) and has no threshold. On 2026-11-04: API 83.8% of statements and 85.1% of lines, web 70.2% and 72.3%.
   - The rule in `CLAUDE.md` is that a bug fix ships with a test that fails without the fix.
 - **A retrieval eval, not just unit tests.** `npm run eval` runs 22 labelled questions (16 answerable, 6 unanswerable) through the real embedder and writes `evals/results/latest.json`. The eval ranks turns the way the app does, including the per-turn rescoring step. CI fails if recall@8 drops below 0.58, MRR below 0.64 or all-retrieved recall below 0.80. The gates come from measured results, not guesses. Current values are recall@8 0.6042, MRR 0.6671 and all-retrieved recall 0.849.
 - **CI.** Typecheck, lint, tests, the eval and the build on every push. A separate web job. A compose smoke test that builds the stack from a clean checkout, waits for it to be healthy, and streams one question through both the API and nginx. All of it runs without a key.
-- **Containers.** Multi-stage API image with the embedding model and the voice models baked in (about 725 MiB on the image filesystem, 216 MiB of it voice). Healthchecks on `db` and `api`. Ports on `127.0.0.1` only.
-- **Observability.** Structured JSON logs with a request id on every line. A line per stage: `ingest.done`, `extract.done`, `ask.retrieved`, `ask.answered`. A trace row per question. A test fails if a log line at `info` contains transcript text, the question, an answer or a key-shaped string.
+- **Containers.** Multi-stage API image with the embedding model and the voice models baked in (about 725 MiB on the image filesystem, 216 MiB of it voice). Healthchecks on `db`, `api` and `web`. The `api` check passes only when the database answers and the embedding model is loaded. `LOG_LEVEL`, `RETRIEVAL_MIN_SCORE` and the voice limits can be set in `.env` and reach the container. Ports on `127.0.0.1` only.
+- **Observability.** Structured JSON logs with a request id on every line. A line per stage: `boot.migrated`, `ingest.done`, `extract.done`, `ask.retrieved`, `ask.answered`. Health probes are logged at `warn`, so they do not drown the rest. Every API error carries the request id, and the web app shows it as `Ref: <id>`. A trace row per question. A test fails if a log line at `info` contains transcript text, the question, an answer or a key-shaped string.
 - **Security.** No CORS and same-origin serving. Uploads are format-checked before anything is embedded. Transcript text is escaped and wrapped before it reaches a model, and model output is validated. A Content-Security-Policy on the web app. The key lives only in the API process, and CI fails the web build if its bundle contains `sk-ant`. gitleaks runs as a pre-commit hook and in CI.
 - **Database.** Numbered SQL migrations, applied in a transaction at boot and safe to run twice.
 - **Frontend.** Colours come only from design tokens, and ESLint fails the build on a hex colour outside `tokens.css`.
@@ -211,4 +212,8 @@ The brief asks for my thoughts, not an LLM's direct output, so here is what is w
 - The refusal threshold catches few unanswerable questions on its own (1 of 6 in the eval). In full mode the model does most of the refusing. I measured it once, live, on 2026-11-04: all 6 unanswerable questions were refused (1 by the threshold, 5 by the model), see `evals/results/manual-refusal-and-injection-2026-11-04.jsonl`. That is one run on 6 questions, not a rate. See `docs/adr/0006-two-layer-refusal.md`.
 - A citation check shows the model cited a turn it was given. It does not show that the turn supports the claim.
 - Recall@8 is 0.6042 on a 16-question set. Treat the retrieval numbers as coarse.
+- Migrations take no advisory lock, so two API replicas starting at once could both try to apply the same migration. The app runs as one replica.
+- A few components are long (`WhyThisAnswer` 246 lines, `UploadDropzone` 217, `AskPage` 185, `MeetingSummaryCard` 179). They are mostly JSX, and splitting them was not worth the regression risk in a two-day build.
+- The nginx `/assets/` location does not send the CSP and frame headers (an `add_header` in a location replaces the inherited ones). It serves only static JS and CSS, which are not documents.
+- Answer and extraction `max_tokens` (1024 and 4096) are constants in `apps/api/src/llm/client.ts`, not settings.
 - Prompt injection is mitigated, not solved. See `docs/adr/0009-transcripts-are-untrusted-input.md`.
