@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
+import { DEFAULT_RETRIEVAL_MIN_SCORE } from './config.js';
 import type { Pool } from './db/pool.js';
 import type { Embedder } from './embed/embedder.js';
 import { AppError, type ErrorCode } from './errors.js';
@@ -48,7 +49,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     pool: deps.pool,
     embedder: deps.embedder,
     llm: deps.llm,
-    retrievalMinScore: deps.retrievalMinScore ?? 0.55,
+    retrievalMinScore: deps.retrievalMinScore ?? DEFAULT_RETRIEVAL_MIN_SCORE,
   });
   app.decorate('extractionQueue', new ExtractionQueue());
 
