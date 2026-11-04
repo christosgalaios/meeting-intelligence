@@ -17,5 +17,7 @@ export default defineConfig({
     include: ['src/test/**/*.test.{ts,tsx}'],
     setupFiles: ['src/test/setup.ts'],
     css: false,
+    // A number to quote, not a gate: there is deliberately no threshold. Run with `npm run test:coverage`.
+    coverage: { provider: 'v8', include: ['src/**/*.{ts,tsx}'], exclude: ['src/test/**'], reporter: ['text-summary', 'text'] },
   },
 });
