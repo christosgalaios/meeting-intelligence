@@ -71,7 +71,7 @@ export function AskPanel(props: AskPanelProps) {
   };
 
   return (
-    <section aria-label="Conversation" className="flex min-w-0 flex-1 flex-col">
+    <section aria-label="Conversation" className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div ref={scroller} className="min-h-0 flex-1 overflow-auto">
         <div className="mx-auto flex max-w-[720px] flex-col gap-11 px-[clamp(20px,3vw,32px)] pb-6 pt-8">
           {exchanges.length === 0 && (

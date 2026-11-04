@@ -130,14 +130,14 @@ export function MeetingSummaryCard({ meeting, mode, extractionModel, onExtract, 
           {meeting.actionItems.length === 0 && <p className="m-0 text-[13.5px] text-fg-3">No action items found.</p>}
           {meeting.actionItems.length > 0 && (
             <div role="table" aria-label="Action items" className="flex flex-col">
-              <div role="row" className="grid grid-cols-[minmax(0,1fr)_132px_104px_88px] gap-3 border-b border-line py-1.5 text-[11.5px] text-fg-3">
+              <div role="row" className="grid grid-cols-[minmax(0,1fr)_132px_140px_88px] gap-3 border-b border-line py-1.5 text-[11.5px] text-fg-3">
                 <span role="columnheader">Task</span>
                 <span role="columnheader">Owner</span>
                 <span role="columnheader">Due</span>
                 <span role="columnheader">Source</span>
               </div>
               {meeting.actionItems.map((a) => (
-                <div key={a.id} role="row" className="grid grid-cols-[minmax(0,1fr)_132px_104px_88px] items-center gap-3 border-b border-line py-[9px] text-[13.5px]">
+                <div key={a.id} role="row" className="grid grid-cols-[minmax(0,1fr)_132px_140px_88px] items-center gap-3 border-b border-line py-[9px] text-[13.5px]">
                   <span role="cell" className="text-pretty">{a.text}</span>
                   <span role="cell" className="flex min-w-0 items-center gap-[7px]">
                     <span

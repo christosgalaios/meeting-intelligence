@@ -51,7 +51,7 @@ export function AskPage() {
 
   return (
     <div className="relative flex min-h-0 flex-1">
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="relative flex h-[52px] shrink-0 items-center gap-2.5 border-b border-line px-5">
           <h1 className="m-0 text-sm font-semibold">Ask</h1>
           <span aria-hidden="true" className="text-line-strong">
@@ -175,7 +175,7 @@ export function AskPage() {
             </div>
           </>
         ) : (
-          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] content-start gap-[22px] overflow-auto px-4 pb-8 pt-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-[22px] overflow-auto px-4 pb-8 pt-4 [&>*]:shrink-0">
             <WhyThisAnswer exchange={whyEx ?? (lastExchange && !whyId ? lastExchange : null)} onSelectTurn={onCite} />
           </div>
         )}

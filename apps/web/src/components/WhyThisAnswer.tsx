@@ -122,7 +122,7 @@ export function WhyThisAnswer({ exchange: ex, onSelectTurn }: Props) {
       )}
       {note && <div className="rounded-md bg-surface-2 px-2.5 py-2 font-mono text-[12.5px] text-fg-2">{note}</div>}
 
-      <div className="grid min-h-min grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
         {cells.map((c) => (
           <div key={c.label} className="flex min-w-0 flex-col gap-[3px] bg-surface px-3 py-2.5">
             <span className="text-[11.5px] text-fg-3">{c.label}</span>
