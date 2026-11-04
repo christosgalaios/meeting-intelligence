@@ -1,8 +1,7 @@
 import type { Pool } from '../db/pool.js';
 import { AppError } from '../errors.js';
+import { UUID } from '../uuid.js';
 import type { ActionItem, Decision, ExtractionStatus, MeetingDetail, MeetingSummary, Turn } from '../types.js';
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface MeetingRow {
   id: string;

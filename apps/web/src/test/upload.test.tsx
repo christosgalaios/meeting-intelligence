@@ -18,6 +18,7 @@ describe('UploadDropzone', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('notes.txt could not be imported');
     expect(alert).toHaveTextContent(message);
+    expect(alert).toHaveTextContent('Ref: r1'); // the request id, so the error can be matched to a log line
     expect(onUploaded).not.toHaveBeenCalled();
   });
 });

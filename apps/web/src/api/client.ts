@@ -66,7 +66,22 @@ const post = (body?: unknown): RequestInit => ({
   ...(body === undefined ? {} : { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }),
 });
 
-export const getHealth = (signal?: AbortSignal) => sendJson('/health', Health, signal ? { signal } : undefined);
+/**
+ * The API answers 503 with a full health body while it is degraded (model still loading, database down). That body is
+ * the information the banner needs, so a 503 that parses as Health is returned, not thrown.
+ */
+export async function getHealth(signal?: AbortSignal): Promise<Health> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/health`, signal ? { signal } : undefined);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') throw err;
+    throw new ApiClientError('NETWORK', 'Could not reach the API.');
+  }
+  const parsed = Health.safeParse(await res.json().catch(() => null));
+  if (parsed.success) return parsed.data;
+  throw new ApiClientError('BAD_RESPONSE', `The API returned ${res.status}.`, res.status);
+}
 
 export const listMeetings = async (signal?: AbortSignal): Promise<MeetingSummary[]> =>
   (await sendJson('/meetings', z.object({ meetings: z.array(MeetingSummary) }), signal ? { signal } : undefined)).meetings;

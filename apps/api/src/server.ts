@@ -11,7 +11,7 @@ import { registerMeetingRoutes } from './routes/meetings.js';
 import { registerSeedRoutes } from './routes/seed.js';
 import { registerTraceRoutes } from './routes/traces.js';
 import { registerTranscriptionRoutes } from './routes/transcriptions.js';
-import { ExtractionQueue } from './services/queue.js';
+import { JobTracker } from './services/jobTracker.js';
 import type { ApiError } from './types.js';
 import { TranscriptionJobs, type TranscriptionRunner } from './voice/jobs.js';
 
@@ -33,12 +33,10 @@ export interface ServerDeps {
 declare module 'fastify' {
   interface FastifyInstance {
     deps: Required<Pick<ServerDeps, 'retrievalMinScore'>> & Pick<ServerDeps, 'pool' | 'embedder' | 'llm'>;
-    extractionQueue: ExtractionQueue;
+    extractionJobs: JobTracker;
     transcriptionJobs: TranscriptionJobs;
   }
 }
-
-export const VERSION = '0.1.0';
 
 export function buildServer(deps: ServerDeps): FastifyInstance {
   const app = Fastify({
@@ -61,7 +59,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     llm: deps.llm,
     retrievalMinScore: deps.retrievalMinScore ?? DEFAULT_RETRIEVAL_MIN_SCORE,
   });
-  app.decorate('extractionQueue', new ExtractionQueue());
+  app.decorate('extractionJobs', new JobTracker());
   app.decorate('transcriptionJobs', new TranscriptionJobs(deps.voice ?? null, {
     maxQueue: deps.voiceMaxQueue ?? 4,
     maxSeconds: deps.voiceMaxSeconds ?? 1800,

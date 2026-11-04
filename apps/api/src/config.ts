@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const VERSION = '0.1.0';
+
 // Tuned from the retrieval eval, see apps/api/README.md. The spec's starting guess was 0.55.
 export const DEFAULT_RETRIEVAL_MIN_SCORE = 0.58;
 

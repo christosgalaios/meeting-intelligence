@@ -19,18 +19,20 @@ Option 2. Each change was tried alone, with the 22-question eval set frozen.
 
 | variant | recall@5 | recall@8 | MRR | recall, all retrieved |
 |---|---|---|---|---|
-| AND (spec) | 0.286 | 0.490 | 0.383 | 0.786 |
-| OR (chosen) | 0.302 | 0.438 | 0.360 | 0.849 |
-| OR + 1 neighbour each side | 0.302 | 0.438 | 0.358 | 0.865 |
-| OR, limit 10 | 0.302 | 0.438 | 0.360 | 0.849 |
-| OR, RRF k 20 or 10 | 0.302 | 0.438 | 0.360 | 0.818 |
+| AND (spec) | 0.531 | 0.583 | 0.625 | 0.786 |
+| OR (chosen) | 0.531 | 0.604 | 0.667 | 0.849 |
+| OR + 1 neighbour each side | 0.531 | 0.552 | 0.667 | 0.865 |
+| OR, limit 10 | 0.531 | 0.604 | 0.635 | 0.849 |
+| OR, RRF k 20 or 10 | 0.531 | 0.573 | 0.667 | 0.818 |
+
+Re-measured on 2026-11-04 after a review found the eval did not rescore turns the way the app does. The first measurement, which let turns inherit their chunk's score, gave AND 0.286 / 0.490 / 0.383 / 0.786 and OR 0.302 / 0.438 / 0.360 / 0.849, and showed OR slightly worse on the two top-turn metrics. With the app's real ranking, OR is better or equal on all four. The decision does not change.
 
 ## Consequences
 - What the model is shown improves: recall over every retrieved turn goes from 0.786 to 0.849.
-- Two ranking numbers get slightly worse: recall@8 from 0.490 to 0.438 and MRR from 0.383 to 0.360. Turns inherit their chunk's score, so turns in one chunk tie and are ordered by turn number. I kept OR for the gain in context, and say so here instead of hiding the dip.
+- The two top-turn ranking numbers also improve slightly: recall@8 from 0.583 to 0.604 and MRR from 0.625 to 0.667.
 - 16 answerable questions is a small set. One turn moves recall@5 and recall@8 by 0.02 to 0.06.
-- The CI gates were reset to what was measured: recall@8 at least 0.40, MRR at least 0.33, all-retrieved recall at least 0.80. The spec's 0.7 and 0.5 were guesses that the tie ordering made unreachable.
+- The CI gates were reset to what was measured: recall@8 at least 0.58, MRR at least 0.64, all-retrieved recall at least 0.80. The spec's 0.7 and 0.5 were guesses made before any measurement.
 - With OR, nearly every question has a one-word match. The refusal override therefore needs a chunk that contains every term of the question (ADR 0006).
-- Rejected option 3: it added 0.016 on one question, lowered MRR and put more tokens in every answer.
-- Rejected option 4: limit 10 changed nothing, because the two extra chunks held no expected turn. A smaller k lowered all-retrieved recall.
+- Rejected option 3: it added 0.016 on one question, lowered recall@8 and put more tokens in every answer.
+- Rejected option 4: limit 10 lowered MRR, because the two extra chunks held no expected turn. A smaller k lowered recall@8 and all-retrieved recall.
 - Source: `apps/api/README.md` and `evals/results/latest.json`.

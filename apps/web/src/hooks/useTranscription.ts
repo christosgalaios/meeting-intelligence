@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiClientError, deleteTranscription, getTranscription, startTranscription } from '../api/client';
 import type { Transcription } from '../api/types';
+import { errorRef } from '../lib/friendly';
 
 export type TranscriptionState =
   | { phase: 'idle' }
@@ -8,7 +9,7 @@ export type TranscriptionState =
   | { phase: 'queued'; position: number }
   | { phase: 'running'; stage: Transcription['stage'] }
   | { phase: 'done'; transcription: Transcription }
-  | { phase: 'error'; message: string };
+  | { phase: 'error'; message: string; ref: string | null };
 
 export interface TranscriptionController {
   state: TranscriptionState;
@@ -45,7 +46,7 @@ export function useTranscription(pollMs = 1500): TranscriptionController {
       return true;
     }
     if (t.status === 'failed') {
-      setState({ phase: 'error', message: t.error ?? 'Transcription failed.' });
+      setState({ phase: 'error', message: t.error ?? 'Transcription failed.', ref: null });
       return true;
     }
     setState(t.status === 'queued' ? { phase: 'queued', position: t.queuePosition ?? 1 } : { phase: 'running', stage: t.stage });
@@ -69,7 +70,7 @@ export function useTranscription(pollMs = 1500): TranscriptionController {
           })
           .catch((err: unknown) => {
             if (run.current !== mine || (err instanceof DOMException && err.name === 'AbortError')) return;
-            setState({ phase: 'error', message: err instanceof ApiClientError && err.code === 'NOT_FOUND' ? RESTARTED : errorMessage(err) });
+            setState({ phase: 'error', message: err instanceof ApiClientError && err.code === 'NOT_FOUND' ? RESTARTED : errorMessage(err), ref: errorRef(err) });
           });
       }, pollMs);
     };
@@ -81,7 +82,7 @@ export function useTranscription(pollMs = 1500): TranscriptionController {
       })
       .catch((err: unknown) => {
         if (run.current !== mine) return;
-        setState({ phase: 'error', message: errorMessage(err) });
+        setState({ phase: 'error', message: errorMessage(err), ref: errorRef(err) });
       });
   }, [apply, pollMs, stop]);
 

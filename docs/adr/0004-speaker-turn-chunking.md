@@ -29,4 +29,4 @@ Option 1, in `apps/api/src/transcript/chunk.ts`.
 - Rejected option 3: a turn like "Okay." or "Noted." embeds to almost nothing, and the answer to a question often sits in the turn before it.
 - Rejected option 4: it costs a model call per upload and breaks the rule that retrieval works with no key.
 - The numbers 6, 180 and 2 are reasoned, not tuned. The eval did not compare other chunk sizes. Adding neighbouring turns was tried and rejected (see `apps/api/README.md`).
-- The eval's recall@5 and recall@8 count turns, and 8 turns is only one or two chunks, so those two numbers are coarse.
+- The eval's recall@5 and recall@8 count turns, and 8 turns is only one or two chunks, so those two numbers are coarse. They come from 16 answerable questions.

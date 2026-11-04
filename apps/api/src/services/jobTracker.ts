@@ -1,5 +1,8 @@
-/** Tracks background jobs (extraction) so tests and shutdown can wait for them. */
-export class ExtractionQueue {
+/**
+ * Tracks background jobs (extraction) so tests and shutdown can wait for them.
+ * It is not a queue: every job starts the moment it is added, and nothing is retried or persisted.
+ */
+export class JobTracker {
   private readonly running = new Set<Promise<void>>();
 
   add(job: () => Promise<void>): void {

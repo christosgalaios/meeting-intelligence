@@ -9,16 +9,17 @@ import { migrate } from '../src/db/migrate.js';
 import { createPool } from '../src/db/pool.js';
 import { BgeEmbedder } from '../src/embed/bge.js';
 import { NullLlmClient } from '../src/llm/client.js';
-import { expandToTurns } from '../src/retrieval/expand.js';
+import { expandToTurns, rescoreTurns } from '../src/retrieval/expand.js';
 import { hybridSearch, type FtsMode } from '../src/retrieval/search.js';
 import { isBelowThreshold } from '../src/services/ask.js';
-import { ExtractionQueue } from '../src/services/queue.js';
+import { JobTracker } from '../src/services/jobTracker.js';
 import { seedTranscripts } from '../src/services/seed.js';
 
 // Spec starting gates were recall@8 0.7 and MRR 0.5; adjusted after the first real run (see apps/api/README.md).
-// recall@8 and MRR count the top 8 *turns*, which is coarse because turns inherit their chunk's score.
+// Turns are ranked the way production ranks them: expand the fused chunks to turns, then rescore each turn by its own
+// cosine similarity to the question (rescoreTurns, as in services/ask.ts). recall@8 and MRR count the top 8 turns.
 // recallAllRetrieved is what the model actually sees, so it carries the main gate.
-const GATE = { recallAt8: 0.4, mrr: 0.33, recallAllRetrieved: 0.8 };
+const GATE = { recallAt8: 0.58, mrr: 0.64, recallAllRetrieved: 0.8 };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const EVALS_DIR = path.resolve(here, '../../../evals');
@@ -79,7 +80,7 @@ try {
   await migrate(pool);
   await embedder.warm();
   const seeded = await seedTranscripts(
-    { pool, embedder, llm: new NullLlmClient(), queue: new ExtractionQueue(), log },
+    { pool, embedder, llm: new NullLlmClient(), jobs: new JobTracker(), log },
   );
   console.log(`seed: added ${seeded.added}, skipped ${seeded.skipped}\n`);
 
@@ -87,7 +88,7 @@ try {
   const rows: Row[] = [];
   for (const q of questions) {
     const search = await hybridSearch(pool, embedder, { question: q.question, ...KNOBS.search });
-    const turns = await expandToTurns(pool, search.chunks, KNOBS.expand);
+    const turns = await rescoreTurns(embedder, q.question, await expandToTurns(pool, search.chunks, KNOBS.expand));
     const ranked = turns.map((t) => t.id);
     const { topVectorScore, belowThreshold } = isBelowThreshold(search.chunks, config.RETRIEVAL_MIN_SCORE, search.strictTextHit);
     const hit = (k: number) => q.expectedTurnIds.filter((id) => ranked.slice(0, k).includes(id)).length / q.expectedTurnIds.length;

@@ -92,11 +92,13 @@ jobs:
             -H 'content-type: application/json' \
             -d '{"question":"What price was agreed for the Starter plan?"}' | tee ask.txt
           grep -q 'event: done' ask.txt
-      - name: Wait for nginx to accept connections
+      - name: Wait for the web container to be healthy
         # The web container starts only after the api is healthy, so it can still be booting here.
         run: |
           for i in $(seq 1 30); do
-            curl -sf -o /dev/null http://localhost:5173/ && exit 0
+            status=$(docker inspect --format '{{.State.Health.Status}}' "$(docker compose ps -q web)")
+            echo "web health: $status"
+            [ "$status" = "healthy" ] && exit 0
             sleep 2
           done
           docker compose logs web

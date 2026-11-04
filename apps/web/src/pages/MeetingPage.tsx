@@ -5,7 +5,7 @@ import { useApp } from '../AppContext';
 import { IconSearch } from '../components/icons';
 import { MeetingSummaryCard } from '../components/MeetingSummaryCard';
 import { TranscriptView, type TurnFocus } from '../components/TranscriptView';
-import { btnSecondary } from '../components/ui';
+import { btnSecondary, ErrorRef } from '../components/ui';
 import { useMeeting } from '../hooks/useMeeting';
 import { formatDuration, meetingDateLabel, plural } from '../lib/format';
 import { speakerColor } from '../lib/speakers';
@@ -23,7 +23,7 @@ export function talkShare(meeting: Pick<MeetingDetail, 'turns' | 'speakers'>): A
 
 export function MeetingPage() {
   const { id = '' } = useParams();
-  const { meeting, loading, error, notFound, set } = useMeeting(id);
+  const { meeting, loading, error, errorRef, notFound, set } = useMeeting(id);
   const { health, mode, reloadMeetings, setScope } = useApp();
   const navigate = useNavigate();
   const [focus, setFocus] = useState<TurnFocus | null>(null);
@@ -41,6 +41,7 @@ export function MeetingPage() {
     return (
       <div className="flex-1 p-10 text-[13.5px] text-fg-2" role={error ? 'alert' : 'status'}>
         {error ?? (loading ? 'Loading meeting…' : '')}
+        {error && errorRef && <div><ErrorRef id={errorRef} /></div>}
       </div>
     );
   }

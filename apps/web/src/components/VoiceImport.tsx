@@ -3,7 +3,7 @@ import type { MeetingDetail, Transcription } from '../api/types';
 import { useTranscription, type TranscriptionState } from '../hooks/useTranscription';
 import { decodeToWav16k, AudioTooLong, AudioUndecodable, MAX_AUDIO_SECONDS } from '../lib/audio';
 import { TranscriptReview } from './TranscriptReview';
-import { btnGhost, btnSecondary } from './ui';
+import { btnGhost, btnSecondary, ErrorRef } from './ui';
 
 export const VOICE_NOTE = `English audio, up to ${MAX_AUDIO_SECONDS / 60} minutes. It runs on your own API: the recording is not stored and nothing leaves your machine.`;
 
@@ -64,6 +64,7 @@ export function VoiceImport({ file, onImported, onCancel, importHint, pollMs }: 
   const text = decoding ? `Decoding ${file.name}…` : progressText(tx.state);
   const inFlight = text !== null;
   const failure = decodeError ?? (tx.state.phase === 'error' ? tx.state.message : null);
+  const failureRef = tx.state.phase === 'error' ? tx.state.ref : null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -83,6 +84,7 @@ export function VoiceImport({ file, onImported, onCancel, importHint, pollMs }: 
           <div className="flex flex-col gap-0.5 bg-danger-soft px-4 py-3.5">
             <div className="font-semibold text-danger">{file.name} could not be transcribed</div>
             <div className="text-[13px] text-fg-2">{failure}</div>
+            <ErrorRef id={decodeError ? null : failureRef} />
           </div>
           <div className="flex gap-2 px-4 py-3">
             {!decodeError && (

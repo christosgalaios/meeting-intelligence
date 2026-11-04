@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { ApiClientError, askStream } from '../api/client';
 import type { AskEvent, Mode, RankedChunk, SourceTurn } from '../api/types';
+import { errorRef } from '../lib/friendly';
 
 export type ExchangeStatus = 'searching' | 'thinking' | 'streaming' | 'done' | 'error';
 export type DoneEvent = Extract<AskEvent, { type: 'done' }>;
@@ -20,13 +21,14 @@ export interface Exchange {
   answer: string;
   refusal: { topVectorScore: number | null } | null;
   done: DoneEvent | null;
-  error: { code: string; message: string } | null;
+  /** `ref` is what to quote to find the log line: the request id for a failure before the stream, the trace id after it. */
+  error: { code: string; message: string; ref: string | null } | null;
 }
 
 type Action =
   | { type: 'start'; exchange: Exchange }
   | { type: 'event'; id: string; event: AskEvent }
-  | { type: 'failed'; id: string; code: string; message: string }
+  | { type: 'failed'; id: string; code: string; message: string; ref: string | null }
   | { type: 'reset' };
 
 export function applyEvent(ex: Exchange, event: AskEvent): Exchange {
@@ -43,7 +45,7 @@ export function applyEvent(ex: Exchange, event: AskEvent): Exchange {
     case 'done':
       return { ...ex, done: event, answer: event.answer ?? ex.answer, status: 'done' };
     case 'error':
-      return { ...ex, error: { code: event.code, message: event.message }, status: 'error' };
+      return { ...ex, error: { code: event.code, message: event.message, ref: ex.traceId }, status: 'error' };
   }
 }
 
@@ -55,7 +57,9 @@ function reducer(state: Exchange[], action: Action): Exchange[] {
       return state.map((ex) => (ex.id === action.id ? applyEvent(ex, action.event) : ex));
     case 'failed':
       return state.map((ex) =>
-        ex.id === action.id && ex.status !== 'done' ? { ...ex, status: 'error', error: { code: action.code, message: action.message } } : ex,
+        ex.id === action.id && ex.status !== 'done'
+          ? { ...ex, status: 'error', error: { code: action.code, message: action.message, ref: action.ref } }
+          : ex,
       );
     case 'reset':
       return [];
@@ -102,7 +106,7 @@ export function useAsk(): AskController {
         if (controller.signal.aborted) return;
         const code = err instanceof ApiClientError ? err.code : 'NETWORK';
         const message = err instanceof Error ? err.message : 'The question could not be sent.';
-        dispatch({ type: 'failed', id, code, message });
+        dispatch({ type: 'failed', id, code, message, ref: errorRef(err) });
       })
       .finally(() => {
         busyRef.current = false;

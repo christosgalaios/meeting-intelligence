@@ -4,7 +4,7 @@ import type { Exchange } from '../hooks/useAsk';
 import { citationLookup, splitAnswer } from '../lib/citations';
 import { formatMs, plural } from '../lib/format';
 import { usageCost, formatUsd } from '../lib/cost';
-import { btnGhost, btnPrimary, ButtonHint, Caret, Dots } from './ui';
+import { btnGhost, btnPrimary, ButtonHint, Caret, Dots, ErrorRef } from './ui';
 import { CitationChip } from './CitationChip';
 import { SourcesList } from './SourcesList';
 
@@ -233,6 +233,7 @@ function ExchangeView({ ex, whyOpen, activeTurnId, titleOf, onCite, onOpenWhy }:
         <div role="alert" className="flex flex-col gap-1 rounded-lg border border-danger bg-danger-soft px-4 py-3.5">
           <div className="text-[15px] font-semibold text-danger">This question could not be answered</div>
           <div className="text-[13.5px] text-fg-2">{ex.error.message}</div>
+          <ErrorRef id={ex.error.ref} />
         </div>
       )}
 

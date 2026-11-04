@@ -3,7 +3,8 @@ import type { MeetingDetail, Mode } from '../api/types';
 import { ApiClientError } from '../api/client';
 import { estimateExtractionCost, formatHint } from '../lib/cost';
 import { speakerColor } from '../lib/speakers';
-import { btnPrimary, ButtonHint, Spinner } from './ui';
+import { errorRef } from '../lib/friendly';
+import { btnPrimary, ButtonHint, ErrorRef, Spinner } from './ui';
 import { IconLock } from './icons';
 
 interface Props {
@@ -36,7 +37,7 @@ function Frame({ children }: { children: React.ReactNode }) {
 
 export function MeetingSummaryCard({ meeting, mode, extractionModel, onExtract, onJump }: Props) {
   const [starting, setStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
+  const [startError, setStartError] = useState<{ message: string; ref: string | null } | null>(null);
   const status = meeting.extractionStatus;
   const hint = (() => {
     const usd = estimateExtractionCost(extractionModel, meeting);
@@ -49,7 +50,7 @@ export function MeetingSummaryCard({ meeting, mode, extractionModel, onExtract, 
     try {
       await onExtract();
     } catch (err) {
-      setStartError(err instanceof ApiClientError ? err.message : 'Extraction could not be started.');
+      setStartError({ message: err instanceof ApiClientError ? err.message : 'Extraction could not be started.', ref: errorRef(err) });
     } finally {
       setStarting(false);
     }
@@ -80,7 +81,12 @@ export function MeetingSummaryCard({ meeting, mode, extractionModel, onExtract, 
           {meeting.extractionError ?? 'The model did not return a usable result.'}
         </p>
         {mode === 'full' && extractButton('Try again')}
-        {startError && <p role="alert" className="m-0 text-[13px] text-danger">{startError}</p>}
+        {startError && (
+          <p role="alert" className="m-0 flex flex-col gap-0.5 text-[13px] text-danger">
+            {startError.message}
+            <ErrorRef id={startError.ref} />
+          </p>
+        )}
       </Frame>
     );
   } else if (status === 'skipped') {
@@ -92,7 +98,12 @@ export function MeetingSummaryCard({ meeting, mode, extractionModel, onExtract, 
             Pull out the decisions and action items, each linked to its source moment. It runs once, when you start it.
           </p>
           {extractButton('Extract decisions and actions')}
-          {startError && <p role="alert" className="m-0 text-[13px] text-danger">{startError}</p>}
+          {startError && (
+          <p role="alert" className="m-0 flex flex-col gap-0.5 text-[13px] text-danger">
+            {startError.message}
+            <ErrorRef id={startError.ref} />
+          </p>
+        )}
         </Frame>
       ) : (
         <Frame>

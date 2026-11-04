@@ -3,7 +3,7 @@ import pino from 'pino';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Pool } from '../src/db/pool.js';
 import { buildServer } from '../src/server.js';
-import { ExtractionQueue } from '../src/services/queue.js';
+import { JobTracker } from '../src/services/jobTracker.js';
 import { seedTranscripts } from '../src/services/seed.js';
 import { filenameMeta } from '../src/transcript/title.js';
 import { MeetingDetail, MeetingSummary } from '../src/types.js';
@@ -57,7 +57,7 @@ describe('titles, dates and counts through the API', () => {
   });
 
   it('the list carries decision and action counts once extracted', async () => {
-    await app.extractionQueue.idle();
+    await app.extractionJobs.idle();
     const list = (await app.inject({ method: 'GET', url: '/api/meetings' })).json() as { meetings: unknown[] };
     const m = list.meetings.map((x) => MeetingSummary.parse(x)).find((x) => x.slug === '2026-10-13-pricing-model-review')!;
     expect(m).toMatchObject({ extractionStatus: 'done', decisionCount: 1, actionItemCount: 2 });
@@ -68,9 +68,9 @@ describe('seeding never calls the model', () => {
   it('with a key set, seeded meetings are skipped and extract is never called', async () => {
     const { pool, drop } = await createTestDb();
     const llm = new FakeLlm();
-    const queue = new ExtractionQueue();
-    const res = await seedTranscripts({ pool, embedder: fakeEmbedder, llm, queue, log: pino({ level: 'silent' }) });
-    await queue.idle();
+    const jobs = new JobTracker();
+    const res = await seedTranscripts({ pool, embedder: fakeEmbedder, llm, jobs, log: pino({ level: 'silent' }) });
+    await jobs.idle();
     expect(res.added).toBeGreaterThan(0);
     expect(llm.extractCalls).toBe(0);
     const { rows } = await pool.query("SELECT DISTINCT extraction_status AS s, count(meeting_date)::int AS dated FROM meetings GROUP BY 1");
@@ -88,7 +88,7 @@ describe('POST /api/seed', () => {
     expect(first.statusCode).toBe(200);
     const { added } = first.json() as { added: number; skipped: number };
     expect(added).toBeGreaterThan(0);
-    await app.extractionQueue.idle();
+    await app.extractionJobs.idle();
     expect(llm.extractCalls).toBe(0);
     const again = await app.inject({ method: 'POST', url: '/api/seed' });
     expect(again.json()).toEqual({ added: 0, skipped: added });

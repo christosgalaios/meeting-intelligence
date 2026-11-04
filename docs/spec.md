@@ -225,7 +225,7 @@ Rules, in order:
 3. A line matching the grammar starts a new turn: `n` = count so far + 1, `speaker` trimmed, `startSeconds` = h*3600 + m*60 + s, `timestampLabel` = the bracket content zero-padded to `hh:mm:ss`, `text` = the remainder trimmed.
 4. A non-matching line is appended to the previous turn's text with a single space. If there is no previous turn yet, it is dropped and counted in `warnings`.
 5. Result also carries `warnings: string[]` (dropped leading lines, out-of-order timestamps). Warnings are logged, not fatal.
-6. Reject with `EMPTY_TRANSCRIPT` if zero turns parse. Reject with `TOO_LARGE` above 2 MB of text (checked at the route).
+6. Reject with `UNPROCESSABLE` (422) if zero turns parse. Reject with `TOO_LARGE` above 2 MB of text (checked at the route).
 
 Slug (`transcript/slug.ts`): filename without extension, lower-cased, non `[a-z0-9]` runs replaced by `-`, trimmed of `-`, max 60 chars. Empty result becomes `meeting`. On slug collision at upload, append `-2`, `-3`, ... (checked in the ingest service, not the parser).
 
@@ -302,7 +302,7 @@ export const ExtractionStatus = z.enum(['pending', 'done', 'failed', 'skipped'])
 export const ApiError = z.object({
   error: z.object({
     code: z.enum([
-      'VALIDATION', 'NOT_FOUND', 'EMPTY_TRANSCRIPT', 'TOO_LARGE',
+      'VALIDATION', 'UNPROCESSABLE', 'NOT_FOUND', 'TOO_LARGE',
       'EMBEDDINGS_NOT_READY', 'LLM_ERROR', 'CONFLICT', 'INTERNAL',
     ]),
     message: z.string(),
@@ -460,11 +460,11 @@ export type AskEvent = z.infer<typeof AskEvent>;
 
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
-| `GET /api/health` | none | `200 Health`. `status: 'degraded'` when db false or embeddings not ready; still 200 so compose healthchecks can read the body. | none |
-| `POST /api/meetings` | `UploadRequest` JSON. The browser reads the file with `File.text()`. | `201 MeetingDetail`. Synchronous: parse, chunk, embed, insert. Extraction (full mode) starts after the response (seeded meetings are the exception: seeding never calls the model, they are `skipped`, and the user starts extraction); `extractionStatus` is `pending`, poll `GET /api/meetings/:id` until it changes. In retrieval-only mode it is `skipped` immediately. | `400 VALIDATION`, `422 VALIDATION` (not a text transcript, under 2 turns, under half the lines timestamped, a turn over 2,000 words: checked before any embedding or model call), `400 EMPTY_TRANSCRIPT`, `413 TOO_LARGE`, `503 EMBEDDINGS_NOT_READY` |
+| `GET /api/health` | none | `200 Health`, or `503 Health` (the same body) when `status` is `'degraded'`: db false or embeddings not ready. The compose healthcheck passes only on `status === 'ok'`. The probe is logged at `warn`, not `info`. | none |
+| `POST /api/meetings` | `UploadRequest` JSON. The browser reads the file with `File.text()`. | `201 MeetingDetail`. Synchronous: parse, chunk, embed, insert. Extraction (full mode) starts after the response (seeded meetings are the exception: seeding never calls the model, they are `skipped`, and the user starts extraction); `extractionStatus` is `pending`, poll `GET /api/meetings/:id` until it changes. In retrieval-only mode it is `skipped` immediately. | `400 VALIDATION`, `422 UNPROCESSABLE` (not a text transcript, no turns, under 2 turns, under half the lines timestamped, a turn over 2,000 words: checked before any embedding or model call), `413 TOO_LARGE`, `503 EMBEDDINGS_NOT_READY` |
 | `POST /api/meetings/:id/extract` | none. User-clicked from the summary card. id = uuid or slug. | `202 MeetingDetail` with `extractionStatus: 'pending'`; poll `GET /api/meetings/:id`. Runs the same extraction as an upload, once, on a meeting that is `skipped` or `failed`. | `409 CONFLICT` when the API has no key, or the meeting is already `pending` or `done`; `404 NOT_FOUND` |
 | `POST /api/seed` | none. User-clicked from the empty library. | `200 { added, skipped }`. Loads the bundled sample transcripts; meetings that already exist are skipped, so it is idempotent. Never calls the model: seeded meetings are `skipped`. | `503 EMBEDDINGS_NOT_READY` |
-| `POST /api/transcriptions` | Body is a 16 kHz mono 16-bit PCM WAV with `content-type: audio/wav`. Optional `?numSpeakers=1..20`. Body limit 64 MiB. | `202 Transcription` with `status: 'queued'`. The audio is parsed in memory and handed to a worker thread; it is never written to disk. | `400 VALIDATION` (not a WAV body, bad `numSpeakers`), `422 VALIDATION` (not a WAV, wrong format, under half a second), `413 TOO_LARGE` (over 30 minutes or 64 MiB), `409 CONFLICT` (voice not available on this API, or 4 jobs already active) |
+| `POST /api/transcriptions` | Body is a 16 kHz mono 16-bit PCM WAV with `content-type: audio/wav`. Optional `?numSpeakers=1..20`. Body limit 64 MiB. | `202 Transcription` with `status: 'queued'`. The audio is parsed in memory and handed to a worker thread; it is never written to disk. | `400 VALIDATION` (not a WAV body, bad `numSpeakers`), `422 UNPROCESSABLE` (not a WAV, wrong format, under half a second), `413 TOO_LARGE` (over 30 minutes or 64 MiB), `409 CONFLICT` (voice not available on this API, or 4 jobs already active) |
 | `GET /api/transcriptions/:id` | none | `200 Transcription`. While `running`, `stage` shows progress; when `done`, `transcript` and `segments` are set. A job that finished is kept for 60 minutes. | `404 NOT_FOUND` (unknown, expired, or lost in an API restart) |
 | `DELETE /api/transcriptions/:id` | none | `204`. Evicts a finished job early. | `404 NOT_FOUND`, `409 CONFLICT` while still queued or running |
 | `GET /api/meetings` | none | `200 { meetings: MeetingSummary[] }`, newest first | none |
@@ -604,7 +604,7 @@ Runner: vitest in both apps, `npm test` at the root runs both. Unit tests need n
 - attaches a malformed line to the previous turn with a space
 - drops a malformed line before the first turn and reports a warning
 - speaker with spaces and punctuation (`Dr. Ana Lopez`) parses
-- empty input throws `EMPTY_TRANSCRIPT`
+- empty input throws `UNPROCESSABLE`
 - strips BOM
 
 `chunk.test.ts`
@@ -637,9 +637,9 @@ Runner: vitest in both apps, `npm test` at the root runs both. Unit tests need n
 `buildServer({ embedder: fakeEmbedder, llm: fakeLlm | nullLlm, pool })`. Fake embedder returns a deterministic 384-vector from a hash of the text so similar strings (same prefix) score higher. Fake LLM streams a fixed answer containing one valid and one invalid citation, and a fixed extraction JSON. Each test runs in a fresh schema (`CREATE SCHEMA test_<random>` and `search_path`) so tests are isolated.
 
 - `GET /api/health` returns ok and the right mode for each llm
-- upload returns 201 with turns and `extractionStatus` `skipped` (null llm) or `pending` then `done` after `await server.extractionQueue.idle()` (fake llm)
+- upload returns 201 with turns and `extractionStatus` `skipped` (null llm) or `pending` then `done` after `await server.extractionJobs.idle()` (fake llm)
 - upload with the same filename twice gives slugs `x` and `x-2`
-- upload of an empty file gives 400 `EMPTY_TRANSCRIPT`
+- upload of an empty file gives 422 `UNPROCESSABLE`
 - list and detail match `MeetingSummary` / `MeetingDetail` schemas
 - ask in retrieval-only mode: events are `meta, sources, done` with `answer: null` and `sources.turns` non-empty
 - ask in full mode: events include `token`s, `done.answer` contains the fake text, `done.citations` has the valid one, `done.droppedCitations` has the invalid one
@@ -691,7 +691,7 @@ services:
       SEED_ON_START: "true"
     depends_on: { db: { condition: service_healthy } }
     ports: ["3001:3001"]
-    healthcheck: { test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>r.json()).then(j=>process.exit(j.embeddings.ready?0:1))"], interval: 10s, retries: 30 }
+    healthcheck: { test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r=>r.json()).then(j=>process.exit(j.status==='ok'?0:1))"], interval: 10s, retries: 30 }
   web:
     build: { context: ., dockerfile: apps/web/Dockerfile }
     depends_on: { api: { condition: service_healthy } }

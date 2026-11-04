@@ -4,20 +4,20 @@ import { toVectorLiteral, type Embedder } from '../embed/embedder.js';
 import { AppError } from '../errors.js';
 import type { LlmClient } from '../llm/client.js';
 import { validateExtraction } from '../llm/extractionSchema.js';
-import { chunkTurns } from '../transcript/chunk.js';
-import { parseTranscript } from '../transcript/parse.js';
+import { chunkTurns, type ChunkDraft } from '../transcript/chunk.js';
+import type { ParsedTurn } from '../transcript/parse.js';
 import { validateTranscript } from '../transcript/validate.js';
 import { fileSlug } from '../transcript/slug.js';
 import { filenameMeta } from '../transcript/title.js';
 import type { MeetingDetail } from '../types.js';
 import { getMeetingDetail } from './meetings.js';
-import type { ExtractionQueue } from './queue.js';
+import type { JobTracker } from './jobTracker.js';
 
 export interface IngestDeps {
   pool: Pool;
   embedder: Embedder;
   llm: LlmClient;
-  queue: ExtractionQueue;
+  jobs: JobTracker;
   log: FastifyBaseLogger;
 }
 
@@ -36,6 +36,76 @@ async function pickSlug(pool: Pool, base: string): Promise<string> {
 
 const isUniqueViolation = (err: unknown) => typeof err === 'object' && err !== null && (err as { code?: string }).code === '23505';
 
+interface NewMeeting {
+  slug: string;
+  title: string;
+  filename: string;
+  date: string | null;
+  status: 'pending' | 'skipped';
+  turns: ParsedTurn[];
+  chunks: ChunkDraft[];
+  vectors: number[][];
+}
+
+/** The three inserts (meeting, turns, chunks) in one transaction. A slug clash rolls everything back and rethrows. */
+async function insertMeeting(pool: Pool, m: NewMeeting): Promise<string> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const row = await client.query<{ id: string }>(
+      `INSERT INTO meetings (slug, title, source_filename, turn_count, duration_seconds, speakers, extraction_status, meeting_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+      [
+        m.slug, m.title, m.filename, m.turns.length, m.turns[m.turns.length - 1]!.startSeconds,
+        [...new Set(m.turns.map((t) => t.speaker))], m.status, m.date,
+      ],
+    );
+    const meetingId = row.rows[0]!.id;
+    await client.query(
+      `INSERT INTO turns (id, meeting_id, n, speaker, start_seconds, timestamp_label, text)
+       SELECT x.id, $1::uuid, x.n, x.speaker, x.start_seconds, x.timestamp_label, x.text
+         FROM jsonb_to_recordset($2::jsonb)
+           AS x(id text, n int, speaker text, start_seconds int, timestamp_label text, text text)`,
+      [
+        meetingId,
+        JSON.stringify(
+          m.turns.map((t) => ({
+            id: t.id, n: t.n, speaker: t.speaker, start_seconds: t.startSeconds, timestamp_label: t.timestampLabel, text: t.text,
+          })),
+        ),
+      ],
+    );
+    await client.query(
+      `INSERT INTO chunks (meeting_id, first_turn_n, last_turn_n, start_seconds, end_seconds, speakers, content, embedding)
+       SELECT $1::uuid, x.first_turn_n, x.last_turn_n, x.start_seconds, x.end_seconds,
+              ARRAY(SELECT jsonb_array_elements_text(x.speakers)), x.content, x.embedding::vector
+         FROM jsonb_to_recordset($2::jsonb)
+           AS x(first_turn_n int, last_turn_n int, start_seconds int, end_seconds int, speakers jsonb, content text, embedding text)`,
+      [
+        meetingId,
+        JSON.stringify(
+          m.chunks.map((c, i) => ({
+            first_turn_n: c.firstTurnN,
+            last_turn_n: c.lastTurnN,
+            start_seconds: c.startSeconds,
+            end_seconds: c.endSeconds,
+            speakers: c.speakers,
+            content: c.content,
+            embedding: toVectorLiteral(m.vectors[i]!),
+          })),
+        ),
+      ],
+    );
+    await client.query('COMMIT');
+    return meetingId;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 export async function ingestTranscript(
   deps: IngestDeps,
   input: {
@@ -46,81 +116,37 @@ export async function ingestTranscript(
     skipExtraction?: boolean;
   },
 ): Promise<MeetingDetail> {
-  const { pool, embedder, llm, queue, log } = deps;
+  const { pool, embedder, llm, jobs, log } = deps;
   const t0 = performance.now();
   // Before any embedding, database write or model call: rejected input costs nothing.
-  validateTranscript(input.text);
+  const { turns: parsed, warnings } = validateTranscript(input.text);
+
+  // Chunk text is `Speaker: text` and never holds the slug, so it is embedded once. Only the turn ids depend on the slug.
+  const chunks = chunkTurns(parsed);
+  const e0 = performance.now();
+  const vectors = await embedder.embed(chunks.map((c) => c.content));
+  const embedMs = Math.round(performance.now() - e0);
+  if (vectors.length !== chunks.length) throw new Error('embedder returned the wrong number of vectors');
+
+  const meta = filenameMeta(input.filename);
+  const extract = llm.enabled && !input.skipExtraction;
+  const base = fileSlug(input.filename);
 
   for (let attempt = 0; ; attempt++) {
-    const slug = await pickSlug(pool, fileSlug(input.filename));
-    const { turns, warnings } = parseTranscript(input.text, slug);
+    const slug = await pickSlug(pool, base);
     if (warnings.length) log.warn({ slug, warnings }, 'ingest.warnings');
-    const chunks = chunkTurns(turns);
+    const turns = parsed.map((t) => ({ ...t, id: `${slug}#${t.n}` }));
 
-    const e0 = performance.now();
-    const vectors = await embedder.embed(chunks.map((c) => c.content));
-    const embedMs = Math.round(performance.now() - e0);
-    if (vectors.length !== chunks.length) throw new Error('embedder returned the wrong number of vectors');
-
-    const meta = filenameMeta(input.filename);
-    const title = input.title ?? meta.title;
-    const speakers = [...new Set(turns.map((t) => t.speaker))];
-    const extract = llm.enabled && !input.skipExtraction;
-    const status = extract ? 'pending' : 'skipped';
-
-    const client = await pool.connect();
     let meetingId: string;
     try {
-      await client.query('BEGIN');
-      const m = await client.query<{ id: string }>(
-        `INSERT INTO meetings (slug, title, source_filename, turn_count, duration_seconds, speakers, extraction_status, meeting_date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-        [slug, title, input.filename, turns.length, turns[turns.length - 1]!.startSeconds, speakers, status, meta.date],
-      );
-      meetingId = m.rows[0]!.id;
-      await client.query(
-        `INSERT INTO turns (id, meeting_id, n, speaker, start_seconds, timestamp_label, text)
-         SELECT x.id, $1::uuid, x.n, x.speaker, x.start_seconds, x.timestamp_label, x.text
-           FROM jsonb_to_recordset($2::jsonb)
-             AS x(id text, n int, speaker text, start_seconds int, timestamp_label text, text text)`,
-        [
-          meetingId,
-          JSON.stringify(
-            turns.map((t) => ({
-              id: t.id, n: t.n, speaker: t.speaker, start_seconds: t.startSeconds, timestamp_label: t.timestampLabel, text: t.text,
-            })),
-          ),
-        ],
-      );
-      await client.query(
-        `INSERT INTO chunks (meeting_id, first_turn_n, last_turn_n, start_seconds, end_seconds, speakers, content, embedding)
-         SELECT $1::uuid, x.first_turn_n, x.last_turn_n, x.start_seconds, x.end_seconds,
-                ARRAY(SELECT jsonb_array_elements_text(x.speakers)), x.content, x.embedding::vector
-           FROM jsonb_to_recordset($2::jsonb)
-             AS x(first_turn_n int, last_turn_n int, start_seconds int, end_seconds int, speakers jsonb, content text, embedding text)`,
-        [
-          meetingId,
-          JSON.stringify(
-            chunks.map((c, i) => ({
-              first_turn_n: c.firstTurnN,
-              last_turn_n: c.lastTurnN,
-              start_seconds: c.startSeconds,
-              end_seconds: c.endSeconds,
-              speakers: c.speakers,
-              content: c.content,
-              embedding: toVectorLiteral(vectors[i]!),
-            })),
-          ),
-        ],
-      );
-      await client.query('COMMIT');
+      meetingId = await insertMeeting(pool, {
+        slug, title: input.title ?? meta.title, filename: input.filename, date: meta.date,
+        status: extract ? 'pending' : 'skipped', turns, chunks, vectors,
+      });
     } catch (err) {
-      await client.query('ROLLBACK').catch(() => undefined);
       // Another upload took the slug between pickSlug and the insert: pick again.
       if (isUniqueViolation(err) && attempt < 3) continue;
       throw err;
-    } finally {
-      client.release();
     }
 
     log.info(
@@ -130,8 +156,8 @@ export async function ingestTranscript(
 
     const detail = await getMeetingDetail(pool, meetingId);
     if (!detail) throw new AppError('INTERNAL', 'meeting vanished after insert');
-    // Queued after the detail is read so the upload response always reports `pending`.
-    if (extract) queue.add(() => runExtraction(deps, meetingId));
+    // Started after the detail is read so the upload response always reports `pending`.
+    if (extract) jobs.add(() => runExtraction(deps, meetingId));
     return detail;
   }
 }
@@ -215,10 +241,10 @@ export async function runExtraction(deps: Pick<IngestDeps, 'pool' | 'llm' | 'log
 
 /**
  * User-requested extraction for a meeting that has none (seeded without a key, or a failed run).
- * Marks it pending and queues the job; the caller polls the meeting like it does after an upload.
+ * Marks it pending and starts the job; the caller polls the meeting like it does after an upload.
  */
 export async function requestExtraction(deps: IngestDeps, idOrSlug: string): Promise<MeetingDetail> {
-  const { pool, llm, queue } = deps;
+  const { pool, llm, jobs } = deps;
   // Checked first: without a key there is nothing to run, whatever state the meeting is in.
   if (!llm.enabled) throw new AppError('CONFLICT', 'Extraction needs an Anthropic key set on the API.');
   const meeting = await getMeetingDetail(pool, idOrSlug);
@@ -227,13 +253,13 @@ export async function requestExtraction(deps: IngestDeps, idOrSlug: string): Pro
   if (meeting.extractionStatus === 'pending') throw new AppError('CONFLICT', 'Extraction is already running for this meeting.');
   if (meeting.extractionStatus === 'done') throw new AppError('CONFLICT', 'This meeting has already been extracted.');
 
-  // The status guard in the WHERE keeps two simultaneous clicks from queueing two paid calls.
+  // The status guard in the WHERE keeps two simultaneous clicks from starting two paid calls.
   const claimed = await pool.query(
     "UPDATE meetings SET extraction_status = 'pending', extraction_error = NULL WHERE id = $1 AND extraction_status IN ('skipped', 'failed')",
     [meeting.id],
   );
   if (claimed.rowCount !== 1) throw new AppError('CONFLICT', 'Extraction is already running for this meeting.');
-  queue.add(() => runExtraction(deps, meeting.id));
+  jobs.add(() => runExtraction(deps, meeting.id));
   const detail = await getMeetingDetail(pool, meeting.id);
   if (!detail) throw new AppError('INTERNAL', 'meeting vanished during extraction request');
   return detail;

@@ -7,5 +7,7 @@ export default defineConfig({
     fileParallelism: false,
     testTimeout: 30_000,
     env: { LOG_LEVEL: 'silent' },
+    // A number to quote, not a gate: there is deliberately no threshold. Run with `npm run test:coverage`.
+    coverage: { provider: 'v8', include: ['src/**/*.ts'], exclude: ['src/**/*.d.ts'], reporter: ['text-summary', 'text'] },
   },
 });

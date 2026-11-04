@@ -19,6 +19,8 @@ flowchart LR
 - `web` serves the static React app and proxies `/api` to the API. The API sends no CORS headers (ADR 0010).
 - `api` owns the database, the embeddings and every model call. The key exists only in this process.
 - `db` is `pgvector/pgvector:pg17`.
+- All three have a healthcheck. `api` is healthy only when `GET /api/health` reports `status: ok` (database answering and embedding model loaded). The endpoint answers `503` with the same body while it is `degraded`, so any probe that reads only the status code gets the right answer, and the web app still reads the body to show its banner. Probes are logged at `warn`, so the 10 s healthcheck does not fill the log. `web` is healthy when nginx serves `/`.
+- At boot the API logs `boot.migrated` with the migrations it applied (an empty list on a normal restart), then `boot.listening`, `boot.voice` and `boot.embeddings_ready`. Migrations take no advisory lock, so they assume one API replica.
 
 ## Ingest
 
@@ -40,8 +42,9 @@ flowchart TD
 ```
 
 - Turn ids are `<slug>#<n>`. The slug comes from the filename, so the same id is used in the database, the prompt and the UI anchor.
-- Embedding is synchronous. A large file holds the request open.
-- The upload is validated before anything is embedded: a 422 for non-text, too few turns, too few timestamped lines or a turn over 2,000 words (`apps/api/src/transcript/validate.ts`).
+- Embedding is synchronous. A large file holds the request open. The transcript is validated, parsed, chunked and embedded once. Only the turn ids depend on the slug, so a slug clash with a concurrent upload re-runs the insert, not the embedding.
+- The upload is validated before anything is embedded: a 422 `UNPROCESSABLE` for non-text, no turns, too few turns, too few timestamped lines or a turn over 2,000 words (`apps/api/src/transcript/validate.ts`). The parse is reused, not repeated.
+- Extraction jobs are tracked by `JobTracker` (`apps/api/src/services/jobTracker.ts`). It is not a queue: each job starts at once and the tracker only lets tests and shutdown wait for them. The only real queue is the voice one.
 - A pending extraction that is left over when the process dies is marked `failed: interrupted` at the next boot. Extraction is never retried automatically.
 - Sample transcripts are loaded at start when `SEED_ON_START=true`. Seeding never calls the model.
 
@@ -181,6 +184,17 @@ erDiagram
 
 - `query_traces` has no foreign key. It holds a copy of what was retrieved and answered, so a trace survives a deleted meeting.
 - Migrations are numbered SQL files in `apps/api/migrations/`. Each runs in a transaction at boot and is recorded in `schema_migrations`, so a second run applies nothing.
+
+## Errors
+
+- Every error body is `{ error: { code, message, requestId } }`. `requestId` is the `x-request-id` header and the `reqId` on every log line for that request.
+- `VALIDATION` is `400`: the request itself is malformed (bad JSON, a body that fails its schema, a bad query value). `UNPROCESSABLE` is `422`: the request is well-formed but the file in it is unusable (not a transcript, no turns, not a usable WAV, audio under half a second). Other codes: `NOT_FOUND` 404, `TOO_LARGE` 413, `CONFLICT` 409, `LLM_ERROR` 502, `EMBEDDINGS_NOT_READY` 503, `INTERNAL` 500.
+- An unexpected exception becomes `500 INTERNAL` with the message `Internal error`. The detail goes to the log only (tested in `apps/api/test/hardening.test.ts`).
+- The web app shows `Ref: <id>` under every error it displays that came from the API: the request id, or for an error inside the answer stream the trace id from the `meta` event. Someone reporting a problem can quote it and it matches a log line or a trace row.
+
+## Web app layering
+
+Pages and components never call `fetch`. All HTTP goes through `apps/web/src/api/client.ts`, which validates every response with the same zod schemas as the API. Reads that several components share or that poll (`useMeetings`, `useMeeting`, `useHealth`, `useAsk`, `useTranscription`) live in hooks under `src/hooks/`. One-shot mutations the user starts with a click (upload, paste, import a reviewed draft, load the samples, start an extraction) call the client from the component or page that owns the button and keep their pending and error state locally. A hook for each would only wrap one call and one `useState`.
 
 ## Request lifecycle and the trace
 
