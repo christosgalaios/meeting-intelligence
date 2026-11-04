@@ -206,7 +206,7 @@ function ExchangeView({ ex, whyOpen, activeTurnId, titleOf, onCite, onOpenWhy }:
               <p className="m-0 text-pretty text-[15px] leading-[1.72]">
                 {b.parts.map((p, j) =>
                   p.kind === 'text' ? (
-                    <span key={j}>{p.text}</span>
+                    p.bold ? <strong key={j} className="font-semibold">{p.text}</strong> : <span key={j}>{p.text}</span>
                   ) : (
                     <CitationChip key={j} n={p.n} citation={p.citation} active={activeTurnId === p.turnId} onClick={onCite} />
                   ),

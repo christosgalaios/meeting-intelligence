@@ -45,54 +45,57 @@
   --shadow-pop: var(--shadow-lg);
 }
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-}
+/* In a layer so Tailwind utilities (also layered) win over these element defaults. */
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  line-height: 1.45;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
 
-button {
-  cursor: pointer;
-}
-button:disabled {
-  cursor: not-allowed;
-}
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
 
-/* The ask bar shows focus on the whole field, so the inner control drops its own ring. */
-[data-askbar]:focus-within {
-  border-color: var(--focus);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-[data-askbar] input:focus-visible,
-[data-askbar] textarea:focus-visible {
-  outline: none;
-}
+  /* The ask bar shows focus on the whole field, so the inner control drops its own ring. */
+  [data-askbar]:focus-within {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  [data-askbar] input:focus-visible,
+  [data-askbar] textarea:focus-visible {
+    outline: none;
+  }
 
-::placeholder {
-  color: var(--text-3);
-  opacity: 1;
-}
+  ::placeholder {
+    color: var(--text-3);
+    opacity: 1;
+  }
 
-a {
-  color: var(--accent);
-}
-a:hover {
-  color: var(--accent-hover);
+  a {
+    color: var(--accent);
+  }
+  a:hover {
+    color: var(--accent-hover);
+  }
 }
 
 @keyframes mi-pulse {

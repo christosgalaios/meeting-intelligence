@@ -57,6 +57,18 @@ describe('splitAnswer', () => {
     expect(blocks.map((b) => b.listItem)).toEqual([false, true, true]);
   });
 
+  it('renders **bold**, keeps it open across a chip, and never shows the asterisks', () => {
+    const [block] = splitAnswer('**Oct 6 kickoff [pricing#1] and more:** Priya proposed it', lookup);
+    expect(block!.parts.map((p) => (p.kind === 'text' ? `${p.bold ? 'b' : 't'}:${p.text}` : 'chip'))).toEqual([
+      'b:Oct 6 kickoff ',
+      'chip',
+      'b: and more:',
+      't: Priya proposed it',
+    ]);
+    const [open] = splitAnswer('Normal **bold so far', lookup, true);
+    expect(open!.parts).toEqual([{ kind: 'text', text: 'Normal ' }, { kind: 'text', text: 'bold so far', bold: true }]);
+  });
+
   it('hides a half-typed citation at the end while streaming', () => {
     const [block] = splitAnswer('The discount is 20% [pricing#', lookup, true);
     expect(block!.parts).toEqual([{ kind: 'text', text: 'The discount is 20% ' }]);
