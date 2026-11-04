@@ -10,6 +10,11 @@ const ConfigSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   RETRIEVAL_MIN_SCORE: z.coerce.number().min(0).max(1).default(DEFAULT_RETRIEVAL_MIN_SCORE),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  // Voice transcription is on only when this points at a directory holding the models (compose sets /models/voice).
+  VOICE_MODELS_DIR: z.string().optional().transform((v) => (v && v.trim() !== '' ? v.trim() : undefined)),
+  VOICE_MAX_SECONDS: z.coerce.number().int().positive().default(1800),
+  VOICE_THREADS: z.coerce.number().int().positive().default(2),
+  VOICE_MAX_QUEUE: z.coerce.number().int().positive().default(4),
   SEED_ON_START: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
 });
 
