@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Pool } from '../db/pool.js';
+import { UUID } from '../uuid.js';
 import type { Citation, Mode, QueryTrace, RankedChunk } from '../types.js';
 
 export interface TraceStart {
@@ -87,7 +88,7 @@ interface TraceRow {
 }
 
 export async function getTrace(pool: Pool, id: string): Promise<QueryTrace | null> {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
+  if (!UUID.test(id)) return null;
   const { rows } = await pool.query<TraceRow>('SELECT * FROM query_traces WHERE id = $1', [id]);
   const r = rows[0];
   if (!r) return null;

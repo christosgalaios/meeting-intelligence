@@ -125,12 +125,12 @@ describe('formatTranscript', () => {
     expect(turns.map((t) => t.speaker)).toEqual(['Speaker 1', 'Speaker 2', 'Speaker 1']);
   });
   it('is accepted by validateTranscript', () => {
-    expect(validateTranscript(formatTranscript(two))).toHaveLength(3);
+    expect(validateTranscript(formatTranscript(two)).turns).toHaveLength(3);
   });
   it('keeps a 28 s turn at 10 words per second under the per-turn word cap', () => {
     const words = Array.from({ length: 280 }, () => 'word').join(' ');
     expect(words.split(' ').length).toBeLessThan(MAX_WORDS_PER_TURN);
-    expect(validateTranscript(formatTranscript([seg(1, 0, 28, words), seg(2, 28, 30, 'ok')]))).toHaveLength(2);
+    expect(validateTranscript(formatTranscript([seg(1, 0, 28, words), seg(2, 28, 30, 'ok')])).turns).toHaveLength(2);
   });
   it('formats timestamps across the hour boundary', () => {
     expect(timestampLabel(3599.9)).toBe('00:59:59');

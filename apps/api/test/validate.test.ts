@@ -29,9 +29,9 @@ describe('validateTranscript', () => {
     expect(() => validateTranscript(wrapped)).not.toThrow();
   });
 
-  it('rejects a NUL byte and mostly-control-character text as a 422 VALIDATION', () => {
+  it('rejects a NUL byte and mostly-control-character text as a 422 UNPROCESSABLE', () => {
     const nul = rejection(GOOD + '\0');
-    expect(nul).toMatchObject({ code: 'VALIDATION', status: 422, message: "This doesn't look like a text transcript." });
+    expect(nul).toMatchObject({ code: 'UNPROCESSABLE', status: 422, message: "This doesn't look like a text transcript." });
     expect(rejection(GOOD + '\u0001'.repeat(40)).message).toBe("This doesn't look like a text transcript.");
     expect(() => validateTranscript(`${GOOD}\n`.repeat(10) + '\u0001\u0001')).not.toThrow(); // well under 1%
     expect(() => validateTranscript(GOOD.replace(/ /g, '\t'))).not.toThrow(); // tabs and newlines are fine
@@ -39,26 +39,26 @@ describe('validateTranscript', () => {
 
   it('rejects fewer than 2 turns', () => {
     const e = rejection('[00:00:01] Priya: only one turn');
-    expect(e).toMatchObject({ code: 'VALIDATION', status: 422 });
+    expect(e).toMatchObject({ code: 'UNPROCESSABLE', status: 422 });
     expect(e.message).toContain('Only 1 of 1 lines');
   });
 
   it('rejects when under half of the non-empty lines are turns, naming the counts', () => {
     const junk = Array.from({ length: 117 }, (_, i) => `junk line ${i}`).join('\n');
     const e = rejection(`${GOOD}\n${junk}`);
-    expect(e).toMatchObject({ code: 'VALIDATION', status: 422 });
+    expect(e).toMatchObject({ code: 'UNPROCESSABLE', status: 422 });
     expect(e.message).toContain("Only 3 of 120 lines look like '[hh:mm:ss] Speaker: text'");
   });
 
   it('rejects a single turn longer than 2000 words', () => {
     const e = rejection(`[00:00:01] Priya: ${'word '.repeat(2001)}\n[00:00:09] Marcus: ok`);
-    expect(e).toMatchObject({ code: 'VALIDATION', status: 422 });
+    expect(e).toMatchObject({ code: 'UNPROCESSABLE', status: 422 });
     expect(e.message).toContain('Turn 1');
     expect(() => validateTranscript(`[00:00:01] Priya: ${'word '.repeat(2000)}\n[00:00:09] Marcus: ok`)).not.toThrow();
   });
 
-  it('keeps the existing EMPTY_TRANSCRIPT error for text with no turns at all', () => {
-    expect(rejection('just some words').code).toBe('EMPTY_TRANSCRIPT');
+  it('keeps UNPROCESSABLE (not a separate code) for text with no turns at all', () => {
+    expect(rejection('just some words').code).toBe('UNPROCESSABLE');
   });
 });
 
@@ -71,7 +71,7 @@ describe('uploads are validated before any embedding or model call', () => {
   ];
 
   for (const [name, text, message] of bad) {
-    it(`${name}: 422 VALIDATION, and no embedder or LLM call`, async () => {
+    it(`${name}: 422 UNPROCESSABLE, and no embedder or LLM call`, async () => {
       const { pool, drop } = await createTestDb();
       let embeds = 0;
       const embedder: Embedder = { embed: (t) => { embeds++; return fakeEmbedder.embed(t); }, isReady: () => true };
@@ -80,9 +80,9 @@ describe('uploads are validated before any embedding or model call', () => {
       const res = await app.inject({ method: 'POST', url: '/api/meetings', payload: { filename: 'x.txt', text } });
       expect(res.statusCode).toBe(422);
       const err = ApiError.parse(res.json());
-      expect(err.error.code).toBe('VALIDATION');
+      expect(err.error.code).toBe('UNPROCESSABLE');
       expect(err.error.message).toContain(message);
-      await app.extractionQueue.idle();
+      await app.extractionJobs.idle();
       expect(embeds).toBe(0);
       expect(llm.extractCalls).toBe(0);
       const { rows } = await pool.query('SELECT count(*)::int AS n FROM meetings');
@@ -98,7 +98,7 @@ describe('uploads are validated before any embedding or model call', () => {
     const res = await app.inject({ method: 'POST', url: '/api/meetings', payload: { filename: 'g.txt', text: GOOD } });
     expect(res.statusCode).toBe(201);
     MeetingDetail.parse(res.json());
-    await app.extractionQueue.idle();
+    await app.extractionJobs.idle();
     await app.close();
     await drop();
   });

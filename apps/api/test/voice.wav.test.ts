@@ -42,7 +42,7 @@ function rejects(buf: Buffer, message: RegExp) {
   } catch (err) {
     expect(err).toBeInstanceOf(AppError);
     expect((err as AppError).status).toBe(422);
-    expect((err as AppError).code).toBe('VALIDATION');
+    expect((err as AppError).code).toBe('UNPROCESSABLE');
     expect((err as AppError).message).toMatch(message);
     return;
   }

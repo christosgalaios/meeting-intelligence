@@ -12,7 +12,7 @@ import { NullLlmClient } from '../src/llm/client.js';
 import { expandToTurns, rescoreTurns } from '../src/retrieval/expand.js';
 import { hybridSearch, type FtsMode } from '../src/retrieval/search.js';
 import { isBelowThreshold } from '../src/services/ask.js';
-import { ExtractionQueue } from '../src/services/queue.js';
+import { JobTracker } from '../src/services/jobTracker.js';
 import { seedTranscripts } from '../src/services/seed.js';
 
 // Spec starting gates were recall@8 0.7 and MRR 0.5; adjusted after the first real run (see apps/api/README.md).
@@ -80,7 +80,7 @@ try {
   await migrate(pool);
   await embedder.warm();
   const seeded = await seedTranscripts(
-    { pool, embedder, llm: new NullLlmClient(), queue: new ExtractionQueue(), log },
+    { pool, embedder, llm: new NullLlmClient(), jobs: new JobTracker(), log },
   );
   console.log(`seed: added ${seeded.added}, skipped ${seeded.skipped}\n`);
 

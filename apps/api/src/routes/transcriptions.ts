@@ -34,7 +34,7 @@ export function registerTranscriptionRoutes(app: FastifyInstance): void {
 
     const wav = parseWav(req.body);
     const seconds = wav.samples.length / WAV_SAMPLE_RATE;
-    if (seconds < MIN_SECONDS) throw new AppError('VALIDATION', 'Audio is shorter than half a second.', 422);
+    if (seconds < MIN_SECONDS) throw new AppError('UNPROCESSABLE', 'Audio is shorter than half a second.');
     if (seconds > jobs.maxSeconds) {
       throw new AppError('TOO_LARGE', `Audio is longer than ${Math.floor(jobs.maxSeconds / 60)} minutes. Trim it and try again.`);
     }

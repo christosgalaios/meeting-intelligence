@@ -33,7 +33,7 @@ const app = buildServer({
 
 const shutdown = async () => {
   await app.close();
-  await app.extractionQueue.idle();
+  await app.extractionJobs.idle();
   await pool.end();
   process.exit(0);
 };
@@ -41,7 +41,8 @@ process.on('SIGTERM', () => void shutdown());
 process.on('SIGINT', () => void shutdown());
 
 try {
-  await migrate(pool);
+  const applied = await migrate(pool);
+  app.log.info({ applied }, 'boot.migrated');
   const interrupted = await failInterruptedExtractions(pool);
   if (interrupted > 0) app.log.warn({ interrupted }, 'boot.extractions_interrupted');
   // Listen first so /health answers (as degraded) while the model loads.
@@ -51,7 +52,7 @@ try {
   await embedder.warm();
   app.log.info('boot.embeddings_ready');
   if (config.SEED_ON_START) {
-    await seedTranscripts({ pool, embedder, llm, queue: app.extractionQueue, log: app.log });
+    await seedTranscripts({ pool, embedder, llm, jobs: app.extractionJobs, log: app.log });
   }
 } catch (err) {
   app.log.error({ err }, 'boot.failed');

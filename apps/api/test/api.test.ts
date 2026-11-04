@@ -71,10 +71,10 @@ describe('API in retrieval-only mode (no key)', () => {
     expect(MeetingDetail.parse(second.json()).slug).toBe('dup-2');
   });
 
-  it('upload of an empty file gives 400 EMPTY_TRANSCRIPT', async () => {
+  it('upload of an empty file gives 422 UNPROCESSABLE', async () => {
     const res = await upload(env.app, 'empty.txt', '   \n\n');
-    expect(res.statusCode).toBe(400);
-    expect(ApiError.parse(res.json()).error.code).toBe('EMPTY_TRANSCRIPT');
+    expect(res.statusCode).toBe(422);
+    expect(ApiError.parse(res.json()).error.code).toBe('UNPROCESSABLE');
   });
 
   it('upload with a missing field is a 400 VALIDATION', async () => {
@@ -172,7 +172,7 @@ describe('API in full mode (fake LLM)', () => {
     env = await setup(llm);
     await upload(env.app, 'x.txt', PRICING);
     await upload(env.app, 'offsite.txt', OFFSITE);
-    await env.app.extractionQueue.idle();
+    await env.app.extractionJobs.idle();
   });
   afterAll(async () => {
     await env.app.close();
@@ -184,11 +184,11 @@ describe('API in full mode (fake LLM)', () => {
     expect(body).toMatchObject({ status: 'ok', mode: 'full', models: { answer: 'fake-answer-model', extraction: 'fake-extraction-model' } });
   });
 
-  it('upload is pending, then done after the extraction queue is idle', async () => {
+  it('upload is pending, then done after the extraction jobs are idle', async () => {
     const res = await upload(env.app, 'ex.txt', PRICING);
     expect(res.statusCode).toBe(201);
     expect(MeetingDetail.parse(res.json()).extractionStatus).toBe('pending');
-    await env.app.extractionQueue.idle();
+    await env.app.extractionJobs.idle();
     const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/ex' })).json());
     expect(detail.extractionStatus).toBe('done');
     expect(detail.decisions).toHaveLength(1);
@@ -203,7 +203,7 @@ describe('API in full mode (fake LLM)', () => {
     const { pool, drop } = await createTestDb();
     const app = buildServer({ pool, embedder: fakeEmbedder, llm: failing, logLevel: 'silent' });
     await upload(app, 'f.txt', PRICING);
-    await app.extractionQueue.idle();
+    await app.extractionJobs.idle();
     const detail = MeetingDetail.parse((await app.inject({ method: 'GET', url: '/api/meetings/f' })).json());
     expect(detail).toMatchObject({ extractionStatus: 'failed', extractionError: 'upstream 529' });
     await app.close();
@@ -254,7 +254,7 @@ describe('API in full mode (fake LLM)', () => {
     const { pool, drop } = await createTestDb();
     const app = buildServer({ pool, embedder: fakeEmbedder, llm: declining, logLevel: 'silent' });
     await upload(app, 'x.txt', PRICING);
-    await app.extractionQueue.idle();
+    await app.extractionJobs.idle();
     const { events } = await ask(app, { question: 'Starter plan priced per seat' });
     expect(events.at(-1)!.data).toMatchObject({ refusalReason: 'model_declined', citations: [] });
     const trace = QueryTrace.parse((await app.inject({ method: 'GET', url: `/api/traces/${events[0]!.data.traceId}` })).json());
@@ -269,7 +269,7 @@ describe('API in full mode (fake LLM)', () => {
     const { pool, drop } = await createTestDb();
     const app = buildServer({ pool, embedder: fakeEmbedder, llm: broken, logLevel: 'silent' });
     await upload(app, 'x.txt', PRICING);
-    await app.extractionQueue.idle();
+    await app.extractionJobs.idle();
     const { res, events } = await ask(app, { question: 'Starter plan priced per seat' });
     expect(res.statusCode).toBe(200);
     expect(events.at(-1)).toEqual({ event: 'error', data: { type: 'error', code: 'LLM_ERROR', message: 'The answer could not be generated.' } });
@@ -302,8 +302,10 @@ describe('embeddings not ready', () => {
     expect(ApiError.parse(up.json()).error.code).toBe('EMBEDDINGS_NOT_READY');
     const a = await app.inject({ method: 'POST', url: '/api/ask', payload: { question: 'hello' } });
     expect(a.statusCode).toBe(503);
-    const h = Health.parse((await app.inject({ method: 'GET', url: '/api/health' })).json());
-    expect(h).toMatchObject({ status: 'degraded', embeddings: { ready: false } });
+    const health = await app.inject({ method: 'GET', url: '/api/health' });
+    expect(health.statusCode).toBe(503); // a probe that checks only the status code must see this
+    const h = Health.parse(health.json());
+    expect(h).toMatchObject({ status: 'degraded', embeddings: { ready: false }, voice: { available: false } });
     await app.close();
     await drop();
   });
@@ -328,7 +330,7 @@ describe('POST /api/meetings/:id/extract', () => {
     const llm = new FakeLlm();
     const env = await setup(llm);
     await upload(env.app, 'seeded.txt', PRICING);
-    await env.app.extractionQueue.idle();
+    await env.app.extractionJobs.idle();
     // The state a meeting seeded without a key is in.
     await env.pool.query("UPDATE meetings SET extraction_status = 'skipped' WHERE slug = 'seeded'");
     llm.extractCalls = 0;
@@ -336,7 +338,7 @@ describe('POST /api/meetings/:id/extract', () => {
     const res = await extract(env.app, 'seeded');
     expect(res.statusCode).toBe(202);
     expect(MeetingDetail.parse(res.json()).extractionStatus).toBe('pending');
-    await env.app.extractionQueue.idle();
+    await env.app.extractionJobs.idle();
     const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/seeded' })).json());
     expect(detail.extractionStatus).toBe('done');
     expect(detail.decisions).toHaveLength(1);
@@ -357,11 +359,11 @@ describe('POST /api/meetings/:id/extract', () => {
     const llm = new FakeLlm();
     const env = await setup(llm);
     await upload(env.app, 'retry.txt', PRICING);
-    await env.app.extractionQueue.idle();
+    await env.app.extractionJobs.idle();
     await env.pool.query("UPDATE meetings SET extraction_status = 'failed', extraction_error = 'upstream 529' WHERE slug = 'retry'");
     const res = await extract(env.app, 'retry');
     expect(res.statusCode).toBe(202);
-    await env.app.extractionQueue.idle();
+    await env.app.extractionJobs.idle();
     const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/retry' })).json());
     expect(detail).toMatchObject({ extractionStatus: 'done', extractionError: null });
     await env.app.close();

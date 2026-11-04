@@ -6,11 +6,11 @@ import { migrate } from '../src/db/migrate.js';
 import type { Pool } from '../src/db/pool.js';
 import { AnthropicLlmClient, NullLlmClient, type AnswerResult } from '../src/llm/client.js';
 import { buildServer } from '../src/server.js';
-import { failInterruptedExtractions } from '../src/services/ingest.js';
+import { failInterruptedExtractions, ingestTranscript } from '../src/services/ingest.js';
 import { isBelowThreshold } from '../src/services/ask.js';
-import { ExtractionQueue } from '../src/services/queue.js';
+import { JobTracker } from '../src/services/jobTracker.js';
 import { seedTranscripts } from '../src/services/seed.js';
-import type { RankedChunk } from '../src/types.js';
+import { ApiError, type RankedChunk } from '../src/types.js';
 import { FakeLlm, createTestDb, fakeEmbedder, parseSse } from './helpers.js';
 
 const PRICING = readFileSync(new URL('./fixtures/pricing.txt', import.meta.url), 'utf8');
@@ -31,7 +31,7 @@ describe('database lifecycle', () => {
   });
 
   it('seeding is idempotent', async () => {
-    const deps = { pool, embedder: fakeEmbedder, llm: new NullLlmClient(), queue: new ExtractionQueue(), log: pino({ level: 'silent' }) };
+    const deps = { pool, embedder: fakeEmbedder, llm: new NullLlmClient(), jobs: new JobTracker(), log: pino({ level: 'silent' }) };
     const first = await seedTranscripts(deps);
     expect(first.added).toBeGreaterThan(0);
     expect(first.skipped).toBe(0);
@@ -47,6 +47,61 @@ describe('database lifecycle', () => {
     const { rows } = await pool.query("SELECT extraction_status, extraction_error FROM meetings WHERE extraction_error = 'interrupted'");
     expect(rows).toEqual([{ extraction_status: 'failed', extraction_error: 'interrupted' }]);
     expect(await failInterruptedExtractions(pool)).toBe(0);
+  });
+});
+
+describe('ingest', () => {
+  it('embeds once when a slug clash forces a second insert', async () => {
+    const { pool, drop } = await createTestDb();
+    let embeds = 0;
+    const embedder = { embed: (t: string[]) => { embeds++; return fakeEmbedder.embed(t); }, isReady: () => true };
+    // The first INSERT INTO meetings fails the way a concurrent upload taking the slug would: unique violation 23505.
+    let failed = false;
+    const racing = new Proxy(pool, {
+      get(target, key) {
+        if (key === 'connect') {
+          return async () => {
+            const client = await target.connect();
+            const query = client.query.bind(client) as (...a: unknown[]) => Promise<unknown>;
+            (client as { query: unknown }).query = (text: unknown, ...rest: unknown[]) => {
+              if (!failed && typeof text === 'string' && text.includes('INSERT INTO meetings')) {
+                failed = true;
+                return Promise.reject(Object.assign(new Error('duplicate key'), { code: '23505' }));
+              }
+              return query(text, ...rest);
+            };
+            return client;
+          };
+        }
+        const v = (target as unknown as Record<string | symbol, unknown>)[key];
+        return typeof v === 'function' ? v.bind(target) : v;
+      },
+    }) as Pool;
+    const detail = await ingestTranscript(
+      { pool: racing, embedder, llm: new NullLlmClient(), jobs: new JobTracker(), log: pino({ level: 'silent' }) },
+      { filename: 'clash.txt', text: PRICING },
+    );
+    expect(failed).toBe(true);
+    expect(embeds).toBe(1);
+    expect(detail.slug).toBe('clash');
+    expect(detail.turns[0]!.id).toBe('clash#1');
+    await drop();
+  });
+});
+
+describe('unexpected errors', () => {
+  it('a 500 hides the internal message and still carries the request id', async () => {
+    const pool = { query: () => Promise.reject(new Error('secret internal detail: password=hunter2')) } as unknown as Pool;
+    const lines: string[] = [];
+    const app = buildServer({ pool, embedder: fakeEmbedder, llm: new NullLlmClient(), logLevel: 'error', logStream: { write: (l) => void lines.push(l) } });
+    const res = await app.inject({ method: 'GET', url: '/api/meetings' });
+    expect(res.statusCode).toBe(500);
+    expect(res.body).not.toContain('hunter2');
+    const body = ApiError.parse(res.json());
+    expect(body.error).toMatchObject({ code: 'INTERNAL', message: 'Internal error' });
+    expect(body.error.requestId).toBe(res.headers['x-request-id']);
+    expect(lines.join('')).toContain('unhandled'); // the detail goes to the log, not the client
+    await app.close();
   });
 });
 

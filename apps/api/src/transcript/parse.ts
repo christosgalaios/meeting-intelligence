@@ -60,6 +60,6 @@ export function parseTranscript(input: string, slug: string): ParseResult {
     }
   }
 
-  if (turns.length === 0) throw new AppError('EMPTY_TRANSCRIPT', 'No timestamped speaker turns found in the transcript.');
+  if (turns.length === 0) throw new AppError('UNPROCESSABLE', 'No timestamped speaker turns found in the transcript.');
   return { turns, warnings };
 }

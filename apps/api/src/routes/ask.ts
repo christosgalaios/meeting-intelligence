@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { AppError } from '../errors.js';
+import { validationError } from '../errors.js';
+import { requireEmbeddings } from './guards.js';
 import { prepareAsk } from '../services/ask.js';
 import { AskRequest } from '../types.js';
 
@@ -7,10 +8,10 @@ export function registerAskRoutes(app: FastifyInstance): void {
   app.post('/api/ask', async (req, reply) => {
     const parsed = AskRequest.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION', parsed.error.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`).join('; '));
+      throw validationError(parsed.error.issues);
     }
     const { pool, embedder, llm, retrievalMinScore } = app.deps;
-    if (!embedder.isReady()) throw new AppError('EMBEDDINGS_NOT_READY', 'The embedding model is still loading. Try again shortly.');
+    requireEmbeddings(embedder);
 
     // Scope, embedding and retrieval errors are plain JSON responses because nothing has streamed yet.
     const prepared = await prepareAsk(

@@ -9,7 +9,7 @@ export interface ParsedWav {
   samples: Int16Array;
 }
 
-const reject = (message: string) => new AppError('VALIDATION', message, 422);
+const reject = (message: string) => new AppError('UNPROCESSABLE', message);
 
 /**
  * Parses the one format the API accepts: 16 kHz, mono, 16-bit PCM. Walks the chunks instead of assuming a 44-byte

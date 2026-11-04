@@ -39,9 +39,9 @@ describe('parseTranscript', () => {
     expect(turns[0]).toMatchObject({ speaker: 'Dr. Ana Lopez', text: 'Ratio is 3:1, ok?' });
   });
 
-  it('throws EMPTY_TRANSCRIPT on empty input', () => {
-    expect(() => parseTranscript('  \n\n', 'x')).toThrowError(expect.objectContaining({ code: 'EMPTY_TRANSCRIPT' }));
-    expect(() => parseTranscript('no timestamps at all', 'x')).toThrowError(expect.objectContaining({ code: 'EMPTY_TRANSCRIPT' }));
+  it('throws UNPROCESSABLE on empty input', () => {
+    expect(() => parseTranscript('  \n\n', 'x')).toThrowError(expect.objectContaining({ code: 'UNPROCESSABLE' }));
+    expect(() => parseTranscript('no timestamps at all', 'x')).toThrowError(expect.objectContaining({ code: 'UNPROCESSABLE' }));
   });
 
   it('strips a BOM', () => {

@@ -20,7 +20,8 @@ describe('log hygiene (spec 7)', () => {
     });
     await app.ready();
     await app.inject({ method: 'POST', url: '/api/meetings', payload: { filename: 'x.txt', text: PRICING } });
-    await app.extractionQueue.idle();
+    await app.extractionJobs.idle();
+    await app.inject({ method: 'GET', url: '/api/health' });
     await app.inject({ method: 'POST', url: '/api/ask', payload: { question: 'Starter plan priced per seat secret-question-marker' } });
     await app.inject({ method: 'POST', url: '/api/ask', payload: { question: 'zxqvk plorfnax wibblegarb' } });
   });
@@ -34,6 +35,11 @@ describe('log hygiene (spec 7)', () => {
   it('logs the per-stage lines from spec 7 at info', () => {
     const msgs = lines.map((l) => (JSON.parse(l) as { msg: string }).msg);
     for (const m of ['ingest.done', 'extract.done', 'ask.retrieved', 'ask.answered']) expect(msgs).toContain(m);
+  });
+
+  it('does not log a line per health probe at info', () => {
+    const probes = lines.map((l) => JSON.parse(l) as Record<string, unknown>).filter((l) => l.route === '/api/health');
+    expect(probes).toEqual([]);
   });
 
   it('puts reqId, route and method on every request-scoped line', () => {

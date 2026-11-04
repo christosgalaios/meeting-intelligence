@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { AppError } from '../errors.js';
+import { AppError, validationError } from '../errors.js';
+import { requireEmbeddings } from './guards.js';
 import { ingestTranscript, requestExtraction } from '../services/ingest.js';
 import { getMeetingDetail, listMeetings } from '../services/meetings.js';
 import { UploadRequest } from '../types.js';
@@ -15,13 +16,13 @@ export function registerMeetingRoutes(app: FastifyInstance): void {
     }
     const parsed = UploadRequest.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError('VALIDATION', parsed.error.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`).join('; '));
+      throw validationError(parsed.error.issues);
     }
     const { pool, embedder, llm } = app.deps;
-    if (!embedder.isReady()) throw new AppError('EMBEDDINGS_NOT_READY', 'The embedding model is still loading. Try again shortly.');
+    requireEmbeddings(embedder);
 
     const detail = await ingestTranscript(
-      { pool, embedder, llm, queue: app.extractionQueue, log: req.log },
+      { pool, embedder, llm, jobs: app.extractionJobs, log: req.log },
       { filename: parsed.data.filename, title: parsed.data.title, text: parsed.data.text },
     );
     return reply.code(201).send(detail);
@@ -30,7 +31,7 @@ export function registerMeetingRoutes(app: FastifyInstance): void {
   // User-clicked from the summary card. 202 because the work finishes after the response; poll GET /api/meetings/:id.
   app.post<{ Params: { id: string } }>('/api/meetings/:id/extract', async (req, reply) => {
     const { pool, embedder, llm } = app.deps;
-    const detail = await requestExtraction({ pool, embedder, llm, queue: app.extractionQueue, log: req.log }, req.params.id);
+    const detail = await requestExtraction({ pool, embedder, llm, jobs: app.extractionJobs, log: req.log }, req.params.id);
     return reply.code(202).send(detail);
   });
 
