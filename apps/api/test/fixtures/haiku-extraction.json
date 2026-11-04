@@ -1,0 +1,10 @@
+{
+  "decisions": [
+    { "text": "Starter plan is priced per seat.", "turnId": "pricing#3" },
+    { "text": "Annual billing gets a discount.", "turnId": "pricing#999" }
+  ],
+  "actionItems": [
+    { "text": "Collect competitor pricing.", "owner": "Priya", "due": "by Friday", "turnId": "pricing#7" },
+    { "text": "Draft the pricing page mockup.", "owner": null, "due": null, "turnId": "nowhere#1" }
+  ]
+}
