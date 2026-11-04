@@ -1,0 +1,706 @@
+{
+  "gate": {
+    "recallAt8": 0.4,
+    "mrr": 0.33,
+    "recallAllRetrieved": 0.8
+  },
+  "metrics": {
+    "questions": 22,
+    "answerable": 16,
+    "unanswerable": 6,
+    "recallAt5": 0.3021,
+    "recallAt8": 0.4375,
+    "recallAllRetrieved": 0.849,
+    "mrr": 0.3605,
+    "threshold": 0.58,
+    "refusal": {
+      "precision": 1,
+      "recall": 0.1667,
+      "falseRefusals": 0,
+      "missedRefusals": 5
+    }
+  },
+  "questions": [
+    {
+      "id": "q01",
+      "answerable": true,
+      "topVectorScore": 0.7717,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0,
+      "recallAt8": 1,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.1429,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#9",
+        "2026-10-06-pricing-kickoff#10",
+        "2026-10-06-pricing-kickoff#11",
+        "2026-10-06-pricing-kickoff#12",
+        "2026-10-06-pricing-kickoff#13",
+        "2026-10-06-pricing-kickoff#14",
+        "2026-10-06-pricing-kickoff#29",
+        "2026-10-06-pricing-kickoff#30"
+      ]
+    },
+    {
+      "id": "q02",
+      "answerable": true,
+      "topVectorScore": 0.6966,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0.5,
+      "recallAt8": 0.5,
+      "recallAllRetrieved": 0.5,
+      "reciprocalRank": 0.2,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#69",
+        "2026-10-06-pricing-kickoff#70",
+        "2026-10-06-pricing-kickoff#71",
+        "2026-10-06-pricing-kickoff#72",
+        "2026-10-06-pricing-kickoff#73",
+        "2026-10-06-pricing-kickoff#74",
+        "2026-10-06-pricing-kickoff#75",
+        "2026-10-06-pricing-kickoff#76"
+      ]
+    },
+    {
+      "id": "q03",
+      "answerable": true,
+      "topVectorScore": 0.7246,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0,
+      "recallAt8": 0.5,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.125,
+      "top8Turns": [
+        "2026-10-13-pricing-model-review#70",
+        "2026-10-13-pricing-model-review#71",
+        "2026-10-13-pricing-model-review#72",
+        "2026-10-13-pricing-model-review#73",
+        "2026-10-13-pricing-model-review#74",
+        "2026-10-13-pricing-model-review#75",
+        "2026-10-27-pricing-revision-checkpoint#1",
+        "2026-10-27-pricing-revision-checkpoint#2"
+      ]
+    },
+    {
+      "id": "q04",
+      "answerable": true,
+      "topVectorScore": 0.8284,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 1,
+      "recallAt8": 1,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.2,
+      "top8Turns": [
+        "2026-10-13-pricing-model-review#34",
+        "2026-10-13-pricing-model-review#35",
+        "2026-10-13-pricing-model-review#36",
+        "2026-10-13-pricing-model-review#37",
+        "2026-10-13-pricing-model-review#38",
+        "2026-10-13-pricing-model-review#39",
+        "2026-10-13-pricing-model-review#40",
+        "2026-10-13-pricing-model-review#41"
+      ]
+    },
+    {
+      "id": "q05",
+      "answerable": true,
+      "topVectorScore": 0.7178,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0.5,
+      "recallAt8": 0.5,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 1,
+      "top8Turns": [
+        "2026-10-13-pricing-model-review#24",
+        "2026-10-13-pricing-model-review#25",
+        "2026-10-13-pricing-model-review#26",
+        "2026-10-13-pricing-model-review#27",
+        "2026-10-27-pricing-revision-checkpoint#20",
+        "2026-10-27-pricing-revision-checkpoint#21",
+        "2026-10-06-pricing-kickoff#9",
+        "2026-10-06-pricing-kickoff#10"
+      ]
+    },
+    {
+      "id": "q06",
+      "answerable": true,
+      "topVectorScore": 0.652,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0.3333,
+      "recallAt8": 0.3333,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 1,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#81",
+        "2026-10-06-pricing-kickoff#82",
+        "2026-10-06-pricing-kickoff#83",
+        "2026-10-06-pricing-kickoff#84",
+        "2026-10-06-pricing-kickoff#85",
+        "2026-10-06-pricing-kickoff#86",
+        "2026-10-27-pricing-revision-checkpoint#70",
+        "2026-10-27-pricing-revision-checkpoint#71"
+      ]
+    },
+    {
+      "id": "q07",
+      "answerable": true,
+      "topVectorScore": 0.7175,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0,
+      "recallAt8": 0,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.1111,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#49",
+        "2026-10-06-pricing-kickoff#50",
+        "2026-10-06-pricing-kickoff#51",
+        "2026-10-06-pricing-kickoff#52",
+        "2026-10-06-pricing-kickoff#53",
+        "2026-10-06-pricing-kickoff#54",
+        "2026-10-27-pricing-revision-checkpoint#38",
+        "2026-10-27-pricing-revision-checkpoint#39"
+      ]
+    },
+    {
+      "id": "q08",
+      "answerable": true,
+      "topVectorScore": 0.731,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0,
+      "recallAt8": 0,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.04,
+      "top8Turns": [
+        "2026-10-27-pricing-revision-checkpoint#21",
+        "2026-10-27-pricing-revision-checkpoint#22",
+        "2026-10-27-pricing-revision-checkpoint#20",
+        "2026-10-27-pricing-revision-checkpoint#19",
+        "2026-10-13-pricing-model-review#5",
+        "2026-10-13-pricing-model-review#6",
+        "2026-10-13-pricing-model-review#7",
+        "2026-10-13-pricing-model-review#8"
+      ]
+    },
+    {
+      "id": "q09",
+      "answerable": true,
+      "topVectorScore": 0.6677,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0,
+      "recallAt8": 0.3333,
+      "recallAllRetrieved": 0.6667,
+      "reciprocalRank": 0.1667,
+      "top8Turns": [
+        "2026-10-27-pricing-revision-checkpoint#13",
+        "2026-10-27-pricing-revision-checkpoint#14",
+        "2026-10-27-pricing-revision-checkpoint#15",
+        "2026-10-27-pricing-revision-checkpoint#16",
+        "2026-10-27-pricing-revision-checkpoint#17",
+        "2026-10-27-pricing-revision-checkpoint#18",
+        "2026-10-06-pricing-kickoff#61",
+        "2026-10-06-pricing-kickoff#62"
+      ]
+    },
+    {
+      "id": "q10",
+      "answerable": true,
+      "topVectorScore": 0.7251,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0.25,
+      "recallAt8": 0.25,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 1,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#77",
+        "2026-10-06-pricing-kickoff#78",
+        "2026-10-06-pricing-kickoff#79",
+        "2026-10-06-pricing-kickoff#80",
+        "2026-10-06-pricing-kickoff#81",
+        "2026-10-06-pricing-kickoff#82",
+        "2026-11-03-launch-readiness#61",
+        "2026-11-03-launch-readiness#62"
+      ]
+    },
+    {
+      "id": "q11",
+      "answerable": true,
+      "topVectorScore": 0.6875,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0.25,
+      "recallAt8": 0.25,
+      "recallAllRetrieved": 0.75,
+      "reciprocalRank": 0.25,
+      "top8Turns": [
+        "2026-10-13-pricing-model-review#86",
+        "2026-10-13-pricing-model-review#87",
+        "2026-10-13-pricing-model-review#88",
+        "2026-10-13-pricing-model-review#89",
+        "2026-10-13-pricing-model-review#90",
+        "2026-10-13-pricing-model-review#91",
+        "2026-11-03-launch-readiness#65",
+        "2026-11-03-launch-readiness#66"
+      ]
+    },
+    {
+      "id": "q12",
+      "answerable": true,
+      "topVectorScore": 0.5821,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0,
+      "recallAt8": 0,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.0323,
+      "top8Turns": [
+        "2026-11-03-launch-readiness#1",
+        "2026-11-03-launch-readiness#2",
+        "2026-11-03-launch-readiness#3",
+        "2026-11-03-launch-readiness#4",
+        "2026-11-03-launch-readiness#5",
+        "2026-11-03-launch-readiness#6",
+        "2026-10-13-pricing-model-review#30",
+        "2026-10-13-pricing-model-review#31"
+      ]
+    },
+    {
+      "id": "q13",
+      "answerable": true,
+      "topVectorScore": 0.6391,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0.6667,
+      "recallAt8": 1,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.25,
+      "top8Turns": [
+        "2026-10-13-pricing-model-review#54",
+        "2026-10-13-pricing-model-review#55",
+        "2026-10-13-pricing-model-review#56",
+        "2026-10-13-pricing-model-review#57",
+        "2026-10-13-pricing-model-review#58",
+        "2026-10-13-pricing-model-review#59",
+        "2026-10-27-pricing-revision-checkpoint#21",
+        "2026-10-27-pricing-revision-checkpoint#22"
+      ]
+    },
+    {
+      "id": "q14",
+      "answerable": true,
+      "topVectorScore": 0.7761,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0.3333,
+      "recallAt8": 0.3333,
+      "recallAllRetrieved": 0.6667,
+      "reciprocalRank": 1,
+      "top8Turns": [
+        "2026-10-27-pricing-revision-checkpoint#58",
+        "2026-10-27-pricing-revision-checkpoint#59",
+        "2026-10-27-pricing-revision-checkpoint#60",
+        "2026-10-27-pricing-revision-checkpoint#61",
+        "2026-10-27-pricing-revision-checkpoint#62",
+        "2026-10-27-pricing-revision-checkpoint#63",
+        "2026-10-27-pricing-revision-checkpoint#54",
+        "2026-10-27-pricing-revision-checkpoint#55"
+      ]
+    },
+    {
+      "id": "q15",
+      "answerable": true,
+      "topVectorScore": 0.7015,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 0,
+      "recallAt8": 0,
+      "recallAllRetrieved": 0,
+      "reciprocalRank": 0,
+      "top8Turns": [
+        "2026-10-27-pricing-revision-checkpoint#13",
+        "2026-10-27-pricing-revision-checkpoint#14",
+        "2026-10-27-pricing-revision-checkpoint#15",
+        "2026-10-27-pricing-revision-checkpoint#16",
+        "2026-10-27-pricing-revision-checkpoint#17",
+        "2026-10-27-pricing-revision-checkpoint#18",
+        "2026-10-27-pricing-revision-checkpoint#19",
+        "2026-10-27-pricing-revision-checkpoint#20"
+      ]
+    },
+    {
+      "id": "q16",
+      "answerable": true,
+      "topVectorScore": 0.6967,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": 1,
+      "recallAt8": 1,
+      "recallAllRetrieved": 1,
+      "reciprocalRank": 0.25,
+      "top8Turns": [
+        "2026-11-03-launch-readiness#17",
+        "2026-11-03-launch-readiness#18",
+        "2026-11-03-launch-readiness#19",
+        "2026-11-03-launch-readiness#20",
+        "2026-11-03-launch-readiness#21",
+        "2026-11-03-launch-readiness#22",
+        "2026-11-03-launch-readiness#13",
+        "2026-11-03-launch-readiness#14"
+      ]
+    },
+    {
+      "id": "q17",
+      "answerable": false,
+      "topVectorScore": 0.7457,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": null,
+      "recallAt8": null,
+      "recallAllRetrieved": null,
+      "reciprocalRank": null,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#1",
+        "2026-10-06-pricing-kickoff#2",
+        "2026-10-06-pricing-kickoff#3",
+        "2026-10-06-pricing-kickoff#4",
+        "2026-10-06-pricing-kickoff#5",
+        "2026-10-06-pricing-kickoff#6",
+        "2026-10-06-pricing-kickoff#7",
+        "2026-10-06-pricing-kickoff#8"
+      ]
+    },
+    {
+      "id": "q18",
+      "answerable": false,
+      "topVectorScore": 0.7229,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": null,
+      "recallAt8": null,
+      "recallAllRetrieved": null,
+      "reciprocalRank": null,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#1",
+        "2026-10-06-pricing-kickoff#2",
+        "2026-10-06-pricing-kickoff#3",
+        "2026-10-06-pricing-kickoff#4",
+        "2026-10-06-pricing-kickoff#5",
+        "2026-10-06-pricing-kickoff#6",
+        "2026-10-27-pricing-revision-checkpoint#58",
+        "2026-10-27-pricing-revision-checkpoint#59"
+      ]
+    },
+    {
+      "id": "q19",
+      "answerable": false,
+      "topVectorScore": 0.5759,
+      "hasTextHit": false,
+      "belowThreshold": true,
+      "recallAt5": null,
+      "recallAt8": null,
+      "recallAllRetrieved": null,
+      "reciprocalRank": null,
+      "top8Turns": [
+        "2026-10-13-pricing-model-review#74",
+        "2026-10-13-pricing-model-review#75",
+        "2026-10-13-pricing-model-review#76",
+        "2026-10-13-pricing-model-review#77",
+        "2026-10-13-pricing-model-review#78",
+        "2026-10-13-pricing-model-review#79",
+        "2026-10-13-pricing-model-review#80",
+        "2026-10-13-pricing-model-review#81"
+      ]
+    },
+    {
+      "id": "q20",
+      "answerable": false,
+      "topVectorScore": 0.606,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": null,
+      "recallAt8": null,
+      "recallAllRetrieved": null,
+      "reciprocalRank": null,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#73",
+        "2026-10-06-pricing-kickoff#74",
+        "2026-10-06-pricing-kickoff#75",
+        "2026-10-06-pricing-kickoff#76",
+        "2026-10-06-pricing-kickoff#77",
+        "2026-10-06-pricing-kickoff#78",
+        "2026-11-03-launch-readiness#25",
+        "2026-11-03-launch-readiness#26"
+      ]
+    },
+    {
+      "id": "q21",
+      "answerable": false,
+      "topVectorScore": 0.6396,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": null,
+      "recallAt8": null,
+      "recallAllRetrieved": null,
+      "reciprocalRank": null,
+      "top8Turns": [
+        "2026-10-06-pricing-kickoff#61",
+        "2026-10-06-pricing-kickoff#62",
+        "2026-10-06-pricing-kickoff#63",
+        "2026-10-06-pricing-kickoff#64",
+        "2026-10-06-pricing-kickoff#65",
+        "2026-10-06-pricing-kickoff#66",
+        "2026-10-27-pricing-revision-checkpoint#58",
+        "2026-10-27-pricing-revision-checkpoint#59"
+      ]
+    },
+    {
+      "id": "q22",
+      "answerable": false,
+      "topVectorScore": 0.661,
+      "hasTextHit": false,
+      "belowThreshold": false,
+      "recallAt5": null,
+      "recallAt8": null,
+      "recallAllRetrieved": null,
+      "reciprocalRank": null,
+      "top8Turns": [
+        "2026-10-13-pricing-model-review#24",
+        "2026-10-13-pricing-model-review#25",
+        "2026-10-13-pricing-model-review#26",
+        "2026-10-13-pricing-model-review#27",
+        "2026-10-13-pricing-model-review#28",
+        "2026-10-13-pricing-model-review#29",
+        "2026-10-13-pricing-model-review#30",
+        "2026-10-13-pricing-model-review#31"
+      ]
+    }
+  ],
+  "thresholdSweep": [
+    {
+      "threshold": 0.3,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.32,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.34,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.36,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.38,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.4,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.42,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.44,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.46,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.48,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.5,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.52,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.54,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.56,
+      "precision": null,
+      "recall": 0,
+      "falseRefusals": 0,
+      "missedRefusals": 6
+    },
+    {
+      "threshold": 0.58,
+      "precision": 1,
+      "recall": 0.1667,
+      "falseRefusals": 0,
+      "missedRefusals": 5
+    },
+    {
+      "threshold": 0.6,
+      "precision": 0.5,
+      "recall": 0.1667,
+      "falseRefusals": 1,
+      "missedRefusals": 5
+    },
+    {
+      "threshold": 0.62,
+      "precision": 0.6667,
+      "recall": 0.3333,
+      "falseRefusals": 1,
+      "missedRefusals": 4
+    },
+    {
+      "threshold": 0.64,
+      "precision": 0.6,
+      "recall": 0.5,
+      "falseRefusals": 2,
+      "missedRefusals": 3
+    },
+    {
+      "threshold": 0.66,
+      "precision": 0.5,
+      "recall": 0.5,
+      "falseRefusals": 3,
+      "missedRefusals": 3
+    },
+    {
+      "threshold": 0.68,
+      "precision": 0.5,
+      "recall": 0.6667,
+      "falseRefusals": 4,
+      "missedRefusals": 2
+    },
+    {
+      "threshold": 0.7,
+      "precision": 0.3636,
+      "recall": 0.6667,
+      "falseRefusals": 7,
+      "missedRefusals": 2
+    },
+    {
+      "threshold": 0.72,
+      "precision": 0.2857,
+      "recall": 0.6667,
+      "falseRefusals": 10,
+      "missedRefusals": 2
+    },
+    {
+      "threshold": 0.74,
+      "precision": 0.2778,
+      "recall": 0.8333,
+      "falseRefusals": 13,
+      "missedRefusals": 1
+    },
+    {
+      "threshold": 0.76,
+      "precision": 0.3158,
+      "recall": 1,
+      "falseRefusals": 13,
+      "missedRefusals": 0
+    },
+    {
+      "threshold": 0.78,
+      "precision": 0.2857,
+      "recall": 1,
+      "falseRefusals": 15,
+      "missedRefusals": 0
+    },
+    {
+      "threshold": 0.8,
+      "precision": 0.2857,
+      "recall": 1,
+      "falseRefusals": 15,
+      "missedRefusals": 0
+    },
+    {
+      "threshold": 0.82,
+      "precision": 0.2857,
+      "recall": 1,
+      "falseRefusals": 15,
+      "missedRefusals": 0
+    },
+    {
+      "threshold": 0.84,
+      "precision": 0.2727,
+      "recall": 1,
+      "falseRefusals": 16,
+      "missedRefusals": 0
+    },
+    {
+      "threshold": 0.86,
+      "precision": 0.2727,
+      "recall": 1,
+      "falseRefusals": 16,
+      "missedRefusals": 0
+    },
+    {
+      "threshold": 0.88,
+      "precision": 0.2727,
+      "recall": 1,
+      "falseRefusals": 16,
+      "missedRefusals": 0
+    },
+    {
+      "threshold": 0.9,
+      "precision": 0.2727,
+      "recall": 1,
+      "falseRefusals": 16,
+      "missedRefusals": 0
+    }
+  ]
+}
