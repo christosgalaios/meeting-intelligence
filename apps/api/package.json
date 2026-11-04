@@ -9,6 +9,7 @@
     "migrate": "node --env-file-if-exists=../../.env ../../node_modules/tsx/dist/cli.mjs src/db/migrate-cli.ts",
     "seed": "node --env-file-if-exists=../../.env ../../node_modules/tsx/dist/cli.mjs seed/seed-cli.ts",
     "eval": "node ../../node_modules/tsx/dist/cli.mjs scripts/eval.ts",
+    "voice:eval": "node ../../node_modules/tsx/dist/cli.mjs scripts/voice-eval.ts",
     "test": "node ../../node_modules/vitest/vitest.mjs run",
     "typecheck": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
     "lint": "node ../../node_modules/eslint/bin/eslint.js ."
@@ -19,6 +20,7 @@
     "fastify": "^5.12.8",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
+    "sherpa-onnx-node": "2.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
