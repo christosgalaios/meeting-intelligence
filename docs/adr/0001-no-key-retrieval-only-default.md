@@ -20,5 +20,5 @@ Option 3. Embeddings run locally, so retrieval is real and free. Without a key t
 ## Consequences
 - The app works end to end on a clean clone with zero setup cost.
 - Without a key, a reviewer sees real retrieval quality, not a fake.
-- Extraction (decisions, action items) only appears with a key.
+- Extraction (decisions, action items) only appears with a key. An uploaded transcript is extracted automatically; the sample meetings are not, and each shows an extract button with a cost estimate.
 - Canned responses exist only as test fixtures, so CI needs no key.
