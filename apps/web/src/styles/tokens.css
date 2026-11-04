@@ -1,0 +1,85 @@
+/*
+ * Design tokens, "Graphite". Source: docs/design/Design System.dc.html.
+ * This is the only file allowed to contain colour values. Tailwind reads these through
+ * the @theme block in index.css; components use classes like bg-surface or text-fg-2.
+ */
+:root,
+[data-theme='light'] {
+  --bg: #f6f6f4;
+  --surface: #ffffff;
+  --surface-2: #f1f1ee;
+  --surface-3: #e7e7e3;
+  --border: #e2e2de;
+  --border-strong: #cdcdc7;
+  --text: #17171a;
+  --text-2: #4c4c54;
+  --text-3: #67676f;
+  --accent: #3352c6;
+  --accent-hover: #2a45ad;
+  --on-accent: #ffffff;
+  --accent-soft: #ebeffc;
+  --accent-soft-text: #2a45ad;
+  --chart-2: #c8891e;
+  --hl: #fff2c7;
+  --hl-text: #5c4200;
+  --ok: #1e7347;
+  --ok-soft: #e5f3ea;
+  --warn: #8a5a00;
+  --warn-soft: #fbf1da;
+  --danger: #b3261e;
+  --danger-soft: #fcebe9;
+  --focus: #3352c6;
+  --scrim: rgba(10, 10, 12, 0.4);
+  --spk-1: oklch(0.53 0.14 35);
+  --spk-2: oklch(0.5 0.1 195);
+  --spk-3: oklch(0.5 0.14 300);
+  --spk-4: oklch(0.5 0.12 145);
+  --spk-5: oklch(0.52 0.11 75);
+  --spk-6: oklch(0.52 0.15 355);
+  --shadow: 0 1px 2px rgba(23, 23, 26, 0.05), 0 2px 8px rgba(23, 23, 26, 0.04);
+  --shadow-lg: 0 12px 40px rgba(23, 23, 26, 0.14), 0 2px 6px rgba(23, 23, 26, 0.06);
+  --font-ui: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-code: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+  --r-pill: 999px;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: #0e0e10;
+  --surface: #161618;
+  --surface-2: #1c1c1f;
+  --surface-3: #26262a;
+  --border: #28282d;
+  --border-strong: #3a3a41;
+  --text: #ededf0;
+  --text-2: #b2b2ba;
+  --text-3: #8f8f98;
+  --accent: #8ea4f6;
+  --accent-hover: #a8baf8;
+  --on-accent: #0e0e10;
+  --accent-soft: #1d2442;
+  --accent-soft-text: #bcc9fa;
+  --chart-2: #e0ae55;
+  --hl: #3b3115;
+  --hl-text: #f3dc9a;
+  --ok: #5fcb91;
+  --ok-soft: #13281c;
+  --warn: #e3b45c;
+  --warn-soft: #2d2311;
+  --danger: #f28b82;
+  --danger-soft: #341818;
+  --focus: #8ea4f6;
+  --spk-1: oklch(0.76 0.11 35);
+  --spk-2: oklch(0.76 0.09 195);
+  --spk-3: oklch(0.76 0.11 300);
+  --spk-4: oklch(0.76 0.1 145);
+  --spk-5: oklch(0.78 0.1 80);
+  --spk-6: oklch(0.76 0.12 355);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px #2a2a30;
+  color-scheme: dark;
+}

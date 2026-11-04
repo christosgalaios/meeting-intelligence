@@ -27,7 +27,7 @@ describe('database lifecycle', () => {
   it('running migrations a second time applies nothing', async () => {
     expect(await migrate(pool)).toEqual([]);
     const { rows } = await pool.query('SELECT count(*)::int AS n FROM schema_migrations');
-    expect(rows[0].n).toBe(1);
+    expect(rows[0].n).toBe(2);
   });
 
   it('seeding is idempotent', async () => {

@@ -303,7 +303,7 @@ export const ApiError = z.object({
   error: z.object({
     code: z.enum([
       'VALIDATION', 'NOT_FOUND', 'EMPTY_TRANSCRIPT', 'TOO_LARGE',
-      'EMBEDDINGS_NOT_READY', 'LLM_ERROR', 'INTERNAL',
+      'EMBEDDINGS_NOT_READY', 'LLM_ERROR', 'CONFLICT', 'INTERNAL',
     ]),
     message: z.string(),
     requestId: z.string(),
@@ -330,6 +330,9 @@ export const MeetingSummary = z.object({
   speakers: z.array(z.string()),
   extractionStatus: ExtractionStatus,
   createdAt: z.string(),
+  meetingDate: z.string().nullable(), // YYYY-MM-DD from a leading date on the filename (migration 0002); null -> use createdAt
+  decisionCount: z.number().int(),
+  actionItemCount: z.number().int(),
 });
 
 export const Turn = z.object({
@@ -441,7 +444,8 @@ export type AskEvent = z.infer<typeof AskEvent>;
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
 | `GET /api/health` | none | `200 Health`. `status: 'degraded'` when db false or embeddings not ready; still 200 so compose healthchecks can read the body. | none |
-| `POST /api/meetings` | `UploadRequest` JSON. The browser reads the file with `File.text()`. | `201 MeetingDetail`. Synchronous: parse, chunk, embed, insert. Extraction (full mode) starts after the response; `extractionStatus` is `pending`, poll `GET /api/meetings/:id` until it changes. In retrieval-only mode it is `skipped` immediately. | `400 VALIDATION`, `400 EMPTY_TRANSCRIPT`, `413 TOO_LARGE`, `503 EMBEDDINGS_NOT_READY` |
+| `POST /api/meetings` | `UploadRequest` JSON. The browser reads the file with `File.text()`. | `201 MeetingDetail`. Synchronous: parse, chunk, embed, insert. Extraction (full mode) starts after the response (seeded meetings are the exception: seeding never calls the model, they are `skipped`, and the user starts extraction); `extractionStatus` is `pending`, poll `GET /api/meetings/:id` until it changes. In retrieval-only mode it is `skipped` immediately. | `400 VALIDATION`, `400 EMPTY_TRANSCRIPT`, `413 TOO_LARGE`, `503 EMBEDDINGS_NOT_READY` |
+| `POST /api/meetings/:id/extract` | none. User-clicked from the summary card. id = uuid or slug. | `202 MeetingDetail` with `extractionStatus: 'pending'`; poll `GET /api/meetings/:id`. Runs the same extraction as an upload, once, on a meeting that is `skipped` or `failed`. | `409 CONFLICT` when the API has no key, or the meeting is already `pending` or `done`; `404 NOT_FOUND` |
 | `GET /api/meetings` | none | `200 { meetings: MeetingSummary[] }`, newest first | none |
 | `GET /api/meetings/:id` | id = uuid or slug | `200 MeetingDetail` (turns in n order) | `404 NOT_FOUND` |
 | `POST /api/ask` | `AskRequest` JSON. | `200 text/event-stream` of `AskEvent`. Order: `meta`, `sources`, then either `refusal` + `done`, or `token`* + `done`, or `done` alone (retrieval-only). `error` can replace `done`. Headers: `Cache-Control: no-cache`, `X-Accel-Buffering: no`. | `400 VALIDATION` (JSON, before stream starts), `404 NOT_FOUND` for an unknown meetingId, `503 EMBEDDINGS_NOT_READY`; after the stream starts errors arrive as an `error` event |

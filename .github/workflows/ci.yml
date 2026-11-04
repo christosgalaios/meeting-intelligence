@@ -44,8 +44,27 @@ jobs:
       - run: npm run eval
       - run: npm run build
 
+  # The web app needs neither Postgres nor the embedding model, so it gets its own fast job and its own signal.
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck --workspace apps/web
+      - run: npm run lint --workspace apps/web
+      - run: npm test --workspace apps/web
+      - run: npm run build --workspace apps/web
+      - name: The bundle carries no key material
+        run: |
+          test -f apps/web/dist/index.html
+          if grep -rIl 'sk-ant' apps/web/dist; then echo "found key-shaped text in the web bundle"; exit 1; fi
+
   compose-smoke:
-    needs: test
+    needs: [test, web]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -73,6 +92,17 @@ jobs:
             -H 'content-type: application/json' \
             -d '{"question":"What price was agreed for the Starter plan?"}' | tee ask.txt
           grep -q 'event: done' ask.txt
+      - name: The web app is served and proxies the API through nginx
+        run: |
+          set -o pipefail
+          curl --fail-with-body -sS http://localhost:5173/ | grep -q '<div id="root">'
+          # A deep link must serve the app, not a 404: the router handles /ask and /meetings/:id.
+          curl --fail-with-body -sS http://localhost:5173/ask | grep -q '<div id="root">'
+          curl --fail-with-body -sS http://localhost:5173/api/health | jq -e '.mode == "retrieval-only"'
+          curl --fail-with-body -sS -N -X POST http://localhost:5173/api/ask \
+            -H 'content-type: application/json' \
+            -d '{"question":"What price was agreed for the Starter plan?"}' | tee ask-web.txt
+          grep -q 'event: done' ask-web.txt
       - name: Tear down
         if: always()
         run: docker compose down -v

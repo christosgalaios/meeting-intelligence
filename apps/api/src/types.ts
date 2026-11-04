@@ -10,7 +10,7 @@ export const ApiError = z.object({
   error: z.object({
     code: z.enum([
       'VALIDATION', 'NOT_FOUND', 'EMPTY_TRANSCRIPT', 'TOO_LARGE',
-      'EMBEDDINGS_NOT_READY', 'LLM_ERROR', 'INTERNAL',
+      'EMBEDDINGS_NOT_READY', 'LLM_ERROR', 'CONFLICT', 'INTERNAL',
     ]),
     message: z.string(),
     requestId: z.string(),
@@ -38,6 +38,9 @@ export const MeetingSummary = z.object({
   speakers: z.array(z.string()),
   extractionStatus: ExtractionStatus,
   createdAt: z.string(),
+  meetingDate: z.string().nullable(), // YYYY-MM-DD from the filename prefix; null -> use createdAt
+  decisionCount: z.number().int(),
+  actionItemCount: z.number().int(),
 });
 export type MeetingSummary = z.infer<typeof MeetingSummary>;
 

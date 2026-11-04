@@ -7,6 +7,7 @@ import { validateExtraction } from '../llm/extractionSchema.js';
 import { chunkTurns } from '../transcript/chunk.js';
 import { parseTranscript } from '../transcript/parse.js';
 import { fileSlug } from '../transcript/slug.js';
+import { filenameMeta } from '../transcript/title.js';
 import type { MeetingDetail } from '../types.js';
 import { getMeetingDetail } from './meetings.js';
 import type { ExtractionQueue } from './queue.js';
@@ -36,7 +37,13 @@ const isUniqueViolation = (err: unknown) => typeof err === 'object' && err !== n
 
 export async function ingestTranscript(
   deps: IngestDeps,
-  input: { filename: string; title?: string | undefined; text: string },
+  input: {
+    filename: string;
+    title?: string | undefined;
+    text: string;
+    /** Seeding: the transcript is stored as `skipped` and never calls the model. An upload leaves this off. */
+    skipExtraction?: boolean;
+  },
 ): Promise<MeetingDetail> {
   const { pool, embedder, llm, queue, log } = deps;
   const t0 = performance.now();
@@ -52,18 +59,20 @@ export async function ingestTranscript(
     const embedMs = Math.round(performance.now() - e0);
     if (vectors.length !== chunks.length) throw new Error('embedder returned the wrong number of vectors');
 
-    const title = input.title ?? input.filename.replace(/^.*[\\/]/, '').replace(/\.[^.]*$/, '');
+    const meta = filenameMeta(input.filename);
+    const title = input.title ?? meta.title;
     const speakers = [...new Set(turns.map((t) => t.speaker))];
-    const status = llm.enabled ? 'pending' : 'skipped';
+    const extract = llm.enabled && !input.skipExtraction;
+    const status = extract ? 'pending' : 'skipped';
 
     const client = await pool.connect();
     let meetingId: string;
     try {
       await client.query('BEGIN');
       const m = await client.query<{ id: string }>(
-        `INSERT INTO meetings (slug, title, source_filename, turn_count, duration_seconds, speakers, extraction_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-        [slug, title, input.filename, turns.length, turns[turns.length - 1]!.startSeconds, speakers, status],
+        `INSERT INTO meetings (slug, title, source_filename, turn_count, duration_seconds, speakers, extraction_status, meeting_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+        [slug, title, input.filename, turns.length, turns[turns.length - 1]!.startSeconds, speakers, status, meta.date],
       );
       meetingId = m.rows[0]!.id;
       await client.query(
@@ -119,7 +128,7 @@ export async function ingestTranscript(
     const detail = await getMeetingDetail(pool, meetingId);
     if (!detail) throw new AppError('INTERNAL', 'meeting vanished after insert');
     // Queued after the detail is read so the upload response always reports `pending`.
-    if (llm.enabled) queue.add(() => runExtraction(deps, meetingId));
+    if (extract) queue.add(() => runExtraction(deps, meetingId));
     return detail;
   }
 }
@@ -199,4 +208,30 @@ export async function runExtraction(deps: Pick<IngestDeps, 'pool' | 'llm' | 'log
       log.error({ meetingId, err: e instanceof Error ? e.message : String(e) }, 'extract.failed.record'),
     );
   }
+}
+
+/**
+ * User-requested extraction for a meeting that has none (seeded without a key, or a failed run).
+ * Marks it pending and queues the job; the caller polls the meeting like it does after an upload.
+ */
+export async function requestExtraction(deps: IngestDeps, idOrSlug: string): Promise<MeetingDetail> {
+  const { pool, llm, queue } = deps;
+  // Checked first: without a key there is nothing to run, whatever state the meeting is in.
+  if (!llm.enabled) throw new AppError('CONFLICT', 'Extraction needs an Anthropic key set on the API.');
+  const meeting = await getMeetingDetail(pool, idOrSlug);
+  if (!meeting) throw new AppError('NOT_FOUND', 'Meeting not found');
+  // `done` is refused too: re-running would spend money to replace a result the user already has.
+  if (meeting.extractionStatus === 'pending') throw new AppError('CONFLICT', 'Extraction is already running for this meeting.');
+  if (meeting.extractionStatus === 'done') throw new AppError('CONFLICT', 'This meeting has already been extracted.');
+
+  // The status guard in the WHERE keeps two simultaneous clicks from queueing two paid calls.
+  const claimed = await pool.query(
+    "UPDATE meetings SET extraction_status = 'pending', extraction_error = NULL WHERE id = $1 AND extraction_status IN ('skipped', 'failed')",
+    [meeting.id],
+  );
+  if (claimed.rowCount !== 1) throw new AppError('CONFLICT', 'Extraction is already running for this meeting.');
+  queue.add(() => runExtraction(deps, meeting.id));
+  const detail = await getMeetingDetail(pool, meeting.id);
+  if (!detail) throw new AppError('INTERNAL', 'meeting vanished during extraction request');
+  return detail;
 }

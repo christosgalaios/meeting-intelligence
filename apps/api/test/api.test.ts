@@ -308,3 +308,63 @@ describe('embeddings not ready', () => {
     await drop();
   });
 });
+
+describe('POST /api/meetings/:id/extract', () => {
+  const extract = (app: FastifyInstance, id: string) => app.inject({ method: 'POST', url: `/api/meetings/${id}/extract` });
+
+  it('without a key it is 409 CONFLICT and the meeting stays skipped', async () => {
+    const env = await setup(new NullLlmClient());
+    await upload(env.app, 'nokey.txt', PRICING);
+    const res = await extract(env.app, 'nokey');
+    expect(res.statusCode).toBe(409);
+    expect(ApiError.parse(res.json()).error.code).toBe('CONFLICT');
+    const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/nokey' })).json());
+    expect(detail.extractionStatus).toBe('skipped');
+    await env.app.close();
+    await env.drop();
+  });
+
+  it('with a key it starts one extraction on a skipped meeting, then refuses a second run', async () => {
+    const llm = new FakeLlm();
+    const env = await setup(llm);
+    await upload(env.app, 'seeded.txt', PRICING);
+    await env.app.extractionQueue.idle();
+    // The state a meeting seeded without a key is in.
+    await env.pool.query("UPDATE meetings SET extraction_status = 'skipped' WHERE slug = 'seeded'");
+    llm.extractCalls = 0;
+
+    const res = await extract(env.app, 'seeded');
+    expect(res.statusCode).toBe(202);
+    expect(MeetingDetail.parse(res.json()).extractionStatus).toBe('pending');
+    await env.app.extractionQueue.idle();
+    const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/seeded' })).json());
+    expect(detail.extractionStatus).toBe('done');
+    expect(detail.decisions).toHaveLength(1);
+    expect(llm.extractCalls).toBe(1);
+
+    const again = await extract(env.app, 'seeded');
+    expect(again.statusCode).toBe(409);
+    expect(llm.extractCalls).toBe(1); // no second paid call
+
+    const unknown = await extract(env.app, 'no-such-meeting');
+    expect(unknown.statusCode).toBe(404);
+    expect(ApiError.parse(unknown.json()).error.code).toBe('NOT_FOUND');
+    await env.app.close();
+    await env.drop();
+  });
+
+  it('a failed extraction can be started again', async () => {
+    const llm = new FakeLlm();
+    const env = await setup(llm);
+    await upload(env.app, 'retry.txt', PRICING);
+    await env.app.extractionQueue.idle();
+    await env.pool.query("UPDATE meetings SET extraction_status = 'failed', extraction_error = 'upstream 529' WHERE slug = 'retry'");
+    const res = await extract(env.app, 'retry');
+    expect(res.statusCode).toBe(202);
+    await env.app.extractionQueue.idle();
+    const detail = MeetingDetail.parse((await env.app.inject({ method: 'GET', url: '/api/meetings/retry' })).json());
+    expect(detail).toMatchObject({ extractionStatus: 'done', extractionError: null });
+    await env.app.close();
+    await env.drop();
+  });
+});

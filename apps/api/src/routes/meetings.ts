@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { AppError } from '../errors.js';
-import { ingestTranscript } from '../services/ingest.js';
+import { ingestTranscript, requestExtraction } from '../services/ingest.js';
 import { getMeetingDetail, listMeetings } from '../services/meetings.js';
 import { UploadRequest } from '../types.js';
 
@@ -25,6 +25,13 @@ export function registerMeetingRoutes(app: FastifyInstance): void {
       { filename: parsed.data.filename, title: parsed.data.title, text: parsed.data.text },
     );
     return reply.code(201).send(detail);
+  });
+
+  // User-clicked from the summary card. 202 because the work finishes after the response; poll GET /api/meetings/:id.
+  app.post<{ Params: { id: string } }>('/api/meetings/:id/extract', async (req, reply) => {
+    const { pool, embedder, llm } = app.deps;
+    const detail = await requestExtraction({ pool, embedder, llm, queue: app.extractionQueue, log: req.log }, req.params.id);
+    return reply.code(202).send(detail);
   });
 
   app.get('/api/meetings', async () => ({ meetings: await listMeetings(app.deps.pool) }));
