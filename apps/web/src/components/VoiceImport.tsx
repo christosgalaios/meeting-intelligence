@@ -11,6 +11,8 @@ interface Props {
   file: File;
   onImported(meeting: MeetingDetail): void;
   onCancel(): void;
+  /** Full mode only: the import triggers a paid extraction. */
+  importHint?: string | null;
   /** Poll interval in ms; tests shorten it. */
   pollMs?: number;
 }
@@ -31,7 +33,7 @@ function progressText(state: TranscriptionState): string | null {
 }
 
 /** Decode in the browser, upload, wait, then review. Owns everything between "audio chosen" and "imported". */
-export function VoiceImport({ file, onImported, onCancel, pollMs }: Props) {
+export function VoiceImport({ file, onImported, onCancel, importHint, pollMs }: Props) {
   const tx = useTranscription(pollMs);
   const [decoding, setDecoding] = useState(true);
   const [decodeError, setDecodeError] = useState<string | null>(null);
@@ -99,6 +101,7 @@ export function VoiceImport({ file, onImported, onCancel, pollMs }: Props) {
         <TranscriptReview
           transcription={reviewing}
           busy={inFlight}
+          importHint={importHint ?? null}
           onRerun={tx.rerun}
           onImported={(meeting) => {
             tx.reset();

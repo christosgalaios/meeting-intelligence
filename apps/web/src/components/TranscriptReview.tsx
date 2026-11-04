@@ -16,6 +16,8 @@ interface Props {
   transcription: Transcription;
   /** True while a re-run is in flight: the draft stays visible but cannot be imported. */
   busy: boolean;
+  /** Full mode only: the import triggers a paid extraction. */
+  importHint?: string | null;
   onRerun(numSpeakers: number): void;
   onImported(meeting: MeetingDetail): void;
   onDiscard(): void;
@@ -25,7 +27,7 @@ interface Props {
  * The review step. Nothing here reaches the library until Import is clicked: the draft lives in this component and
  * on the API's in-memory job, and the API's own transcript validator still runs on import.
  */
-export function TranscriptReview({ transcription, busy, onRerun, onImported, onDiscard }: Props) {
+export function TranscriptReview({ transcription, busy, importHint, onRerun, onImported, onDiscard }: Props) {
   const [draft, setDraft] = useState<Draft>(() => {
     const date = isoDate(new Date());
     return newDraft(transcription, `Meeting ${date}`, date);
@@ -141,6 +143,7 @@ export function TranscriptReview({ transcription, busy, onRerun, onImported, onD
       <div className="flex flex-wrap gap-x-3 text-xs text-fg-3">
         <span>{blocked ?? `${plural(turns, 'turn')} · ${plural(numbers.length, 'speaker')}`}</span>
         <span>Nothing is added to the library until you import it.</span>
+        {importHint && <span>{importHint}</span>}
       </div>
 
       {error && (

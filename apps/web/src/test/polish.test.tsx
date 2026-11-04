@@ -62,3 +62,30 @@ describe('empty library', () => {
     expect(screen.queryByText('No meetings yet')).toBeNull();
   });
 });
+
+describe('import cost hint', () => {
+  const health = (mode: 'full' | 'retrieval-only') => ({
+    status: 'ok', mode, db: true, embeddings: { model: 'Xenova/bge-small-en-v1.5', ready: true },
+    models: mode === 'full' ? { answer: 'claude-sonnet-5-5', extraction: 'claude-haiku-5-5' } : { answer: null, extraction: null },
+    voice: { available: true, models: 'x' }, version: '0',
+  });
+  const library = (mode: 'full' | 'retrieval-only') => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      const json = (b: unknown) => Promise.resolve(new Response(JSON.stringify(b), { status: 200 }));
+      return json(url === '/api/health' ? health(mode) : { meetings: [] });
+    }));
+    render(<MemoryRouter><AppProvider><LibraryPage /></AppProvider></MemoryRouter>);
+  };
+  const HINT = /Importing also extracts decisions and action items \(~\$0\.001\)/;
+
+  it('tells the user in full mode that an import makes a paid extraction call', async () => {
+    library('full');
+    expect(await screen.findByText(HINT)).toBeInTheDocument();
+  });
+
+  it('says nothing about it in retrieval-only mode', async () => {
+    library('retrieval-only');
+    await screen.findByRole('button', { name: 'Transcribe audio' }); // health has loaded
+    expect(screen.queryByText(/Importing also extracts/)).toBeNull();
+  });
+});

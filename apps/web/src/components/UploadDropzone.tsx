@@ -27,7 +27,7 @@ export function rejectFile(file: Pick<File, 'name' | 'size' | 'type'>): string |
 }
 
 /** `voiceAvailable`: true shows the audio button, false shows a one-line hint, undefined (health not loaded yet) shows neither. */
-export function UploadDropzone({ onUploaded, voiceAvailable }: { onUploaded: (meeting: MeetingDetail) => void; voiceAvailable?: boolean }) {
+export function UploadDropzone({ onUploaded, voiceAvailable, importHint }: { onUploaded: (meeting: MeetingDetail) => void; voiceAvailable?: boolean; importHint?: string | null }) {
   const [state, setState] = useState<State>({ kind: 'idle' });
   const [drag, setDrag] = useState(false);
   const [pasted, setPasted] = useState('');
@@ -90,6 +90,7 @@ export function UploadDropzone({ onUploaded, voiceAvailable }: { onUploaded: (me
               Drop a .txt file, paste text{voiceAvailable ? ', or transcribe audio' : ''}. One turn per line, like{' '}
               <code className="rounded-sm bg-surface-2 px-[5px] py-px font-mono text-xs text-fg">[00:12:04] Priya Raman: Then let&rsquo;s decide it.</code>
             </div>
+            {importHint && <div className="text-xs text-fg-3">{importHint}</div>}
             {voiceAvailable === false && (
               <div className="text-xs text-fg-3">Audio transcription is not available on this API: it has no voice models installed.</div>
             )}
@@ -165,6 +166,7 @@ export function UploadDropzone({ onUploaded, voiceAvailable }: { onUploaded: (me
       {state.kind === 'voice' && (
         <VoiceImport
           file={state.file}
+          importHint={importHint ?? null}
           onCancel={cancel}
           onImported={(meeting) => {
             setState({ kind: 'done', meeting });

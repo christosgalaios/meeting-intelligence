@@ -117,3 +117,19 @@ describe('TranscriptReview', () => {
     expect(screen.getByRole('button', { name: 'Import' })).toBeEnabled();
   });
 });
+
+describe('TranscriptReview import cost hint', () => {
+  const HINT = 'Importing also extracts decisions and action items (~$0.001)';
+  const renderWith = (importHint?: string | null) =>
+    render(<TranscriptReview transcription={transcription()} busy={false} {...(importHint === undefined ? {} : { importHint })} onRerun={vi.fn()} onImported={vi.fn()} onDiscard={vi.fn()} />);
+
+  it('shows the hint next to Import when given one', () => {
+    renderWith(HINT);
+    expect(screen.getByText(HINT)).toBeInTheDocument();
+  });
+
+  it('shows nothing without one', () => {
+    renderWith(null);
+    expect(screen.queryByText(/Importing also extracts/)).toBeNull();
+  });
+});
