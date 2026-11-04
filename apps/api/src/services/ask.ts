@@ -25,11 +25,17 @@ export interface PreparedAsk {
   run(emit: (event: AskEvent) => void, signal?: AbortSignal): Promise<void>;
 }
 
-/** The refusal rule: weak vector evidence and no keyword hit at all. A text hit always overrides the threshold. */
-export function isBelowThreshold(chunks: RankedChunk[], minScore: number): { topVectorScore: number | null; belowThreshold: boolean } {
+/**
+ * The refusal rule: weak vector evidence and no strong keyword hit. A chunk containing every term of the question
+ * (`hasTextHit`) overrides the threshold; a chunk matching a single common word does not.
+ */
+export function isBelowThreshold(
+  chunks: RankedChunk[],
+  minScore: number,
+  hasTextHit: boolean,
+): { topVectorScore: number | null; belowThreshold: boolean } {
   const scores = chunks.flatMap((c) => (c.vectorScore === null ? [] : [c.vectorScore]));
   const topVectorScore = scores.length ? Math.max(...scores) : null;
-  const hasTextHit = chunks.some((c) => c.textRank !== null);
   return { topVectorScore, belowThreshold: (topVectorScore === null || topVectorScore < minScore) && !hasTextHit };
 }
 
@@ -60,7 +66,7 @@ export async function prepareAsk(
 
   const search = await hybridSearch(pool, embedder, { question: input.question, meetingIds });
   const turns = await expandToTurns(pool, search.chunks);
-  const { topVectorScore, belowThreshold: refuse } = isBelowThreshold(search.chunks, deps.retrievalMinScore);
+  const { topVectorScore, belowThreshold: refuse } = isBelowThreshold(search.chunks, deps.retrievalMinScore, search.strictTextHit);
 
   const traceId = await insertTrace(pool, {
     requestId: input.requestId,

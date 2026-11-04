@@ -57,16 +57,18 @@ describe('refusal rule', () => {
   });
 
   it('refuses when the vector score is low and there is no text hit', () => {
-    expect(isBelowThreshold([chunk(0.3, null)], 0.5)).toEqual({ topVectorScore: 0.3, belowThreshold: true });
-    expect(isBelowThreshold([], 0.5)).toEqual({ topVectorScore: null, belowThreshold: true });
+    expect(isBelowThreshold([chunk(0.3, null)], 0.5, false)).toEqual({ topVectorScore: 0.3, belowThreshold: true });
+    expect(isBelowThreshold([], 0.5, false)).toEqual({ topVectorScore: null, belowThreshold: true });
   });
 
   it('a text hit overrides a low vector score', () => {
-    expect(isBelowThreshold([chunk(0.3, null), chunk(null, 1)], 0.5).belowThreshold).toBe(false);
+    expect(isBelowThreshold([chunk(0.3, null), chunk(null, 1)], 0.5, true).belowThreshold).toBe(false);
+    // a text match that is not strict (one common word) does not override
+    expect(isBelowThreshold([chunk(0.3, null), chunk(null, 1)], 0.5, false).belowThreshold).toBe(true);
   });
 
   it('a strong vector score passes without a text hit', () => {
-    expect(isBelowThreshold([chunk(0.8, null)], 0.5).belowThreshold).toBe(false);
+    expect(isBelowThreshold([chunk(0.8, null)], 0.5, false).belowThreshold).toBe(false);
   });
 });
 

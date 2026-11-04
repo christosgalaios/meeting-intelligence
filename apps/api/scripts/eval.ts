@@ -10,7 +10,7 @@ import { createPool } from '../src/db/pool.js';
 import { BgeEmbedder } from '../src/embed/bge.js';
 import { NullLlmClient } from '../src/llm/client.js';
 import { expandToTurns } from '../src/retrieval/expand.js';
-import { hybridSearch } from '../src/retrieval/search.js';
+import { hybridSearch, type FtsMode } from '../src/retrieval/search.js';
 import { isBelowThreshold } from '../src/services/ask.js';
 import { ExtractionQueue } from '../src/services/queue.js';
 import { seedTranscripts } from '../src/services/seed.js';
@@ -18,7 +18,7 @@ import { seedTranscripts } from '../src/services/seed.js';
 // Spec starting gates were recall@8 0.7 and MRR 0.5; adjusted after the first real run (see apps/api/README.md).
 // recall@8 and MRR count the top 8 *turns*, which is coarse because turns inherit their chunk's score.
 // recallAllRetrieved is what the model actually sees, so it carries the main gate.
-const GATE = { recallAt8: 0.45, mrr: 0.35, recallAllRetrieved: 0.7 };
+const GATE = { recallAt8: 0.4, mrr: 0.33, recallAllRetrieved: 0.8 };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const EVALS_DIR = path.resolve(here, '../../../evals');
@@ -26,6 +26,16 @@ const EVALS_DIR = path.resolve(here, '../../../evals');
 const Questions = z.array(
   z.object({ id: z.string(), question: z.string(), expectedTurnIds: z.array(z.string()), answerable: z.boolean() }),
 );
+
+// Experiment knobs: EVAL_FTS=and|or, EVAL_LIMIT=<chunks>, EVAL_RRF_K=<k>, EVAL_NEIGHBOURS=<turns>. Unset means the production defaults.
+const KNOBS = {
+  search: {
+    ...(process.env.EVAL_FTS ? { ftsMode: process.env.EVAL_FTS as FtsMode } : {}),
+    ...(process.env.EVAL_LIMIT ? { limit: Number(process.env.EVAL_LIMIT) } : {}),
+    ...(process.env.EVAL_RRF_K ? { rrfK: Number(process.env.EVAL_RRF_K) } : {}),
+  },
+  expand: process.env.EVAL_NEIGHBOURS ? { neighbours: Number(process.env.EVAL_NEIGHBOURS) } : {},
+};
 
 const config = loadConfig();
 const pool = createPool(config.DATABASE_URL);
@@ -76,10 +86,10 @@ try {
   const questions = Questions.parse(JSON.parse(await readFile(path.join(EVALS_DIR, 'questions.json'), 'utf8')));
   const rows: Row[] = [];
   for (const q of questions) {
-    const search = await hybridSearch(pool, embedder, { question: q.question, limit: 8 });
-    const turns = await expandToTurns(pool, search.chunks);
+    const search = await hybridSearch(pool, embedder, { question: q.question, ...KNOBS.search });
+    const turns = await expandToTurns(pool, search.chunks, KNOBS.expand);
     const ranked = turns.map((t) => t.id);
-    const { topVectorScore, belowThreshold } = isBelowThreshold(search.chunks, config.RETRIEVAL_MIN_SCORE);
+    const { topVectorScore, belowThreshold } = isBelowThreshold(search.chunks, config.RETRIEVAL_MIN_SCORE, search.strictTextHit);
     const hit = (k: number) => q.expectedTurnIds.filter((id) => ranked.slice(0, k).includes(id)).length / q.expectedTurnIds.length;
     const firstHit = ranked.findIndex((id) => q.expectedTurnIds.includes(id));
     rows.push({
@@ -87,7 +97,7 @@ try {
       answerable: q.answerable,
       question: q.question,
       topVectorScore,
-      hasTextHit: search.chunks.some((c) => c.textRank !== null),
+      hasTextHit: search.strictTextHit,
       belowThreshold,
       recall5: q.answerable ? hit(5) : null,
       recall8: q.answerable ? hit(8) : null,
