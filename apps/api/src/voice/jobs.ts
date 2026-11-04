@@ -81,13 +81,15 @@ export class TranscriptionJobs {
     return [...this.jobs.values()].filter((j) => j.status === 'queued' || j.status === 'running');
   }
 
+  /** Cheap pre-check so the route can refuse before it buffers and decodes a large body. add() still enforces it. */
+  hasCapacity(): boolean {
+    return this.active().length < this.maxQueue;
+  }
+
   /** Throws CONFLICT when the queue is full; otherwise returns the new job as a `queued` snapshot. */
   add(samples: Float32Array, opts: { numSpeakers: number | null }): Transcription {
     if (!this.runner) throw new AppError('CONFLICT', 'Voice transcription is not available on this API.');
-    const active = this.active().length;
-    if (active >= this.maxQueue) {
-      throw new AppError('CONFLICT', `The API is already transcribing ${active} files. Try again in a few minutes.`);
-    }
+    if (!this.hasCapacity()) throw this.queueFull();
     const job: Job = {
       id: randomUUID(),
       status: 'queued',
@@ -105,6 +107,10 @@ export class TranscriptionJobs {
     // Start on the next tick so the caller's 202 always reports `queued`.
     setImmediate(() => void this.pump());
     return snapshot;
+  }
+
+  queueFull(): AppError {
+    return new AppError('CONFLICT', `The API is already transcribing ${this.active().length} files. Try again in a few minutes.`);
   }
 
   /** Undefined for an unknown, evicted or lost id. Expiry is also checked here so it does not depend on the sweep timer. */

@@ -52,14 +52,14 @@ describe('VoiceImport', () => {
     server.current = running(3, 12);
     expect(await screen.findByText('Transcribing 4 of 12 segments')).toBeInTheDocument();
     server.current = transcription();
-    expect(await screen.findByRole('heading', { name: 'Review the transcript' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Transcript preview' })).toBeInTheDocument();
     expect(screen.getAllByLabelText(/^Name for speaker/)).toHaveLength(3);
   });
 
   it('re-runs the same audio with the chosen speaker count and keeps the review on screen', async () => {
     const server = stubServer(transcription());
     renderImport();
-    await screen.findByRole('heading', { name: 'Review the transcript' });
+    await screen.findByRole('list', { name: 'Transcript preview' });
     expect(server.posts).toEqual(['/api/transcriptions']);
 
     const count = screen.getByLabelText('Wrong number of speakers?');
@@ -69,7 +69,7 @@ describe('VoiceImport', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Re-run with 3 speakers' }));
     expect(server.posts).toEqual(['/api/transcriptions', '/api/transcriptions?numSpeakers=3']);
     expect(decode).toHaveBeenCalledTimes(1); // the WAV is reused, not decoded again
-    expect(screen.getByRole('heading', { name: 'Review the transcript' })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Transcript preview' })).toBeInTheDocument();
   });
 
   it('explains a restarted API when the poll gets a 404 and retries from the held audio', async () => {
@@ -83,7 +83,7 @@ describe('VoiceImport', () => {
     status = 200;
     server.current = transcription();
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
-    await screen.findByRole('heading', { name: 'Review the transcript' });
+    await screen.findByRole('list', { name: 'Transcript preview' });
     expect(server.posts).toHaveLength(2);
     expect(decode).toHaveBeenCalledTimes(1);
   });

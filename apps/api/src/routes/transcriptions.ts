@@ -19,9 +19,16 @@ export function registerTranscriptionRoutes(app: FastifyInstance): void {
   // Audio is parsed in memory and handed to the worker. It is never written to disk or the database.
   app.addContentTypeParser(WAV_CONTENT_TYPES, { parseAs: 'buffer' }, (_req, body, done) => done(null, body));
 
-  app.post<{ Querystring: { numSpeakers?: string } }>('/api/transcriptions', { bodyLimit: VOICE_BODY_LIMIT }, async (req, reply) => {
+  app.post<{ Querystring: { numSpeakers?: string } }>('/api/transcriptions', {
+    bodyLimit: VOICE_BODY_LIMIT,
+    // onRequest runs before the body is read, so an unavailable or full queue is refused without buffering up to 64 MiB.
+    onRequest: async () => {
+      const jobs = app.transcriptionJobs;
+      if (!jobs.available) throw new AppError('CONFLICT', 'Voice transcription is not available on this API.');
+      if (!jobs.hasCapacity()) throw jobs.queueFull();
+    },
+  }, async (req, reply) => {
     const jobs = app.transcriptionJobs;
-    if (!jobs.available) throw new AppError('CONFLICT', 'Voice transcription is not available on this API.');
     if (!Buffer.isBuffer(req.body)) throw new AppError('VALIDATION', 'Send the audio as a 16 kHz mono 16-bit WAV with content-type audio/wav.');
     const numSpeakers = parseNumSpeakers(req.query.numSpeakers);
 

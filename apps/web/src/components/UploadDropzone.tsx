@@ -67,11 +67,11 @@ export function UploadDropzone({ onUploaded, voiceAvailable }: { onUploaded: (me
   };
 
   const cancel = () => setState({ kind: 'idle' });
-  const busy = state.kind === 'parsing';
+  const busy = state.kind === 'parsing' || state.kind === 'voice';
 
   return (
     <div className="flex flex-col gap-3">
-      {(state.kind === 'idle' || state.kind === 'done' || state.kind === 'parsing') && (
+      {(state.kind === 'idle' || state.kind === 'done' || state.kind === 'parsing' || state.kind === 'voice') && (
         <div
           onDragOver={(e) => {
             e.preventDefault();
