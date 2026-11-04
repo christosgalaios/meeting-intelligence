@@ -1,0 +1,7 @@
+[00:00:03] Priya: Okay let's start the pricing kickoff for the Tallyboard rework.
+[00:00:20] Tomasz: The Starter plan will be priced per seat, and we cap Starter at five seats.
+[00:00:41] Hui Min: I agree the Starter plan should stay simple, per seat billing only.
+[00:01:05] Priya: Tomasz, please collect competitor pricing by next Friday.
+[00:01:30] Tomasz: Fine, I will gather the competitor pricing sheet.
+[00:02:10] Hui Min: The pricing page mockup is due the week after.
+[00:02:45] Priya: Great, that covers the agenda.
