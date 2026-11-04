@@ -25,7 +25,7 @@ An upload is parsed, chunked, embedded and stored in one request. Extraction run
 
 ```mermaid
 flowchart TD
-  U["POST /api/meetings"] --> V["2 MB check, zod schema, embeddings ready"]
+  U["POST /api/meetings"] --> V["2 MB check, zod schema, transcript validation, embeddings ready"]
   V --> S["pick slug: x, x-2, x-3"]
   S --> PA["parse turns: timestamp, speaker, text"]
   PA --> CH["chunk: up to 6 turns or 180 words, overlap 2"]
@@ -40,6 +40,7 @@ flowchart TD
 
 - Turn ids are `<slug>#<n>`. The slug comes from the filename, so the same id is used in the database, the prompt and the UI anchor.
 - Embedding is synchronous. A large file holds the request open.
+- The upload is validated before anything is embedded: a 422 for non-text, too few turns, too few timestamped lines or a turn over 2,000 words (`apps/api/src/transcript/validate.ts`).
 - A pending extraction that is left over when the process dies is marked `failed: interrupted` at the next boot. Extraction is never retried automatically.
 - Sample transcripts are loaded at start when `SEED_ON_START=true`. Seeding never calls the model.
 
@@ -53,7 +54,7 @@ flowchart TD
   EQ --> FS["full-text top 20, OR query"]
   VS --> RRF["RRF, k = 60, top 8 chunks"]
   FS --> RRF
-  RRF --> TU["expand chunks to distinct turns"]
+  RRF --> TU["expand chunks to distinct turns, score each turn against the question"]
   TU --> T1["insert trace row"]
   T1 --> G{"top vector score below 0.58 and no strict text hit?"}
   G -->|yes| RF["refusal event, no model call"]
@@ -76,7 +77,7 @@ flowchart TD
 | Failure after the stream opens | `meta`, `sources`, then `error` in place of `done` |
 
 - `meta`: trace id, mode, answer model.
-- `sources`: the 8 ranked chunks with their vector, text and RRF scores, and the turns inside them. Each turn carries a score. [TODO: confirm what the turn score is once `feat/polish` is merged. On `main` it is the best RRF score of a containing chunk. `feat/polish` changes it to the cosine similarity of the turn text to the question.]
+- `sources`: the 8 ranked chunks with their vector, text and RRF scores, and the turns inside them. Each turn carries a score, which is the cosine similarity of that turn's text to the question. The chunk-level RRF scores stay on the chunks, and the "Why this answer" panel shows both.
 - `token`: a piece of answer text.
 - `done`: the final answer, the valid citations, the dropped citation ids, the refusal reason, token usage and timings.
 - Request errors found before the stream opens (bad input, unknown meeting, embeddings not ready) are plain JSON with status 400, 404 or 503.
@@ -167,7 +168,7 @@ Follow one question through `POST /api/ask` in full mode.
 2. The body is checked against `AskRequest` (question up to 1000 characters). A bad body is `400 VALIDATION`. If the embedding model is still warming up, it is `503 EMBEDDINGS_NOT_READY`.
 3. A meeting scope, if given, is resolved by uuid or slug. An unknown one is `404`.
 4. The question is embedded, then vector and full-text candidates are fetched in parallel and fused. Timings are kept as `embedMs` and `searchMs`.
-5. The retrieved chunks are expanded to turns, and the refusal rule is applied.
+5. The retrieved chunks are expanded to distinct turns, and each turn is embedded and scored against the question. That extra embedding time is counted in `embedMs`. The refusal rule is then applied to the chunk-level vector scores.
 6. A row is inserted in `query_traces` now, with the request id, question, mode and retrieved chunks. A crash later still leaves a row. The API logs `ask.retrieved` (candidate counts, top vector score, whether it was below threshold, timings).
 7. The response switches to a stream. `meta` and `sources` are sent.
 8. In full mode, the retrieved turns are grouped by meeting, escaped and sent to Sonnet. Tokens are forwarded as `token` events.

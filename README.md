@@ -58,7 +58,7 @@ Open <http://localhost:5173>.
 
 - The first build is slower because the embedding model is downloaded into the API image. After that, start-up needs no network.
 - The API reports healthy only after the model has loaded and warmed up, and the web container waits for that. `docker compose ps` shows the state.
-- Four sample meetings are loaded at start. Loading them never calls a model.
+- Four sample meetings are loaded at start. If the library is ever empty (for example after `docker compose down -v`), a **Load sample meetings** button calls `POST /api/seed` and loads them again. Loading them is safe to repeat and never calls a model.
 - With no key the app is in retrieval-only mode. You can upload transcripts, search across them, and see the best-matching speaker turns with scores. You do not get written answers or extracted decisions. See `docs/adr/0001-no-key-retrieval-only-default.md`.
 
 ### With your own Claude key
@@ -78,7 +78,7 @@ Or pass it for one run: `ANTHROPIC_API_KEY=sk-ant-... docker compose up --build`
 
 ### Using it
 
-- Upload a `.txt` file or paste text. One turn per line: `[00:12:04] Priya Raman: Then let's decide it.` The shorter `[12:04]` form also works. Files up to 2 MB.
+- Upload a `.txt` file or paste text. One turn per line: `[00:12:04] Priya Raman: Then let's decide it.` The shorter `[12:04]` form also works. Files up to 2 MB. A file that does not look like a transcript is rejected before anything is embedded: no timestamps on at least half its lines, fewer than 2 turns, binary content, or a turn over 2,000 words.
 - Ask across all meetings, or scope a question to one.
 - Stop with `docker compose down`. Add `-v` to delete the database volume.
 - The app has no login. All ports are bound to `127.0.0.1`, so it is reachable only from your own machine.
@@ -164,7 +164,7 @@ What I followed:
 - **CI.** Typecheck, lint, tests, the eval and the build on every push. A separate web job. A compose smoke test that builds the stack from a clean checkout, waits for it to be healthy, and streams one question through both the API and nginx. All of it runs without a key.
 - **Containers.** Multi-stage API image with the embedding model baked in (734 MB). Healthchecks on `db` and `api`. Ports on `127.0.0.1` only.
 - **Observability.** Structured JSON logs with a request id on every line. A line per stage: `ingest.done`, `extract.done`, `ask.retrieved`, `ask.answered`. A trace row per question. A test fails if a log line at `info` contains transcript text, the question, an answer or a key-shaped string.
-- **Security.** No CORS and same-origin serving. Transcript text is escaped and wrapped before it reaches a model, and model output is validated. A Content-Security-Policy on the web app. The key lives only in the API process, and CI fails the web build if its bundle contains `sk-ant`. gitleaks runs as a pre-commit hook and in CI.
+- **Security.** No CORS and same-origin serving. Uploads are format-checked before anything is embedded. Transcript text is escaped and wrapped before it reaches a model, and model output is validated. A Content-Security-Policy on the web app. The key lives only in the API process, and CI fails the web build if its bundle contains `sk-ant`. gitleaks runs as a pre-commit hook and in CI.
 - **Database.** Numbered SQL migrations, applied in a transaction at boot and safe to run twice.
 - **Frontend.** Colours come only from design tokens, and ESLint fails the build on a hex colour outside `tokens.css`.
 - **Process.** Work went through branches and pull requests. `CLAUDE.md` holds the rules the coding agents had to follow, including the ones above. Architecture decisions are written up as ADRs in `docs/adr/`.
