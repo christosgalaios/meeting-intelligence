@@ -9,6 +9,7 @@ const STATUS: Record<ErrorCode, number> = {
   TOO_LARGE: 413,
   EMBEDDINGS_NOT_READY: 503,
   LLM_ERROR: 502,
+  CONFLICT: 409,
   INTERNAL: 500,
 };
 

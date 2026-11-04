@@ -200,3 +200,29 @@ export async function runExtraction(deps: Pick<IngestDeps, 'pool' | 'llm' | 'log
     );
   }
 }
+
+/**
+ * User-requested extraction for a meeting that has none (seeded without a key, or a failed run).
+ * Marks it pending and queues the job; the caller polls the meeting like it does after an upload.
+ */
+export async function requestExtraction(deps: IngestDeps, idOrSlug: string): Promise<MeetingDetail> {
+  const { pool, llm, queue } = deps;
+  // Checked first: without a key there is nothing to run, whatever state the meeting is in.
+  if (!llm.enabled) throw new AppError('CONFLICT', 'Extraction needs an Anthropic key set on the API.');
+  const meeting = await getMeetingDetail(pool, idOrSlug);
+  if (!meeting) throw new AppError('NOT_FOUND', 'Meeting not found');
+  // `done` is refused too: re-running would spend money to replace a result the user already has.
+  if (meeting.extractionStatus === 'pending') throw new AppError('CONFLICT', 'Extraction is already running for this meeting.');
+  if (meeting.extractionStatus === 'done') throw new AppError('CONFLICT', 'This meeting has already been extracted.');
+
+  // The status guard in the WHERE keeps two simultaneous clicks from queueing two paid calls.
+  const claimed = await pool.query(
+    "UPDATE meetings SET extraction_status = 'pending', extraction_error = NULL WHERE id = $1 AND extraction_status IN ('skipped', 'failed')",
+    [meeting.id],
+  );
+  if (claimed.rowCount !== 1) throw new AppError('CONFLICT', 'Extraction is already running for this meeting.');
+  queue.add(() => runExtraction(deps, meeting.id));
+  const detail = await getMeetingDetail(pool, meeting.id);
+  if (!detail) throw new AppError('INTERNAL', 'meeting vanished during extraction request');
+  return detail;
+}
