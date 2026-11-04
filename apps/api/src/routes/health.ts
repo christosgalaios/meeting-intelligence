@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { EMBEDDING_MODEL } from '../embed/embedder.js';
 import { VERSION } from '../server.js';
+import { VOICE_MODELS_LABEL } from '../voice/models.js';
 import type { Health } from '../types.js';
 
 export function registerHealthRoutes(app: FastifyInstance): void {
@@ -14,6 +15,7 @@ export function registerHealthRoutes(app: FastifyInstance): void {
       db,
       embeddings: { model: EMBEDDING_MODEL, ready },
       models: { answer: llm.answerModel, extraction: llm.extractionModel },
+      voice: { available: app.transcriptionJobs.available, models: app.transcriptionJobs.available ? VOICE_MODELS_LABEL : null },
       version: VERSION,
     };
   });

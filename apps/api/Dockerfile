@@ -1,4 +1,23 @@
 # Build context is the repo root (see docker-compose.yml).
+
+# Voice models (about 190 MB installed). Its own stage so a dependency change does not re-download them; the layer is
+# keyed on this RUN text and the checksum file. A changed upstream asset fails `sha256sum -c` and so fails the build.
+FROM node:24-slim AS voice-models
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl bzip2 && rm -rf /var/lib/apt/lists/*
+WORKDIR /dl
+COPY apps/api/voice-models.sha256 .
+# "speaker-recongition-models" is the upstream release tag's spelling.
+ARG SHERPA=https://github.com/k2-fsa/sherpa-onnx/releases/download
+RUN curl -fsSL -O $SHERPA/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2 \
+ && curl -fsSL -O $SHERPA/speaker-recongition-models/wespeaker_en_voxceleb_resnet34.onnx \
+ && curl -fsSL -O $SHERPA/asr-models/sherpa-onnx-whisper-base.en.tar.bz2 \
+ && sha256sum -c voice-models.sha256 \
+ && tar xjf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2 && tar xjf sherpa-onnx-whisper-base.en.tar.bz2 \
+ && mkdir -p /models/voice/sherpa-onnx-pyannote-segmentation-3-0 /models/voice/sherpa-onnx-whisper-base.en \
+ && mv wespeaker_en_voxceleb_resnet34.onnx /models/voice/ \
+ && mv sherpa-onnx-pyannote-segmentation-3-0/model.onnx /models/voice/sherpa-onnx-pyannote-segmentation-3-0/ \
+ && mv sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx sherpa-onnx-whisper-base.en/base.en-tokens.txt /models/voice/sherpa-onnx-whisper-base.en/
+
 FROM node:24-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.base.json ./
@@ -36,6 +55,9 @@ WORKDIR /app/apps/api
 RUN mkdir /models && chown node:node /models
 USER node
 RUN node dist/embed/download.js
+# Copied after the embedding download so that layer stays cached when only the voice models change.
+COPY --from=voice-models --chown=node:node /models/voice /models/voice
+ENV VOICE_MODELS_DIR=/models/voice
 
 EXPOSE 3001
 CMD ["node", "dist/index.js"]

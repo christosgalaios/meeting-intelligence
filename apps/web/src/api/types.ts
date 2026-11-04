@@ -24,6 +24,8 @@ export const Health = z.object({
   db: z.boolean(),
   embeddings: z.object({ model: z.literal('Xenova/bge-small-en-v1.5'), ready: z.boolean() }),
   models: z.object({ answer: z.string().nullable(), extraction: z.string().nullable() }),
+  // Optional here so this build still parses an API that predates voice transcription.
+  voice: z.object({ available: z.boolean(), models: z.string().nullable() }).optional(),
   version: z.string(),
 });
 export type Health = z.infer<typeof Health>;
@@ -157,3 +159,19 @@ export const AskEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('error'), code: ApiError.shape.error.shape.code, message: z.string() }),
 ]);
 export type AskEvent = z.infer<typeof AskEvent>;
+
+// POST /api/transcriptions and GET /api/transcriptions/:id. A draft: nothing is stored or ingested until the user imports it.
+export const Transcription = z.object({
+  id: z.string(),
+  status: z.enum(['queued', 'running', 'done', 'failed']),
+  queuePosition: z.number().int().nullable(), // 1-based among active jobs; null once running
+  stage: z.object({ name: z.enum(['diarizing', 'transcribing']), done: z.number().int(), total: z.number().int() }).nullable(),
+  durationSeconds: z.number().int(),
+  numSpeakers: z.number().int().nullable(),
+  speakers: z.array(z.string()),
+  segments: z.array(z.object({ start: z.number(), end: z.number(), speaker: z.number().int(), text: z.string() })),
+  transcript: z.string().nullable(),
+  error: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type Transcription = z.infer<typeof Transcription>;

@@ -11,6 +11,8 @@ export interface AppState {
   unreachable: boolean;
   /** retrieval-only until the API says otherwise is wrong in both directions, so null until /health has answered. */
   mode: Health['mode'] | null;
+  /** Whether the API can transcribe audio. null until /health has answered. */
+  voiceAvailable: boolean | null;
   meetings: MeetingSummary[];
   meetingsLoading: boolean;
   reloadMeetings(): void;
@@ -52,6 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const titleOf = useCallback((id: string) => titles.get(id), [titles]);
 
   const mode = health?.mode ?? null;
+  const voiceAvailable = health === null ? null : (health.voice?.available ?? false);
   const scopeCount = scope?.length ?? meetings.length;
   const cost = mode === 'full' ? estimateAskCost(health?.models.answer ?? null) : null;
   const askCost = mode === 'retrieval-only' ? 'free' : cost !== null ? formatHint(cost) : null;
@@ -65,7 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const value: AppState = {
-    health, unreachable, mode, meetings, meetingsLoading: loading, reloadMeetings: reload, titleOf,
+    health, unreachable, mode, voiceAvailable, meetings, meetingsLoading: loading, reloadMeetings: reload, titleOf,
     ask, scope, setScope, askCost, scopeSummary, submitAsk,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

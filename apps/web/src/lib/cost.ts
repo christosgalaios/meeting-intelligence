@@ -58,4 +58,11 @@ export function formatHint(usd: number): string {
   return `~$${Math.max(usd, 0.001).toFixed(3)}`;
 }
 
+/** Shown next to every import in full mode, where the upload triggers a paid extraction. Null in retrieval-only mode. */
+export function extractionImportHint(mode: 'full' | 'retrieval-only' | null, extractionModel: string | null): string | null {
+  if (mode !== 'full') return null;
+  const usd = estimateExtractionCost(extractionModel, { turns: [] });
+  return `Importing also extracts decisions and action items (${usd === null ? 'costs a few tenths of a cent' : formatHint(usd)})`;
+}
+
 export const formatUsd = (usd: number): string => `$${usd.toFixed(4)}`;

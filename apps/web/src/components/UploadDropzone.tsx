@@ -1,9 +1,11 @@
 import { useRef, useState, type DragEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ApiClientError, uploadMeeting } from '../api/client';
+import { uploadMeeting } from '../api/client';
 import type { MeetingDetail } from '../api/types';
 import { cx } from '../lib/cx';
+import { friendly } from '../lib/friendly';
 import { btnGhost, btnPrimary, btnSecondary } from './ui';
+import { VoiceImport } from './VoiceImport';
 
 export const MAX_BYTES = 2_000_000;
 const PLACEHOLDER = '[00:00:12] Priya Raman: Okay, let’s start.';
@@ -12,25 +14,9 @@ type State =
   | { kind: 'idle' }
   | { kind: 'paste' }
   | { kind: 'parsing'; name: string }
+  | { kind: 'voice'; file: File }
   | { kind: 'error'; title: string; message: string }
   | { kind: 'done'; meeting: MeetingDetail };
-
-/** The messages the API sends for these are for developers; users get the friendly version. */
-function friendly(err: unknown): string {
-  if (err instanceof ApiClientError) {
-    switch (err.code) {
-      case 'TOO_LARGE':
-        return 'That transcript is over 2 MB. Split it into smaller files.';
-      case 'EMBEDDINGS_NOT_READY':
-        return 'The embedding model is still loading. Try again in a moment.';
-      case 'NETWORK':
-        return 'Could not reach the API. Is it running?';
-      default:
-        return err.message;
-    }
-  }
-  return 'Something went wrong while uploading.';
-}
 
 /** Returns an error message when the file cannot be uploaded, otherwise null. Checked before any request. */
 export function rejectFile(file: Pick<File, 'name' | 'size' | 'type'>): string | null {
@@ -40,11 +26,13 @@ export function rejectFile(file: Pick<File, 'name' | 'size' | 'type'>): string |
   return null;
 }
 
-export function UploadDropzone({ onUploaded }: { onUploaded: (meeting: MeetingDetail) => void }) {
+/** `voiceAvailable`: true shows the audio button, false shows a one-line hint, undefined (health not loaded yet) shows neither. */
+export function UploadDropzone({ onUploaded, voiceAvailable, importHint }: { onUploaded: (meeting: MeetingDetail) => void; voiceAvailable?: boolean; importHint?: string | null }) {
   const [state, setState] = useState<State>({ kind: 'idle' });
   const [drag, setDrag] = useState(false);
   const [pasted, setPasted] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
+  const audioInput = useRef<HTMLInputElement>(null);
 
   const send = async (filename: string, text: string, title: string) => {
     setState({ kind: 'parsing', name: title });
@@ -59,6 +47,10 @@ export function UploadDropzone({ onUploaded }: { onUploaded: (meeting: MeetingDe
   };
 
   const handleFile = async (file: File) => {
+    if (voiceAvailable && file.type.startsWith('audio/')) {
+      setState({ kind: 'voice', file });
+      return;
+    }
     const reason = rejectFile(file);
     if (reason) {
       setState({ kind: 'error', title: file.name, message: reason });
@@ -75,11 +67,11 @@ export function UploadDropzone({ onUploaded }: { onUploaded: (meeting: MeetingDe
   };
 
   const cancel = () => setState({ kind: 'idle' });
-  const busy = state.kind === 'parsing';
+  const busy = state.kind === 'parsing' || state.kind === 'voice';
 
   return (
     <div className="flex flex-col gap-3">
-      {(state.kind === 'idle' || state.kind === 'done' || state.kind === 'parsing') && (
+      {(state.kind === 'idle' || state.kind === 'done' || state.kind === 'parsing' || state.kind === 'voice') && (
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -95,9 +87,13 @@ export function UploadDropzone({ onUploaded }: { onUploaded: (meeting: MeetingDe
           <div className="flex min-w-0 flex-col gap-1">
             <div className="font-medium">Add a transcript</div>
             <div className="text-[13px] text-fg-2">
-              Drop a .txt file or paste text. One turn per line, like{' '}
+              Drop a .txt file, paste text{voiceAvailable ? ', or transcribe audio' : ''}. One turn per line, like{' '}
               <code className="rounded-sm bg-surface-2 px-[5px] py-px font-mono text-xs text-fg">[00:12:04] Priya Raman: Then let&rsquo;s decide it.</code>
             </div>
+            {importHint && <div className="text-xs text-fg-3">{importHint}</div>}
+            {voiceAvailable === false && (
+              <div className="text-xs text-fg-3">Audio transcription is not available on this API: it has no voice models installed.</div>
+            )}
           </div>
           <div className="flex gap-2">
             <button type="button" disabled={busy} onClick={() => setState({ kind: 'paste' })} className={btnSecondary}>
@@ -106,6 +102,25 @@ export function UploadDropzone({ onUploaded }: { onUploaded: (meeting: MeetingDe
             <button type="button" disabled={busy} onClick={() => fileInput.current?.click()} className={btnSecondary}>
               Choose file
             </button>
+            {voiceAvailable && (
+              <>
+                <button type="button" disabled={busy} onClick={() => audioInput.current?.click()} className={btnSecondary}>
+                  Transcribe audio
+                </button>
+                <input
+                  ref={audioInput}
+                  type="file"
+                  accept="audio/*"
+                  aria-label="Audio file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = '';
+                    if (f) setState({ kind: 'voice', file: f });
+                  }}
+                />
+              </>
+            )}
             <input
               ref={fileInput}
               type="file"
@@ -146,6 +161,18 @@ export function UploadDropzone({ onUploaded }: { onUploaded: (meeting: MeetingDe
             <span className="text-xs text-fg-3">Parsing runs on your own API. Nothing is sent to an AI model.</span>
           </div>
         </div>
+      )}
+
+      {state.kind === 'voice' && (
+        <VoiceImport
+          file={state.file}
+          importHint={importHint ?? null}
+          onCancel={cancel}
+          onImported={(meeting) => {
+            setState({ kind: 'done', meeting });
+            onUploaded(meeting);
+          }}
+        />
       )}
 
       {state.kind === 'parsing' && (

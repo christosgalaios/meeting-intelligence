@@ -79,6 +79,7 @@ Or pass it for one run: `ANTHROPIC_API_KEY=sk-ant-... docker compose up --build`
 ### Using it
 
 - Upload a `.txt` file or paste text. One turn per line: `[00:12:04] Priya Raman: Then let's decide it.` The shorter `[12:04]` form also works. Files up to 2 MB. A file that does not look like a transcript is rejected before anything is embedded: no timestamps on at least half its lines, fewer than 2 turns, binary content, or a turn over 2,000 words.
+- Or use **Transcribe audio** on the library page. Pick a recording your browser can decode (tested with WAV; MP3 and M4A go through the same browser decoder but were not tested), wait for the draft, then review it: rename or merge speakers, or set the speaker count and re-run if the diarizer got it wrong. Press Import to add it. Nothing is added before that, and the audio is never stored. It runs locally with no key, at about 13.5 seconds per minute of audio. Measurements and limits are in `evals/voice/README.md` and `docs/adr/0011-local-diarized-speech-to-text.md`.
 - Ask across all meetings, or scope a question to one.
 - Stop with `docker compose down`. Add `-v` to delete the database volume.
 - The app has no login. All ports are bound to `127.0.0.1`, so it is reachable only from your own machine.
@@ -109,6 +110,7 @@ flowchart LR
   A --> P[("db: Postgres + pgvector")]
   A -->|"local, in process"| E["bge-small embeddings"]
   A -.->|"only if ANTHROPIC_API_KEY is set"| C["Claude API"]
+  A -->|"worker thread"| W["voice: sherpa-onnx diarize + whisper"]
 ```
 
 **How a question is answered.**
@@ -121,6 +123,8 @@ flowchart LR
 
 **How a transcript is ingested.** The file is parsed into speaker turns, grouped into chunks of up to 6 turns or 180 words with a 2-turn overlap, embedded, and stored in one transaction. With a key, Claude Haiku then extracts decisions and action items in the background.
 
+**How audio is transcribed.** The browser decodes the recording to 16 kHz mono WAV and refuses anything over 30 minutes. The API queues it (one job at a time, at most 4 active) and a worker thread runs speaker segmentation, speaker embeddings and Whisper base.en on the CPU. The result is a draft the user reviews, renames and merges speakers in, and imports through the normal ingest path. Audio is never stored and jobs live in memory. See `docs/adr/0011-local-diarized-speech-to-text.md`.
+
 **Stack.**
 
 | Layer | Choice |
@@ -131,6 +135,7 @@ flowchart LR
 | Embeddings | `Xenova/bge-small-en-v1.5`, 384 dimensions, run locally with `@huggingface/transformers` |
 | Answers | `claude-sonnet-5-5` through the Anthropic SDK, streamed |
 | Extraction | `claude-haiku-5-5`, structured output |
+| Speech-to-text | sherpa-onnx in a worker thread: pyannote segmentation 3.0, wespeaker resnet34, Whisper base.en int8. Local, English, no key |
 | Web | React 19, Vite, Tailwind 4, React Router, design tokens in CSS variables |
 | Serving | nginx, same origin, no CORS |
 | Tests | Vitest in both apps, Testing Library for the web |
@@ -162,7 +167,7 @@ What I followed:
   - The rule in `CLAUDE.md` is that a bug fix ships with a test that fails without the fix.
 - **A retrieval eval, not just unit tests.** `npm run eval` runs 22 labelled questions (16 answerable, 6 unanswerable) through the real embedder and writes `evals/results/latest.json`. CI fails if recall@8 drops below 0.40, MRR below 0.33 or all-retrieved recall below 0.80. The gates come from measured results, not guesses. Current values are recall@8 0.4375, MRR 0.3605 and all-retrieved recall 0.849.
 - **CI.** Typecheck, lint, tests, the eval and the build on every push. A separate web job. A compose smoke test that builds the stack from a clean checkout, waits for it to be healthy, and streams one question through both the API and nginx. All of it runs without a key.
-- **Containers.** Multi-stage API image with the embedding model baked in (734 MB). Healthchecks on `db` and `api`. Ports on `127.0.0.1` only.
+- **Containers.** Multi-stage API image with the embedding model and the voice models baked in (about 725 MiB on the image filesystem, 216 MiB of it voice). Healthchecks on `db` and `api`. Ports on `127.0.0.1` only.
 - **Observability.** Structured JSON logs with a request id on every line. A line per stage: `ingest.done`, `extract.done`, `ask.retrieved`, `ask.answered`. A trace row per question. A test fails if a log line at `info` contains transcript text, the question, an answer or a key-shaped string.
 - **Security.** No CORS and same-origin serving. Uploads are format-checked before anything is embedded. Transcript text is escaped and wrapped before it reaches a model, and model output is validated. A Content-Security-Policy on the web app. The key lives only in the API process, and CI fails the web build if its bundle contains `sk-ant`. gitleaks runs as a pre-commit hook and in CI.
 - **Database.** Numbered SQL migrations, applied in a transaction at boot and safe to run twice.
@@ -172,7 +177,8 @@ What I followed:
 What I skipped, on purpose, for a two-day build:
 
 - **No authentication or rate limiting.** Loopback binding is the only protection. Anyone who can reach the API can spend the key.
-- **No job queue.** Embedding on upload is synchronous, so a large transcript holds the request open. Extraction runs in-process after the response, and is not retried.
+- **No durable job queue.** Embedding on upload is synchronous, so a large transcript holds the request open. Extraction runs in-process after the response, and is not retried. Audio transcription has an in-memory queue (one job at a time, 4 active at most) whose jobs are lost if the API restarts.
+- **Voice is thinly tested.** Speaker identification is weak on similar voices: on three similar female voices it found 1, 2 or 4 speakers depending on the threshold, which is why there is a review step. I tested it only on synthetic text-to-speech voices, never on real meeting audio. Recordings over 30 minutes are refused because memory was measured only up to a 95 second clip. English only.
 - **Contract types are copied by hand** from the API into the web app, instead of living in a shared package. The API tests are the source of truth if they drift.
 - **No browser end-to-end tests.** The compose smoke test covers the built stack through nginx, but nothing drives the UI.
 - **No metrics or tracing.** Logs and the per-question trace row only.
@@ -199,7 +205,8 @@ The brief asks for my thoughts, not an LLM's direct output, so here is what is w
 
 ## Known limits
 
-- Only plain-text transcripts in the `[hh:mm:ss] Speaker: text` shape. No audio, WebVTT or SRT.
+- Transcripts are plain text in the `[hh:mm:ss] Speaker: text` shape, or audio transcribed locally (English, up to 30 minutes, speakers labelled by diarization) and reviewed before import. No WebVTT or SRT.
+- Voice: similar voices can be merged or split by the diarizer. Set the speaker count and re-run, or merge and rename in the review step. Memory is measured only up to a 95 second clip (570 MB peak), so recordings over 30 minutes are refused rather than attempted. One recording is transcribed at a time; the API holds at most four. An API restart loses a job in progress.
 - English only: the full-text index uses the English configuration and the embedding model is English.
 - The refusal threshold catches few unanswerable questions on its own (1 of 6 in the eval). In full mode the model does most of the refusing, and I have not measured it. See `docs/adr/0006-two-layer-refusal.md`.
 - A citation check shows the model cited a turn it was given. It does not show that the turn supports the claim.

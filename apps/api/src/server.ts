@@ -10,14 +10,20 @@ import { registerHealthRoutes } from './routes/health.js';
 import { registerMeetingRoutes } from './routes/meetings.js';
 import { registerSeedRoutes } from './routes/seed.js';
 import { registerTraceRoutes } from './routes/traces.js';
+import { registerTranscriptionRoutes } from './routes/transcriptions.js';
 import { ExtractionQueue } from './services/queue.js';
 import type { ApiError } from './types.js';
+import { TranscriptionJobs, type TranscriptionRunner } from './voice/jobs.js';
 
 export interface ServerDeps {
   pool: Pool;
   embedder: Embedder;
   llm: LlmClient;
   retrievalMinScore?: number;
+  /** Speech-to-text runner. Omitted or null means voice transcription is unavailable (health says so, POST answers 409). */
+  voice?: TranscriptionRunner | null;
+  voiceMaxSeconds?: number;
+  voiceMaxQueue?: number;
   logLevel?: string;
   pretty?: boolean;
   /** Tests capture log output here. */
@@ -28,6 +34,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     deps: Required<Pick<ServerDeps, 'retrievalMinScore'>> & Pick<ServerDeps, 'pool' | 'embedder' | 'llm'>;
     extractionQueue: ExtractionQueue;
+    transcriptionJobs: TranscriptionJobs;
   }
 }
 
@@ -55,6 +62,14 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     retrievalMinScore: deps.retrievalMinScore ?? DEFAULT_RETRIEVAL_MIN_SCORE,
   });
   app.decorate('extractionQueue', new ExtractionQueue());
+  app.decorate('transcriptionJobs', new TranscriptionJobs(deps.voice ?? null, {
+    maxQueue: deps.voiceMaxQueue ?? 4,
+    maxSeconds: deps.voiceMaxSeconds ?? 1800,
+    log: app.log,
+  }));
+
+  // Stops the worker thread and fails queued jobs; in-memory drafts are lost on shutdown by design.
+  app.addHook('onClose', async () => app.transcriptionJobs.cancelAll());
 
   app.addHook('onRequest', (req, reply, done) => {
     void reply.header('x-request-id', req.id);
@@ -94,6 +109,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   registerAskRoutes(app);
   registerSeedRoutes(app);
   registerTraceRoutes(app);
+  registerTranscriptionRoutes(app);
 
   return app;
 }

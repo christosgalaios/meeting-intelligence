@@ -13,6 +13,7 @@ flowchart LR
   A --> P[("db: Postgres + pgvector")]
   A -->|"local, in process"| E["bge-small embeddings"]
   A -.->|"only if ANTHROPIC_API_KEY is set"| C["Claude API"]
+  A -->|"worker thread"| W["voice: sherpa-onnx diarize + whisper"]
 ```
 
 - `web` serves the static React app and proxies `/api` to the API. The API sends no CORS headers (ADR 0010).
@@ -43,6 +44,27 @@ flowchart TD
 - The upload is validated before anything is embedded: a 422 for non-text, too few turns, too few timestamped lines or a turn over 2,000 words (`apps/api/src/transcript/validate.ts`).
 - A pending extraction that is left over when the process dies is marked `failed: interrupted` at the next boot. Extraction is never retried automatically.
 - Sample transcripts are loaded at start when `SEED_ON_START=true`. Seeding never calls the model.
+
+## Voice
+
+Audio becomes a draft transcript that the user reviews, and only then goes through the same ingest path as a text upload (ADR 0011).
+
+```mermaid
+flowchart TD
+  F["audio file in the browser"] --> D["decode to 16 kHz mono WAV, refuse over 30 min"]
+  D --> PO["POST /api/transcriptions, 202"]
+  PO --> Q["in-memory queue, one job at a time, max 4"]
+  Q --> WK["worker thread: diarize, merge turns, Whisper per turn"]
+  WK --> DR["GET /api/transcriptions/:id: draft with speakers"]
+  DR --> RV["review: rename, merge, re-run with N speakers"]
+  RV -->|"Import"| IN["POST /api/meetings, the normal ingest"]
+```
+
+- The audio is never written to disk or the database. The draft lives in API memory.
+- Jobs are lost on an API restart; the browser gets a 404 and offers a retry from the audio it still holds.
+- One job runs at a time because two would halve each other's speed and double peak memory. The queue position is shown to the user.
+- A 30 minute cap applies because memory was measured only up to a 95 second clip. Longer audio is refused, not attempted.
+- Nothing is ingested until the user clicks Import, and the API's own transcript validator still runs then.
 
 ## Ask
 

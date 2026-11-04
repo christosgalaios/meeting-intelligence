@@ -13,6 +13,8 @@ npm test                       # unit tests + API tests against the compose db (
 npm run eval                   # keyless retrieval eval, seeds the db first
 ```
 
+Voice transcription (`POST /api/transcriptions`, ADR 0011) is on only when `VOICE_MODELS_DIR` points at a directory holding the sherpa-onnx models. The Docker image sets it to `/models/voice`; running with `npm run dev` leaves it off unless you download the models yourself (see the `voice-models` stage in `Dockerfile`). Settings: `VOICE_MODELS_DIR` (unset = off), `VOICE_MAX_SECONDS` (default 1800), `VOICE_THREADS` (default 2), `VOICE_MAX_QUEUE` (default 4). `npm run voice:eval` scores the real worker on `evals/voice/clip.wav` and needs the models.
+
 No `ANTHROPIC_API_KEY` means retrieval-only mode (ADR 0001). With a key, answers use `claude-sonnet-5-5` and each upload makes one `claude-haiku-5-5` extraction call.
 
 ## Retrieval tuning

@@ -24,6 +24,7 @@ export const Health = z.object({
   db: z.boolean(),
   embeddings: z.object({ model: z.literal('Xenova/bge-small-en-v1.5'), ready: z.boolean() }),
   models: z.object({ answer: z.string().nullable(), extraction: z.string().nullable() }),
+  voice: z.object({ available: z.boolean(), models: z.string().nullable() }),
   version: z.string(),
 });
 export type Health = z.infer<typeof Health>;
