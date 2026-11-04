@@ -54,7 +54,7 @@ cd meeting-intelligence
 docker compose up --build
 ```
 
-Open <http://localhost:5173>.
+Open <http://127.0.0.1:5173> (use the IP: the port is bound to 127.0.0.1 only, and `localhost` can resolve to IPv6 first).
 
 - The first build is slower because the embedding model is downloaded into the API image. After that, start-up needs no network.
 - The API reports healthy only after the model has loaded and warmed up, and the web container waits for that. `docker compose ps` shows the state.
