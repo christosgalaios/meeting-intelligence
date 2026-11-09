@@ -30,21 +30,29 @@ Taken from the running app. The full-mode shots use `claude-sonnet-5-5` with the
 
 **Refusal.** A question about something the meetings never covered. The top vector score was below the threshold, so no model call was made. The nearest moments are still shown.
 
-![A meeting page with four decisions, seven action items with owner, due wording and source time, and a talk-time bar](docs/screenshots/06-meeting-detail-extraction.png)
+![The Pricing kickoff meeting page after extraction: five decisions and seven action items with owner, due wording and source time, and a talk-time bar](docs/screenshots/06-meeting-detail-extraction.png)
 
-**Meeting page.** Decisions and action items extracted by Claude Haiku, each linked to the turn it came from. Talk time is computed from the transcript and uses no model.
+**Meeting page.** Decisions and action items extracted by Claude Haiku when the user asks, each linked to the turn it came from. Talk time is computed from the transcript and uses no model.
 
-![The empty library before any meeting is added](docs/screenshots/07-empty-library.png)
+![A 95-second recording transcribed on the server: three speakers found and labelled Speaker 1 to 3, with the draft transcript below](docs/screenshots/07-voice-transcribed.png)
 
-**Empty state.**
+**Audio, transcribed.** Speaker detection and Whisper run on the API's own CPU, with no key and no cost. The test clip is three synthetic voices (`evals/voice/clip.wav`).
 
-![The same ask view in the dark theme](docs/screenshots/08-dark-theme.png)
+![Reviewing the transcribed recording: the three speakers renamed, merge and re-run controls in one row, and the draft transcript below. Nothing is saved until Import](docs/screenshots/08-voice-review.png)
+
+**Review before import.** A person names the speakers, merges any that were split, or re-runs with a set speaker count. Nothing is saved until Import, and the audio is never stored.
+
+![A question about the imported recording, answered with citation chips that point at the transcribed turns](docs/screenshots/09-voice-answer.png)
+
+**Asking about a recorded meeting.** Once imported it is chunked, embedded and cited like any other transcript.
+
+![The empty library before any meeting is added, with an option to load the sample meetings](docs/screenshots/10-empty-library.png)
+
+**Empty state.** Taken with the meeting list request answered empty in the browser, since the stack seeds the samples on start.
+
+![The Launch readiness meeting page in the dark theme](docs/screenshots/11-dark-theme.png)
 
 **Dark theme.**
-
-![Reviewing a transcribed recording: three speakers found and renamed, merge and re-run controls in one row, and the draft transcript below. Nothing is saved until Import](docs/screenshots/09-voice-review.png)
-
-**Reviewing a transcribed recording before import.**
 
 ## a. Quick setup
 
