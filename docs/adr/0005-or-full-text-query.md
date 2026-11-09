@@ -6,7 +6,7 @@
 ## Context
 - The spec used `websearch_to_tsquery`, which requires every word of the question to appear in a chunk.
 - A natural-language question has many words, so almost no chunk matched. In the eval, no question got a full-text hit. The keyword half of hybrid search was doing nothing.
-- I found this by running the eval on the first backend build. The agent had accepted recall@8 of 0.49 as built.
+- Found by running the eval against the first backend build, as part of review. The implementing agent had accepted recall@8 of 0.49 as built.
 
 ## Options considered
 1. Keep the AND query from the spec.
