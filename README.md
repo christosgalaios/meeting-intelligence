@@ -39,7 +39,7 @@ docker compose up --build
 Open <http://127.0.0.1:5173>. Use the IP rather than `localhost`: every port is bound to 127.0.0.1 only.
 
 - **No key needed.** Without one the app runs in retrieval-only mode: upload, search, and ranked speaker turns with timestamps, but no written answers or extraction (ADR 0001).
-- **With your own Claude key,** copy `.env.example` to `.env`, set `ANTHROPIC_API_KEY`, and run the same command. The key stays in the API container. Nothing paid runs without a click, and every paid button shows its estimated cost first.
+- **With your own Claude key,** copy `.env.example` to `.env`, set `ANTHROPIC_API_KEY`, and run the same command. The key stays in the API container. Only three things spend money: asking a question, importing a transcript (it runs extraction) and the extract button on a sample meeting. Each shows its estimated cost first.
 - **The first build is slow** because the embedding and voice models are baked into the image. After that it needs no network. Four sample meetings load at start, and a **Load sample meetings** button brings them back if the library is empty.
 - **Transcripts** are `.txt` files or pasted text, one turn per line: `[00:12:04] Priya Raman: Then let's decide it.` Files that do not look like transcripts are rejected before anything is embedded.
 - **Audio:** press **Transcribe audio**, review the speakers, then Import. It runs locally at about 13.5 seconds per minute of audio, and the audio is never stored.
@@ -99,11 +99,11 @@ Ingest, voice transcription, the SSE event order, the data model and the request
 
 Today this is a single-tenant app that runs on one machine with no login. That is fine for a demo. Hosting it for real users needs the following, roughly in this order.
 
-**1. Authorisation and rate limiting.** Anyone who can reach the API can spend the key, which is why every port is bound to localhost. Before any public URL I would add authentication, an owner on every meeting so one customer cannot read another's transcripts, and rate limits per user and per IP in front of the paid endpoints. The tables have no owner column yet, so this is a migration, not a flag.
+**1. Authorisation and rate limiting.** Anyone who can reach the API can spend the key, which is why every port is bound to localhost. Before any public URL I would add authentication, an owner on every meeting so one customer cannot read another's transcripts, and rate limits per user and per IP in front of the paid endpoints. The tables have no owner column yet, so this needs a migration.
 
 **2. Safeguards on LLM spend.** Today the safeguard is that nothing paid runs without a click, and the estimated cost is shown before you click. With many users that is not enough. I would add a budget per user and per organisation, a cap on tokens per request, and a spend limit on the provider key as the last line of defence. The trace table already records the tokens for every question, so the usage data is there.
 
-**3. Where to host it.** My preference is Cloudflare, because I know it from running Socialise. In a company I would first look at what is already in use and adapt to that. Nothing in the app depends on one provider. The three containers already exist with healthchecks, so the move is a container platform for `web` and `api`, a managed Postgres with pgvector, and a secrets manager for the key. Answers stream, so the load balancer's idle timeout has to be long enough not to cut them off.
+**3. Where to host it.** My preference is Cloudflare, because I know it from running my own company, Socialise. In a company I would first look at what is already in use and adapt to that. Nothing in the app depends on one provider. The three containers already exist with healthchecks, so the move is a container platform for `web` and `api`, a managed Postgres with pgvector, and a secrets manager for the key. Answers stream, so the load balancer's idle timeout has to be long enough not to cut them off.
 
 **4. Slow work off the request.** Embedding runs inside the upload request, extraction runs in the API process with no retry, and the voice job queue lives in memory. In production all three become background jobs with a status, retries with a limit, and somewhere for failed jobs to land.
 
@@ -117,15 +117,15 @@ Today this is a single-tenant app that runs on one machine with no login. That i
 
 **LLM.** Answers use Claude Sonnet (`claude-sonnet-5-5`), streamed. Decisions and action items are extracted with Claude Haiku (`claude-haiku-5-5`) in one structured call per meeting. Answers combine several meetings and follow citation rules, and extraction is a simpler job over one transcript, so it gets the cheaper model (ADR 0008). The models were not compared on answer quality.
 
-One option I considered was shipping an on-device LLM, so nobody would pay for API calls. I wasn't sure a reviewer would be comfortable putting in their own key, but I decided to build it with a hosted model because that is more production ready. I also considered building a demo mode first, without any key, but that would have taken more iteration. What the app does have is a real no-key mode: embeddings and voice transcription run locally, so without a key you still get real search results over your own transcripts, just not a written answer (ADR 0001).
+One option I considered was shipping an on-device LLM, so nobody would pay for API calls. I wasn't sure a reviewer would be comfortable putting in their own key, but I decided to build it with a hosted model because that is more production ready. For running without a key, I considered a demo mode, and the first plan had canned answers. A demo mode would have taken more iteration, and a reviewer agent pointed out that canned answers would not work on a reviewer's own transcript. So the no-key mode is real retrieval: embeddings and voice transcription run locally, and without a key you get the matching moments from your own transcripts, just no written answer (ADR 0001).
 
 **Embedding model.** `bge-small-en-v1.5`, 384 dimensions, run locally inside the API. Retrieval is real and free with or without a key. The trade-off is a small model whose similarity scores sit in a narrow band. Only this model was evaluated.
 
-**Vector database.** Postgres with pgvector, with Postgres full-text search next to it. One database holds the meetings, turns, chunks and traces. A separate vector database would be a second system with nothing to gain at this size.
+**Vector database.** Postgres with pgvector, with Postgres full-text search next to it. One database holds the meetings, turns, chunks and traces. At this size a separate vector database would only add a second system to run.
 
 **Orchestration framework.** None. I wanted to keep things simple and straightforward. The flow is a handful of plain functions (embed the question, search, fuse, check, call the model, validate the citations), and it calls the Anthropic SDK directly. A framework would add a layer to learn and debug without doing anything those functions don't. The API wires its parts together by hand in one place (`buildServer`), which is also what lets the tests swap in a fake model and a fake embedder.
 
-**Chunking.** Windows of whole speaker turns: up to 6 turns or 180 words, overlapping by 2 turns. A chunk never cuts a turn in half, so who said what is never lost, and the overlap keeps a question and its answer together when they fall either side of a boundary. The sizes are reasoned, not tuned (ADR 0004).
+**Chunking.** Windows of whole speaker turns: up to 6 turns or 180 words, overlapping by 2 turns. A chunk never cuts a turn in half, so who said what is never lost, and the overlap keeps a question and its answer together when they fall either side of a boundary. I picked the sizes by reasoning and have not tuned them (ADR 0004).
 
 **Retrieval.** Each question fetches 20 chunks by vector similarity and 20 by full-text rank. Reciprocal rank fusion (k = 60) merges the two lists by position, because the two kinds of score are on different scales and can't be added. The top 8 chunks are kept. The full-text query matches any word of the question rather than every word: with every word required, natural questions matched almost nothing. The switch raised recall@8 from 0.583 to 0.604 and MRR from 0.625 to 0.667 (ADR 0005).
 
@@ -145,14 +145,14 @@ One option I considered was shipping an on-device LLM, so nobody would pay for A
 Each of these has an ADR in `docs/adr/` with the options that were rejected.
 
 - **Option 3, Meeting Intelligence.** I have worked on similar projects to do with meetings, so it seemed like a good learning opportunity.
-- **Build it like a proper product, with your own key.** We looked at running answers through my Claude subscription instead of an API key. I decided against it and built it like a proper product: the shipped app uses the reviewer's own key, and there is no hosted demo, since that would put my key behind a public URL.
-- **No key still means real results.** The first plan used canned answers when there was no key. A reviewer agent flagged it, and I went with real retrieval instead, so a reviewer without a key can still test it on their own transcripts.
+- **Build it like a proper product, with your own key.** The shipped app uses the reviewer's own key. There is no hosted demo, since that would put my key behind a public URL.
+- **No key still means real results.** Without a key you still search your own transcripts (section d).
 - **Every paid call starts with a click,** and shows its estimated cost first. Seeding the sample meetings never calls a model.
 - **Check input before it reaches the parser, the embedder or a model.** When I went through the build decisions, I asked whether we were validating input. A file with one valid line and a lot of junk was being accepted, embedded and sent to extraction. There is now a validation step that rejects that before anything is processed.
-- **Two days, with a cut list.** I capped the build at two days and wrote what was cut into section h, instead of half-building it.
-- **Gates from measurements.** The CI thresholds for the eval come from measured results, not guesses, so a regression fails the build.
+- **A fixed time box, with a cut list.** I planned two days and wrote what was cut into section h, so nothing is half-built. The core build ended up done in one long day, 4 November, and the polish and documentation on 9 November.
+- **Gates from measurements.** The CI thresholds for the eval are set just under measured results, so a regression fails the build.
 - **A plain UI.** The interface is kept plain and distraction-free, so the focus stays on reading the text.
-- **Voice, added back.** Voice was listed as a bonus, and I like going the extra mile. It was also something we had already worked on before, so it was familiar. It runs on-device, free and with no key, and a person reviews the speakers before anything is saved, because similar voices get mixed up (ADR 0011).
+- **Voice, added back.** Voice was listed as a bonus, and I like going the extra mile. It was also familiar ground from earlier work. It runs on-device, free and with no key, and a person reviews the speakers before anything is saved, because similar voices get mixed up (ADR 0011).
 
 ## f. Engineering standards
 
@@ -176,11 +176,11 @@ What I skipped, and known limits:
 - **Answer quality is not measured.** The eval measures retrieval on 22 questions. A citation check proves the model cited a turn it was given, not that the turn supports the claim. The refusal threshold on its own catches 1 of 6 unanswerable questions.
 - **Plain-text transcripts only,** no WebVTT or SRT, and English only.
 - **No browser end-to-end tests, coverage threshold, load testing or deploy pipeline.** Contract types are copied by hand between the two apps.
-- **Smaller things.** Migrations take no lock, so this runs as one replica. A few components are long, mostly JSX. The nginx `/assets/` location drops the CSP headers (it serves static files only). `max_tokens` is a constant. The pre-commit secret scan skips itself if gitleaks is not installed; the CI scan always runs.
+- **Smaller things.** Migrations take no lock, so this runs as one replica. A few components are long, mostly JSX. The nginx `/assets/` location drops the CSP headers (it serves static files only). `max_tokens` is a constant. Each question also re-embeds the retrieved turns on the CPU to rank them, which adds CPU time to every question; storing turn vectors at ingest would remove that. The pre-commit secret scan skips itself if gitleaks is not installed; the CI scan always runs.
 
 ## g. How I used AI tools
 
-**My role.** Most of the code was written by AI agents in Claude Code. I made the product and scope decisions, set the rules the work had to follow, and decided what was done. An orchestrating Claude session ran the checks I set: it gave work to the agents, never accepted an agent's own "done", and sent work back. My own time was roughly 6 hours spread over three days: two days on the core build, and the third on polish and documentation.
+**My role.** Most of the code was written by AI agents in Claude Code. I made the product and scope decisions, set the rules the work had to follow, and decided what was done. An orchestrating Claude session ran the checks I set: it gave work to the agents, never accepted an agent's own "done", and sent work back. My own time was roughly 6 hours. The git history shows the shape: the build on 4 November, the polish and documentation on 9 November.
 
 **The setup.**
 - **One planner, separate builders, an independent reviewer.** A planning model wrote the spec from the brief and my constraints. Sonnet agents built the backend and frontend to it. An Opus reviewer, given the brief but not my conclusions, reviewed the plan before building and the code after.
@@ -188,7 +188,7 @@ What I skipped, and known limits:
 - **Checks that don't trust reports.** Run the eval, run the app, look at the build. gitleaks scans for secrets before every commit and in CI.
 - **A decision walkthrough.** Claude put 12 build decisions in front of me with their trade-offs. I kept all 12 and raised the input validation question, which became a fix.
 
-**Decisions that were mine.** Option 3, because I'd worked on meeting projects before. Building it like a proper product with your own key, after looking at the subscription route. The two-day cap. No hosted demo, and my development key used only for building, screenshots and the video, on an account with a $1 spend limit. Going with real retrieval when there's no key. Adding voice back, with proper speaker identification. The plain UI. Asking for a cold code review against the brief. Keeping the documentation in step with every scope change.
+**Decisions that were mine.** Option 3, because I'd worked on meeting projects before. Building it like a proper product, with the reviewer's own key. The two-day cap. No hosted demo, and my development key used only for building, screenshots and the video, on an account with a $1 spend limit. Going with real retrieval when there's no key. Adding voice back, with proper speaker identification. The plain UI. Asking for a cold code review against the brief. Keeping the documentation in step with every scope change.
 
 **What the reviews and checks caught,** and who caught it:
 1. **Canned answers as the no-key default** (reviewer agent, in the plan).
@@ -199,12 +199,7 @@ What I skipped, and known limits:
 6. **An eval that ranked turns differently from the app** (the cold review I asked for).
 7. **Input that wasn't validated before embedding** (me, in the walkthrough).
 
-**Do's and don'ts.**
-- Do give an agent a spec with acceptance checks. Don't accept "done" from the agent that did the work.
-- Do check artefacts, not reports. Most of the catches above came from running the thing.
-- Do get reviews from a model that hasn't seen the author's reasoning.
-- Do keep the rules in a file the agents read every time, rather than repeating them in chat.
-- Don't let an agent decide anything that spends money, exposes a key or changes who can reach the app.
+**Do's and don'ts,** and the full log of what was caught, are in [`docs/ai-workflow.md`](docs/ai-workflow.md).
 
 **Learning what I shipped.** Agents write code faster than I can read it. I own the results, and I study and learn. Before writing this up, I went through the parts of the system I couldn't yet explain (embeddings, chunking, hybrid search and RRF, the eval metrics, refusal, prompt injection and citation checks) until I could. In a normal working environment I would carry on until I knew all of it.
 
@@ -212,7 +207,7 @@ What I skipped, and known limits:
 
 ## h. What I'd do with more time
 
-**With one more day,** I would focus on testing and edge cases, not features, and on reading and understanding the code more. The goal would be more confidence that the tool is reliable.
+**With one more day,** I would add no features. I would focus on testing and edge cases, and on reading and understanding the code more. The goal would be more confidence that the tool is reliable.
 
 **Accuracy.** Test more and find ways to improve the results: a bigger eval set built from real questions, a check that each answer is supported by the turns it cites, tuning the chunk size, and trying a reranker. Each change measured with the eval, one at a time.
 
@@ -224,7 +219,7 @@ What I skipped, and known limits:
 
 **A connect layer,** for input or output. In: pull transcripts from Zoom, Teams or Google Meet. Out: send action items to Slack, email or a ticket tracker, always with a person confirming first.
 
-**Other LLM providers.** Support for more than one provider, so it isn't locked to Anthropic, or an on-device model self-hosted on AWS. That is an option, and it depends on cost, for example if we wanted to keep it free.
+**Other LLM providers.** Support for more than one provider, so it isn't locked to Anthropic, or an open-weights model we host ourselves, for example on AWS. That is an option, and it depends on cost, for example if we wanted to keep it free.
 
 **From the original cut list.** WebVTT and other transcript formats, speaker and date filters, end-to-end tests that drive the UI, and a shared types package between the API and the web app.
 
@@ -237,4 +232,4 @@ The brief asks for my thoughts, not an LLM's direct output, so here is what is w
 - Sections c, d, e, g and h carry my reasoning and my decisions. I gave them in my own words during the build, in chat and in my notes. Claude Code wrote them up from those, and from the decision journal for the facts. Where a reason comes from an ADR rather than from me, it is written as the design's reason, not mine.
 - Sections a, b and f, the ADRs in `docs/adr/` and `docs/architecture.md` describe what the code does and why it was built that way. Claude Code drafted them from the code, the evals and my decision journal. I have read them and checked them against the code.
 - The code was written by AI coding agents under my direction. Section g says how, and what the reviews and checks caught, with who caught each one.
-- Every number in this README comes from the code, from `evals/results/latest.json`, or from a screenshot. Where I did not have a number, I have left a gap and said so.
+- The numbers come from the code, `evals/results/latest.json`, the measurements in `evals/` and the ADRs, or my own records (the time I spent and the spend limit).
