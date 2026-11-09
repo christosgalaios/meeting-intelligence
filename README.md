@@ -213,7 +213,7 @@ The brief asks for my thoughts, not an LLM's direct output, so here is what is w
 
 - Sections c, d, e, g and h are the ones that carry my reasoning, and I write them myself.
 - Sections a, b and f, the ADRs in `docs/adr/` and `docs/architecture.md` describe what the code does and why it was built that way. Claude Code drafted them from the code, the evals and my decision journal, and I check them against the code. [TODO: Christos confirms he has read and checked these before submitting]
-- The code was written by AI coding agents under my direction. Section g says how, and lists the places I rejected or corrected what they produced.
+- The code was written by AI coding agents under my direction. Section g says how, and what the reviews and checks caught, with who caught each one.
 - Every number in this README comes from the code, from `evals/results/latest.json`, or from a screenshot. Where I did not have a number, I have left a gap and said so.
 
 ## Known limits
