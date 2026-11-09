@@ -6,6 +6,10 @@ This is my submission for option 3 of the take-home brief (Meeting Intelligence 
 
 The README follows the brief's sections a to i. Sections a, b and f describe what the code does. Sections c, d, e, g and h are my own account of the thinking, and are marked where they are not written yet. Longer reasoning for each decision is in `docs/adr/`.
 
+## Demo video
+
+[Watch the 3-minute demo](docs/demo/meeting-intelligence-demo.mp4) (MP4, 1080p, 9 MB, captioned, no sound). It was recorded from the running app by a script that drives the real UI: setup, a cited answer, "Why this answer", a refusal, the planted injection line, extraction, voice from upload to a cited answer, and the no-key mode. The voice wait is shown at 4x speed, and the captions say so. Captions are also in [`meeting-intelligence-demo.srt`](docs/demo/meeting-intelligence-demo.srt).
+
 ## Screenshots
 
 Taken from the running app. The full-mode shots use `claude-sonnet-5-5` with the four sample meetings loaded.

@@ -1,0 +1,84 @@
+1
+00:00:03,931 --> 00:00:13,249
+One command starts it: Postgres with pgvector, the API, and nginx serving the web app. The API key lives only in the API.
+
+2
+00:00:13,249 --> 00:00:21,086
+Four sample meetings from a fictional pricing project. Seeding never calls the model, so one is not extracted yet.
+
+3
+00:00:21,086 --> 00:00:29,227
+Ask across all meetings. The button shows the estimated cost before anything is spent.
+
+4
+00:00:29,227 --> 00:00:36,331
+Retrieval first: vector and full-text search, fused. Then Claude streams an answer from those excerpts only.
+
+5
+00:00:36,331 --> 00:00:42,687
+Each chip is a speaker turn the server confirmed was retrieved. Anything else is dropped.
+
+6
+00:00:42,687 --> 00:00:47,707
+Click a citation and the transcript jumps to that moment.
+
+7
+00:00:47,707 --> 00:00:55,174
+Why this answer: tokens, latency by stage, cost, and every retrieved chunk with its vector and full-text rank.
+
+8
+00:00:55,174 --> 00:01:03,120
+Every question stores one trace, so a bad answer can be explained after the fact.
+
+9
+00:01:03,120 --> 00:01:14,561
+Off-topic: below the relevance threshold, so the model is never called and nothing is spent.
+
+10
+00:01:14,561 --> 00:01:20,916
+One transcript contains a planted "ignore all previous instructions" line. Transcripts are treated as data.
+
+11
+00:01:20,916 --> 00:01:26,901
+The model quotes it as something a respondent typed. It does not follow it.
+
+12
+00:01:26,901 --> 00:01:34,525
+Decisions and action items are extracted only when you ask, with one small model call.
+
+13
+00:01:34,525 --> 00:01:43,844
+Each item has an owner, a due date and a link to the moment it was said. Talk time needs no AI call.
+
+14
+00:01:43,844 --> 00:01:49,459
+Audio works too. This test clip is 95 seconds of three synthetic voices.
+
+15
+00:01:49,459 --> 00:01:58,008
+Transcribed on this machine: speaker detection plus Whisper. No API key, no cost. (Waiting sped up 4x.)
+
+16
+00:01:58,008 --> 00:02:05,054
+Three speakers found. A person confirms who is who before anything is saved.
+
+17
+00:02:05,054 --> 00:02:12,521
+Similar voices can be merged, or re-run with a set speaker count. The audio itself is never stored.
+
+18
+00:02:12,521 --> 00:02:27,439
+Imported like any other transcript: chunked, embedded and searchable.
+
+19
+00:02:27,439 --> 00:02:32,683
+Answers about a recorded meeting cite the transcribed turns, the same way.
+
+20
+00:02:32,683 --> 00:02:43,832
+Without an API key the app still works: same retrieval, no written answer, free.
+
+21
+00:02:43,832 --> 00:02:52,410
+You get the ranked moments with timestamps, so a reviewer without a key can still test it on their own transcripts.
+
