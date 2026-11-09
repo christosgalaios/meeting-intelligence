@@ -62,7 +62,7 @@ export function formatHint(usd: number): string {
 export function extractionImportHint(mode: 'full' | 'retrieval-only' | null, extractionModel: string | null): string | null {
   if (mode !== 'full') return null;
   const usd = estimateExtractionCost(extractionModel, { turns: [] });
-  return `Importing also extracts decisions and action items (${usd === null ? 'costs a few tenths of a cent' : formatHint(usd)})`;
+  return `Importing also extracts decisions and action items (${usd === null ? 'costs a few tenths of a cent' : `${formatHint(usd)} for a typical meeting, more for a long one`})`;
 }
 
 export const formatUsd = (usd: number): string => `$${usd.toFixed(4)}`;

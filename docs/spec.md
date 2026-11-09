@@ -1,5 +1,7 @@
 # Meeting Intelligence: build spec
 
+> **Historical.** This is the build plan the planner agent wrote on 4 November, before any code. It is kept as a record of the plan. Where it differs from the code, the code, the ADRs and the README are current: for example the refusal threshold is 0.58 not 0.55, the full-text query matches any word, the CI gates are 0.58 and 0.64, and voice transcription was added later (ADR 0011).
+
 Status: frozen for the 2-day build (Thu 5, Fri 6 Nov 2026). Backend and frontend are built in parallel against section 5 (API contract). Anything not in this file is out of scope; see "What I'd do with more time" in README section h.
 
 Reading order for an implementer: 1 (layout), 5 (contract), then your own workstream in 10. Everything else is reference.

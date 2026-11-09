@@ -119,7 +119,7 @@ describe('TranscriptReview', () => {
 });
 
 describe('TranscriptReview import cost hint', () => {
-  const HINT = 'Importing also extracts decisions and action items (~$0.001)';
+  const HINT = 'Importing also extracts decisions and action items (~$0.001 for a typical meeting, more for a long one)';
   const renderWith = (importHint?: string | null) =>
     render(<TranscriptReview transcription={transcription()} busy={false} {...(importHint === undefined ? {} : { importHint })} onRerun={vi.fn()} onImported={vi.fn()} onDiscard={vi.fn()} />);
 

@@ -76,7 +76,7 @@ describe('import cost hint', () => {
     }));
     render(<MemoryRouter><AppProvider><LibraryPage /></AppProvider></MemoryRouter>);
   };
-  const HINT = /Importing also extracts decisions and action items \(~\$0\.001\)/;
+  const HINT = /Importing also extracts decisions and action items \(~\$0\.001 for a typical meeting, more for a long one\)/;
 
   it('tells the user in full mode that an import makes a paid extraction call', async () => {
     library('full');

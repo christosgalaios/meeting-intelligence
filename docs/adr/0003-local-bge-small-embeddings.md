@@ -23,7 +23,7 @@ Option 1.
 ## Consequences
 - Retrieval is real and free in both modes. CI runs the eval with the real model and no key.
 - The first `docker compose up` needs no network at runtime and behaves the same every time.
-- The model is baked in, so the image is larger and the first build is slower. The API image is 734 MB after removing unused onnxruntime binaries (it was 2.1 GB).
+- The model is baked in, so the image is larger and the first build is slower. Removing unused onnxruntime binaries took the API image from 2.1 GB to 734 MB. The voice models added later (ADR 0011) bring `docker images` to about 1.1 GB.
 - Embedding is CPU work inside the API process. Uploads are embedded synchronously, so a large transcript blocks that request. See the productionising section.
 - Quality limit: cosine scores sit in a narrow band. In the eval, answerable questions score 0.582 to 0.828 and unanswerable ones 0.576 to 0.746, so a score alone cannot tell them apart (ADR 0006).
 - Rejected option 2: it adds a second key, a cost per upload and per question, and a network call on the path of every search. A reviewer without that key would lose retrieval entirely.
