@@ -6,7 +6,7 @@
 ## Context
 - Two jobs need a model. Answering a question over several meetings (reasoning across excerpts, with citations) and pulling decisions and action items out of one transcript (structured output, long input).
 - Reviewers will run this with their own key. Nothing should spend their money without them asking.
-- I use a dev key for development, the eval, screenshots and the video, in a capped console workspace. [TODO: state the spend cap of that workspace. The number is not on record.]
+- I use a dev key for development, the eval, screenshots and the video. The Anthropic account it belongs to has a spend limit of $1, and holds no other live API keys.
 
 ## Options considered
 1. `claude-sonnet-5-5` for answers, `claude-haiku-5-5` for extraction.
