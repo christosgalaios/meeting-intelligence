@@ -2,21 +2,15 @@
 
 Ask questions about your meeting transcripts and get answers that cite the exact moment something was said.
 
-This is my submission for option 3 of the take-home brief (Meeting Intelligence System). The app has a React front end and a Fastify API, both in TypeScript, with Postgres and pgvector behind it.
+My submission for option 3 of the take-home brief (Meeting Intelligence System): a React front end and a Fastify API, both in TypeScript, with Postgres and pgvector. The README follows the brief's sections a to i. Longer reasoning for each decision is in `docs/adr/`.
 
-The README follows the brief's sections a to i. Sections a, b and f describe what the code does. Sections c, d, e, g and h are my own account of the thinking, and are marked where they are not written yet. Longer reasoning for each decision is in `docs/adr/`.
+## Demo
 
-## Demo video
+https://github.com/user-attachments/assets/5d9033a7-7a7f-4296-bd93-bee48e8ad66f
 
-[Watch the 3-minute demo](docs/demo/meeting-intelligence-demo.mp4) (MP4, 1080p, 9 MB, captioned, no sound). It was recorded from the running app by a script that drives the real UI: setup, a cited answer, "Why this answer", a refusal, the planted injection line, extraction, voice from upload to a cited answer, and the no-key mode. The voice wait is shown at 4x speed, and the captions say so. Captions are also in [`meeting-intelligence-demo.srt`](docs/demo/meeting-intelligence-demo.srt).
+Three minutes, captioned, no sound, recorded from the running app: a cited answer, "Why this answer", a refusal, the planted injection line, extraction, voice from upload to a cited answer, and the no-key mode. The voice wait is shown at 4x speed. If the player does not load, the file is [`docs/demo/meeting-intelligence-demo.mp4`](docs/demo/meeting-intelligence-demo.mp4).
 
 ## Screenshots
-
-Taken from the running app. The full-mode shots use `claude-sonnet-5-5` with the four sample meetings loaded.
-
-![The library: four meetings, an ask box with a cost hint, and an upload area that takes a .txt file, pasted text or audio, with a note that importing also runs a paid extraction](docs/screenshots/01-library.png)
-
-**Library.** Meeting cards show the date, length, speakers, and decision and action counts once a meeting has been extracted.
 
 ![An answer to a question across all four meetings, with citation chips that show a timestamp and a speaker, and the transcript on the right highlighting the first cited turn](docs/screenshots/02-ask-cited-answer.png)
 
@@ -26,43 +20,15 @@ Taken from the running app. The full-mode shots use `claude-sonnet-5-5` with the
 
 **Why this answer.** Tokens, latency per stage, an estimated cost, and every retrieved chunk with its vector and full-text rank and score. Each chunk is marked cited or not cited.
 
-![Retrieval-only mode: a banner says the server has no Anthropic key, and the result is a ranked list of speaker turns with scores](docs/screenshots/04-retrieval-only.png)
-
-**Retrieval-only mode (no key).** Same retrieval, no generated answer. The result is the best-matching speaker turns with timestamps, and the banner says why.
-
-![A question about something not in the meetings gets the message Not discussed in these meetings, with the nearest moments listed underneath](docs/screenshots/05-refusal.png)
-
-**Refusal.** A question about something the meetings never covered. The top vector score was below the threshold, so no model call was made. The nearest moments are still shown.
-
-![The Pricing kickoff meeting page after extraction: five decisions and seven action items with owner, due wording and source time, and a talk-time bar](docs/screenshots/06-meeting-detail-extraction.png)
-
-**Meeting page.** Decisions and action items extracted by Claude Haiku when the user asks, each linked to the turn it came from. Talk time is computed from the transcript and uses no model.
-
-![A 95-second recording transcribed on the server: three speakers found and labelled Speaker 1 to 3, with the draft transcript below](docs/screenshots/07-voice-transcribed.png)
-
-**Audio, transcribed.** Speaker detection and Whisper run on the API's own CPU, with no key and no cost. The test clip is three synthetic voices (`evals/voice/clip.wav`).
-
 ![Reviewing the transcribed recording: the three speakers renamed, merge and re-run controls in one row, and the draft transcript below. Nothing is saved until Import](docs/screenshots/08-voice-review.png)
 
 **Review before import.** A person names the speakers, merges any that were split, or re-runs with a set speaker count. Nothing is saved until Import, and the audio is never stored.
 
-![A question about the imported recording, answered with citation chips that point at the transcribed turns](docs/screenshots/09-voice-answer.png)
-
-**Asking about a recorded meeting.** Once imported it is chunked, embedded and cited like any other transcript.
-
-![The empty library before any meeting is added, with an option to load the sample meetings](docs/screenshots/10-empty-library.png)
-
-**Empty state.** Taken with the meeting list request answered empty in the browser, since the stack seeds the samples on start.
-
-![The Launch readiness meeting page in the dark theme](docs/screenshots/11-dark-theme.png)
-
-**Dark theme.**
+All 11 screenshots, with captions: [`docs/screenshots/`](docs/screenshots/README.md).
 
 ## a. Quick setup
 
-You need Docker with Compose v2. Nothing else is required to run the app.
-
-### Without a key
+You need Docker with Compose v2.
 
 ```
 git clone https://github.com/christosgalaios/meeting-intelligence.git
@@ -70,50 +36,24 @@ cd meeting-intelligence
 docker compose up --build
 ```
 
-Open <http://127.0.0.1:5173> (use the IP: the port is bound to 127.0.0.1 only, and `localhost` can resolve to IPv6 first).
+Open <http://127.0.0.1:5173>. Use the IP rather than `localhost`: every port is bound to 127.0.0.1 only.
 
-- The first build is slower because the embedding model is downloaded into the API image. After that, start-up needs no network.
-- The API reports healthy only after the model has loaded and warmed up, and the web container waits for that. `docker compose ps` shows the state. While it is still loading, `GET /api/health` answers 503.
-- Four sample meetings are loaded at start. If the library is ever empty (for example after `docker compose down -v`), a **Load sample meetings** button calls `POST /api/seed` and loads them again. Loading them is safe to repeat and never calls a model.
-- With no key the app is in retrieval-only mode. You can upload transcripts, search across them, and see the best-matching speaker turns with scores. You do not get written answers or extracted decisions. See `docs/adr/0001-no-key-retrieval-only-default.md`.
+- **No key needed.** Without one the app runs in retrieval-only mode: upload, search, and ranked speaker turns with timestamps, but no written answers or extraction (ADR 0001).
+- **With your own Claude key,** copy `.env.example` to `.env`, set `ANTHROPIC_API_KEY`, and run the same command. The key stays in the API container. Nothing paid runs without a click, and every paid button shows its estimated cost first.
+- **The first build is slow** because the embedding and voice models are baked into the image. After that it needs no network. Four sample meetings load at start, and a **Load sample meetings** button brings them back if the library is empty.
+- **Transcripts** are `.txt` files or pasted text, one turn per line: `[00:12:04] Priya Raman: Then let's decide it.` Files that do not look like transcripts are rejected before anything is embedded.
+- **Audio:** press **Transcribe audio**, review the speakers, then Import. It runs locally at about 13.5 seconds per minute of audio, and the audio is never stored.
+- `docker compose down` stops it. Add `-v` to delete the data.
 
-### With your own Claude key
-
-```
-cp .env.example .env
-# set ANTHROPIC_API_KEY=sk-ant-... in .env
-docker compose up --build
-```
-
-Or pass it for one run: `ANTHROPIC_API_KEY=sk-ant-... docker compose up --build`.
-
-- Answers use `claude-sonnet-5-5`. Extraction of decisions and action items uses `claude-haiku-5-5`.
-- Nothing paid runs on its own. A paid call happens when you press Ask, upload a transcript, or press the extract button on a meeting. The button shows an estimate first. The sample meetings are never extracted until you press that button.
-- One answer in the screenshots used 3,128 input and 519 output tokens, which is $0.0114 at the prices on record in `docs/spec.md`.
-- The key is read by the API container only. It is never sent to the browser.
-
-### Using it
-
-- Upload a `.txt` file or paste text. One turn per line: `[00:12:04] Priya Raman: Then let's decide it.` The shorter `[12:04]` form also works. Files up to 2 MB. A file that does not look like a transcript is rejected before anything is embedded: no timestamps on at least half its lines, fewer than 2 turns, binary content, or a turn over 2,000 words.
-- Or use **Transcribe audio** on the library page. Pick a recording your browser can decode (tested with WAV; MP3 and M4A go through the same browser decoder but were not tested), wait for the draft, then review it: rename or merge speakers, or set the speaker count and re-run if the diarizer got it wrong. Press Import to add it. Nothing is added before that, and the audio is never stored. It runs locally with no key, at about 13.5 seconds per minute of audio. Measurements and limits are in `evals/voice/README.md` and `docs/adr/0011-local-diarized-speech-to-text.md`.
-- Ask across all meetings, or scope a question to one.
-- Stop with `docker compose down`. Add `-v` to delete the database volume.
-- The app has no login. All ports are bound to `127.0.0.1`, so it is reachable only from your own machine.
-
-### Without Docker, for development
-
-Needs Node 24.
+For development without Docker (Node 24):
 
 ```
 docker compose up -d db
 npm install
-npm run dev --workspace apps/api    # API on 3001, in one terminal
-npm run dev --workspace apps/web    # web on 5173 with /api proxied, in another
-npm test                            # unit and API tests; the API tests need the db above
-npm run eval                        # retrieval eval, keyless
+npm run dev --workspace apps/api    # API on 3001
+npm run dev --workspace apps/web    # web on 5173, in a second terminal
+npm test && npm run eval
 ```
-
-More detail for the API is in `apps/api/README.md`.
 
 ## b. Architecture
 
@@ -137,10 +77,6 @@ flowchart LR
 5. The server checks every citation against the turns it retrieved. Unverified ones are dropped from the answer's citations and recorded.
 6. Every question writes a trace row, which the "Why this answer" panel and `GET /api/traces/:id` both read.
 
-**How a transcript is ingested.** The file is parsed into speaker turns, grouped into chunks of up to 6 turns or 180 words with a 2-turn overlap, embedded, and stored in one transaction. With a key, Claude Haiku then extracts decisions and action items in the background.
-
-**How audio is transcribed.** The browser decodes the recording to 16 kHz mono WAV and refuses anything over 30 minutes. The API queues it (one job at a time, at most 4 active) and a worker thread runs speaker segmentation, speaker embeddings and Whisper base.en on the CPU. The result is a draft the user reviews, renames and merges speakers in, and imports through the normal ingest path. Audio is never stored and jobs live in memory. See `docs/adr/0011-local-diarized-speech-to-text.md`.
-
 **Stack.**
 
 | Layer | Choice |
@@ -157,7 +93,7 @@ flowchart LR
 | Tests | Vitest in both apps, Testing Library for the web |
 | CI | GitHub Actions: typecheck, lint, tests, retrieval eval, build, compose smoke test, gitleaks |
 
-More diagrams (ingest, ask, the SSE event order, the data model and the request lifecycle with its trace) are in `docs/architecture.md`.
+Ingest, voice transcription, the SSE event order, the data model and the request lifecycle are drawn in `docs/architecture.md`.
 
 ## c. Productionising and scaling
 
@@ -222,33 +158,25 @@ Each of these has an ADR in `docs/adr/` with the options that were rejected.
 
 What I followed:
 
-- **Types.** TypeScript in strict mode with `noUncheckedIndexedAccess`. Every request body and every model output is checked with zod before it is used. The API checks each SSE event against the contract before sending it.
-- **Tests.**
-  - Unit tests for the parser, chunker, RRF, citations, extraction schema, config and log hygiene.
-  - API tests run against a real Postgres with pgvector, using a fake embedder and a fake model, so they need no key. Each test file gets its own schema.
-  - Web tests for the SSE client, the ask panel, the library, the upload and voice flows and the paid extract button (its cost estimate, one request per click, disabled while pending).
-  - Coverage is measured with `npm run test:coverage --workspace apps/api` (or `apps/web`) and has no threshold. On 2026-11-04: API 83.8% of statements and 85.1% of lines, web 70.2% and 72.3%.
-  - The rule in `CLAUDE.md` is that a bug fix ships with a test that fails without the fix.
-- **A retrieval eval, not just unit tests.** `npm run eval` runs 22 labelled questions (16 answerable, 6 unanswerable) through the real embedder and writes `evals/results/latest.json`. The eval ranks turns the way the app does, including the per-turn rescoring step. CI fails if recall@8 drops below 0.58, MRR below 0.64 or all-retrieved recall below 0.80. The gates come from measured results, not guesses. Current values are recall@8 0.6042, MRR 0.6671 and all-retrieved recall 0.849.
-- **CI.** Typecheck, lint, tests, the eval and the build on every push. A separate web job. A compose smoke test that builds the stack from a clean checkout, waits for it to be healthy, and streams one question through both the API and nginx. All of it runs without a key.
-- **Containers.** Multi-stage API image with the embedding model and the voice models baked in (about 725 MiB on the image filesystem, 216 MiB of it voice). Healthchecks on `db`, `api` and `web`. The `api` check passes only when the database answers and the embedding model is loaded. `LOG_LEVEL`, `RETRIEVAL_MIN_SCORE` and the voice limits can be set in `.env` and reach the container. Ports on `127.0.0.1` only.
-- **Observability.** Structured JSON logs with a request id on every line. A line per stage: `boot.migrated`, `ingest.done`, `extract.done`, `ask.retrieved`, `ask.answered`. Health probes are logged at `warn`, so they do not drown the rest. Every API error carries the request id, and the web app shows it as `Ref: <id>`. A trace row per question. A test fails if a log line at `info` contains transcript text, the question, an answer or a key-shaped string.
-- **Security.** No CORS and same-origin serving. Uploads are format-checked before anything is embedded. Transcript text is escaped and wrapped before it reaches a model, and model output is validated. A Content-Security-Policy on the web app. The key lives only in the API process, and CI fails the web build if its bundle contains `sk-ant`. gitleaks runs as a pre-commit hook and in CI.
-- **Database.** Numbered SQL migrations, applied in a transaction at boot and safe to run twice.
-- **Frontend.** Colours come only from design tokens, and ESLint fails the build on a hex colour outside `tokens.css`.
-- **Process.** Work went through branches and pull requests. `CLAUDE.md` holds the rules the coding agents had to follow, including the ones above. Architecture decisions are written up as ADRs in `docs/adr/`.
+- **Types.** Strict TypeScript. Every request body and every model output is checked with zod before it is used, and each streamed event is checked against the contract before it is sent.
+- **Tests.** Unit tests for the parser, chunker, RRF, citations and extraction schema. API tests against a real Postgres with a fake embedder and a fake model, so they need no key. Web tests for the streaming client, ask, upload, voice and the paid extract button. API coverage is about 84% of statements, with no threshold. A bug fix ships with a test that fails without it.
+- **A retrieval eval in CI,** with gates set from measured results (section d).
+- **CI on every push:** typecheck, lint, tests, the eval, the build, gitleaks, and a smoke test that builds the stack from a clean checkout and streams one question through nginx. None of it needs a key.
+- **Containers.** Multi-stage images running as non-root, healthchecks on all three services, ports on 127.0.0.1 only.
+- **Observability.** JSON logs with a request id on every line and a line per stage. Errors show the request id in the UI as `Ref: <id>`. One trace row per question. A test fails if transcript text or a key-shaped string reaches an `info` log.
+- **Security.** Same origin with no CORS, input checked before embedding, transcripts escaped and wrapped before the model, a Content-Security-Policy, and the key only in the API (CI fails if the web bundle contains `sk-ant`).
+- **Database and frontend.** Numbered SQL migrations applied in a transaction at boot. Colours only from design tokens, and lint fails on a stray hex colour.
+- **Process.** Branches and pull requests, rules for the agents in `CLAUDE.md`, and decisions written up as ADRs.
 
-What I skipped, on purpose, for a two-day build:
+What I skipped, and known limits:
 
-- **No authentication or rate limiting.** Loopback binding is the only protection. Anyone who can reach the API can spend the key.
-- **No durable job queue.** Embedding on upload is synchronous, so a large transcript holds the request open. Extraction runs in-process after the response, and is not retried. Audio transcription has an in-memory queue (one job at a time, 4 active at most) whose jobs are lost if the API restarts.
-- **Voice is thinly tested.** Speaker identification is weak on similar voices: on three similar female voices it found 1, 2 or 4 speakers depending on the threshold, which is why there is a review step. I tested it only on synthetic text-to-speech voices, never on real meeting audio. Recordings over 30 minutes are refused because memory was measured only up to a 95 second clip. English only.
-- **Contract types are copied by hand** from the API into the web app, instead of living in a shared package. The API tests are the source of truth if they drift.
-- **No browser end-to-end tests.** The compose smoke test covers the built stack through nginx, but nothing drives the UI.
-- **No metrics or tracing.** Logs and the per-question trace row only.
-- **No test of answer quality.** The eval measures retrieval. There is no faithfulness or answer-correctness eval, and only 22 questions over four sample meetings.
-- **No coverage threshold, no load testing, no deployment pipeline.**
-- **The pre-commit secret scan skips itself if gitleaks is not installed.** The CI scan always runs.
+- **No login or rate limiting.** Binding to localhost is the only protection (section c).
+- **No durable job queue.** Upload embedding is synchronous, extraction runs in the API process with no retry, and voice jobs live in memory and are lost on restart.
+- **Voice is thinly tested.** Synthetic voices only, in clips under two minutes. Similar voices get merged or split (1 to 4 speakers found for 3 similar voices), which is why there is a review step. Recordings over 30 minutes are refused. English only.
+- **Answer quality is not measured.** The eval measures retrieval on 22 questions. A citation check proves the model cited a turn it was given, not that the turn supports the claim. The refusal threshold on its own catches 1 of 6 unanswerable questions.
+- **Plain-text transcripts only,** no WebVTT or SRT, and English only.
+- **No browser end-to-end tests, coverage threshold, load testing or deploy pipeline.** Contract types are copied by hand between the two apps.
+- **Smaller things.** Migrations take no lock, so this runs as one replica. A few components are long, mostly JSX. The nginx `/assets/` location drops the CSP headers (it serves static files only). `max_tokens` is a constant. The pre-commit secret scan skips itself if gitleaks is not installed; the CI scan always runs.
 
 ## g. How I used AI tools
 
@@ -310,17 +238,3 @@ The brief asks for my thoughts, not an LLM's direct output, so here is what is w
 - Sections a, b and f, the ADRs in `docs/adr/` and `docs/architecture.md` describe what the code does and why it was built that way. Claude Code drafted them from the code, the evals and my decision journal. I have read them and checked them against the code.
 - The code was written by AI coding agents under my direction. Section g says how, and what the reviews and checks caught, with who caught each one.
 - Every number in this README comes from the code, from `evals/results/latest.json`, or from a screenshot. Where I did not have a number, I have left a gap and said so.
-
-## Known limits
-
-- Transcripts are plain text in the `[hh:mm:ss] Speaker: text` shape, or audio transcribed locally (English, up to 30 minutes, speakers labelled by diarization) and reviewed before import. No WebVTT or SRT.
-- Voice: similar voices can be merged or split by the diarizer. Set the speaker count and re-run, or merge and rename in the review step. Memory is measured only up to a 95 second clip (570 MB peak), so recordings over 30 minutes are refused rather than attempted. One recording is transcribed at a time; the API holds at most four. An API restart loses a job in progress.
-- English only: the full-text index uses the English configuration and the embedding model is English.
-- The refusal threshold catches few unanswerable questions on its own (1 of 6 in the eval). In full mode the model does most of the refusing. I measured it once, live, on 2026-11-04: all 6 unanswerable questions were refused (1 by the threshold, 5 by the model), see `evals/results/manual-refusal-and-injection-2026-11-04.jsonl`. That is one run on 6 questions, not a rate. See `docs/adr/0006-two-layer-refusal.md`.
-- A citation check shows the model cited a turn it was given. It does not show that the turn supports the claim.
-- Recall@8 is 0.6042 on a 16-question set. Treat the retrieval numbers as coarse.
-- Migrations take no advisory lock, so two API replicas starting at once could both try to apply the same migration. The app runs as one replica.
-- A few components are long (`WhyThisAnswer` 246 lines, `UploadDropzone` 217, `AskPage` 185, `MeetingSummaryCard` 179). They are mostly JSX, and splitting them was not worth the regression risk in a two-day build.
-- The nginx `/assets/` location does not send the CSP and frame headers (an `add_header` in a location replaces the inherited ones). It serves only static JS and CSS, which are not documents.
-- Answer and extraction `max_tokens` (1024 and 4096) are constants in `apps/api/src/llm/client.ts`, not settings.
-- Prompt injection is mitigated, not solved. See `docs/adr/0009-transcripts-are-untrusted-input.md`.
