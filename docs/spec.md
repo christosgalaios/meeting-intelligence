@@ -1,6 +1,6 @@
 # Meeting Intelligence: build spec
 
-Status: frozen for the 2-day build (Thu 5, Fri 6 Nov 2026). Backend and frontend are built in parallel against section 5 (API contract). Anything not in this file is out of scope; see "Cut" in the plan.
+Status: frozen for the 2-day build (Thu 5, Fri 6 Nov 2026). Backend and frontend are built in parallel against section 5 (API contract). Anything not in this file is out of scope; see "What I'd do with more time" in README section h.
 
 Reading order for an implementer: 1 (layout), 5 (contract), then your own workstream in 10. Everything else is reference.
 
