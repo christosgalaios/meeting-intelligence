@@ -14,6 +14,7 @@ export default async function checkDatabase(): Promise<void> {
     throw new Error(
       `The API tests need Postgres with pgvector, and none answered at ${url.replace(/:[^:@/]+@/, ':***@')} (${reason}). ` +
         'Start it with `docker compose up -d db`, then run the tests again.',
+      { cause: err },
     );
   } finally {
     await client.end().catch(() => {});
