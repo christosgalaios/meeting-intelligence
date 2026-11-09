@@ -255,7 +255,7 @@ What I skipped, on purpose, for a two-day build:
 - **Checks that don't trust reports.** Run the eval, run the app, look at the build. gitleaks scans for secrets before every commit and in CI.
 - **A decision walkthrough.** Claude put 12 build decisions in front of me with their trade-offs. I kept all 12 and raised the input validation question, which became a fix.
 
-**Decisions that were mine.** Option 3. Building it like a proper product with your own key, after looking at the subscription route. The two-day cap. No hosted demo, and my development key used only for building, screenshots and the video. Going with real retrieval when there's no key. Adding voice back, with proper speaker identification. The plain UI. Asking for a cold code review against the brief. Keeping the documentation in step with every scope change.
+**Decisions that were mine.** Option 3. Building it like a proper product with your own key, after looking at the subscription route. The two-day cap. No hosted demo, and my development key used only for building, screenshots and the video, on an account with a $1 spend limit. Going with real retrieval when there's no key. Adding voice back, with proper speaker identification. The plain UI. Asking for a cold code review against the brief. Keeping the documentation in step with every scope change.
 
 **What the reviews and checks caught,** and who caught it:
 1. **Canned answers as the no-key default** (reviewer agent, in the plan).
